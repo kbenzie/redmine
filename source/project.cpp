@@ -3,7 +3,7 @@
 #include <cstdio>
 #include <cstring>
 
-result project(int argc, char **argv) {
+result cmd::project(int argc, char **argv) {
   if (0 == argc) {
     fprintf(stderr, "usage: redmine project <action> [args]\n"
                     "actions:\n"
@@ -24,12 +24,12 @@ result project(int argc, char **argv) {
   return INVALID_ARGUMENT;
 }
 
-result project_info(int argc, char **argv) {
+result cmd::project_info(int argc, char **argv) {
   fprintf(stderr, "unsupported: project info\n");
   return UNSUPPORTED;
 }
 
-result project_list(int argc, char **argv) {
+result cmd::project_list(int argc, char **argv) {
   fprintf(stderr, "unsupported: project list\n");
   return UNSUPPORTED;
 }

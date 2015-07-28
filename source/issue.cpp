@@ -3,7 +3,7 @@
 #include <cstdio>
 #include <cstring>
 
-result issue(int argc, char **argv) {
+result cmd::issue(int argc, char **argv) {
   if (0 == argc) {
     fprintf(stderr, "usage: redmine issue <action> [args]\n"
                     "actions:\n"
@@ -29,17 +29,17 @@ result issue(int argc, char **argv) {
   return INVALID_ARGUMENT;
 }
 
-result issue_new(int argc, char **argv) {
+result cmd::issue_new(int argc, char **argv) {
   fprintf(stderr, "unsupported: issue new\n");
   return UNSUPPORTED;
 }
 
-result issue_edit(int argc, char **argv) {
+result cmd::issue_edit(int argc, char **argv) {
   fprintf(stderr, "unsupported: issue edit\n");
   return UNSUPPORTED;
 }
 
-result issue_list(int argc, char **argv) {
+result cmd::issue_list(int argc, char **argv) {
   fprintf(stderr, "unsupported: issue list\n");
   return UNSUPPORTED;
 }

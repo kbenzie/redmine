@@ -16,15 +16,15 @@ int main(int argc, char **argv) {
   }
 
   if (!strcmp("config", argv[1])) {
-    return config(argc - 2, argv + 2);
+    return cmd::config(argc - 2, argv + 2);
   }
 
   if (!strcmp("project", argv[1])) {
-    return project(argc - 2, argv + 2);
+    return cmd::project(argc - 2, argv + 2);
   }
 
   if (!strcmp("issue", argv[1])) {
-    return issue(argc - 2, argv + 2);
+    return cmd::issue(argc - 2, argv + 2);
   }
 
   fprintf(stderr, "invalid argument: %s\n", argv[1]);

@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 2.8)
 project(redmine)
 
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
 if(UNIX)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
   if(${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
@@ -10,10 +14,12 @@ else()
   message(FATAL_ERROR "Platform ${CMAKE_SYSTEM_NAME} not supported.")
 endif()
 
-# TODO: json
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/external/json)
+
 # TODO: curl
 
 include_directories(
+  ${CMAKE_CURRENT_SOURCE_DIR}/external/json/include
   ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 add_executable(redmine
@@ -21,3 +27,4 @@ add_executable(redmine
   ${CMAKE_CURRENT_SOURCE_DIR}/source/issue.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/source/project.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/source/redmine.cpp)
+target_link_libraries(redmine JSON)
