@@ -1,0 +1,47 @@
+[
+  {
+    "_id": "55147465d19fc438cdb3e4c8",
+    "index": 0,
+    "guid": "27c62f2a-9a01-4fe0-b77a-e47ecd588bb2",
+    "isActive": true,
+    "balance": "$3,135.58",
+    "picture": "http://placehold.it/32x32",
+    "age": 39,
+    "eyeColor": "green",
+    "name": "Townsend Oneill",
+    "gender": "male",
+    "company": "ACCEL",
+    "email": "townsendoneill@accel.com",
+    "phone": "+1 (930) 463-3279",
+    "address": "501 Emmons Avenue, Bowden, North Dakota, 9430",
+    "about": "Voluptate et mollit voluptate dolore eiusmod labore amet ex. Do esse ipsum mollit tempor sint culpa amet. Deserunt reprehenderit ad aliquip ex ex eu ex aliqua excepteur proident. Consequat non nisi cupidatat labore ut reprehenderit pariatur pariatur ea irure. Nisi fugiat dolore mollit in cupidatat duis pariatur.\r\n",
+    "registered": "2014-01-18T21:56:28 -00:00",
+    "latitude": 88.659509,
+    "longitude": -7.471627,
+    "tags": [
+      "reprehenderit",
+      "et",
+      "sint",
+      "enim",
+      "ipsum",
+      "excepteur",
+      "amet"
+    ],
+    "friends": [
+      {
+        "id": 0,
+        "name": "Ayala Benjamin"
+      },
+      {
+        "id": 1,
+        "name": "Cummings Lara"
+      },
+      {
+        "id": 2,
+        "name": "Terri Salas"
+      }
+    ],
+    "greeting": "Hello, Townsend Oneill! You have 6 unread messages.",
+    "favoriteFruit": "apple"
+  }
+]
