@@ -311,11 +311,11 @@ json::value read_value(const char *str, position_t &pos, diagnostic_t &diag) {
   return {};
 }
 
-json::value json::read(const std::string &string) {
+json::value json::read(const std::string &string, bool diag_on) {
   position_t pos;
   diagnostic_t diag;
   json::value value = read_value(string.c_str(), pos, diag);
-  if (diag) {
+  if (diag_on && diag) {
     fprintf(stderr, "error: %zu:%zu: %s\n", pos.line, pos.column, diag.error);
   }
   return value;
