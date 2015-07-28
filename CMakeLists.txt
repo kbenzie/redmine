@@ -7,7 +7,7 @@ if(UNIX)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fcolor-diagnostics")
   endif()
 else()
-  message(FATAL_ERROR "Platform ${CMAKE_PLATORM_NAME} not supported.")
+  message(FATAL_ERROR "Platform ${CMAKE_SYSTEM_NAME} not supported.")
 endif()
 
 # TODO: json
