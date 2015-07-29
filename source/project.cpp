@@ -7,13 +7,13 @@ result cmd::project(int argc, char **argv) {
   if (0 == argc) {
     fprintf(stderr, "usage: redmine project <action> [args]\n"
                     "actions:\n"
-                    "        info\n"
+                    "        show\n"
                     "        list\n");
     return FAILURE;
   }
 
-  if (!strcmp("info", argv[0])) {
-    return project_info(argc - 1, argv + 1);
+  if (!strcmp("show", argv[0])) {
+    return project_show(argc - 1, argv + 1);
   }
 
   if (!strcmp("list", argv[0])) {
@@ -24,8 +24,8 @@ result cmd::project(int argc, char **argv) {
   return INVALID_ARGUMENT;
 }
 
-result cmd::project_info(int argc, char **argv) {
-  fprintf(stderr, "unsupported: project info\n");
+result cmd::project_show(int argc, char **argv) {
+  fprintf(stderr, "unsupported: project show\n");
   return UNSUPPORTED;
 }
 
