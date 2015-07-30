@@ -5,7 +5,8 @@
 #include <cstdio>
 #include <cstring>
 
-result_t cmd::project(int argc, char **argv, options_t options) {
+namespace action {
+result_t project(int argc, char **argv, options_t options) {
   if (0 == argc) {
     fprintf(stderr,
             "usage: redmine project <action> [args]\n"
@@ -27,12 +28,12 @@ result_t cmd::project(int argc, char **argv, options_t options) {
   return INVALID_ARGUMENT;
 }
 
-result_t cmd::project_show(int argc, char **argv, options_t options) {
+result_t project_show(int argc, char **argv, options_t options) {
   fprintf(stderr, "unsupported: project show\n");
   return UNSUPPORTED;
 }
 
-result_t cmd::project_list(int argc, char **argv, options_t options) {
+result_t project_list(int argc, char **argv, options_t options) {
   if (0 != argc) {
     fprintf(stderr, "invalid argument: %s\n", argv[0]);
     return INVALID_ARGUMENT;
@@ -47,4 +48,5 @@ result_t cmd::project_list(int argc, char **argv, options_t options) {
   CHECK_RETURN(request(url.c_str(), config.key.c_str(), options, body));
 
   return UNSUPPORTED;
+}
 }

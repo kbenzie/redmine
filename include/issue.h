@@ -3,7 +3,7 @@
 
 #include <redmine.h>
 
-namespace cmd {
+namespace action {
 result_t issue(int argc, char **argv, options_t options);
 
 result_t issue_new(int argc, char **argv, options_t options);

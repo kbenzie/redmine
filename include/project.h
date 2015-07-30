@@ -3,7 +3,7 @@
 
 #include <redmine.h>
 
-namespace cmd {
+namespace action {
 result_t project(int argc, char **argv, options_t options);
 
 result_t project_show(int argc, char **argv, options_t options);

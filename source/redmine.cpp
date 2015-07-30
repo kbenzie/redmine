@@ -31,17 +31,17 @@ int main(int argc, char **argv) {
 
     if (!strcmp("config", argv[argi])) {
       ++argi;
-      return cmd::config(argc - argi, argv + argi, options);
+      return action::config(argc - argi, argv + argi, options);
     }
 
     if (!strcmp("project", argv[argi])) {
       ++argi;
-      return cmd::project(argc - argi, argv + argi, options);
+      return action::project(argc - argi, argv + argi, options);
     }
 
     if (!strcmp("issue", argv[argi])) {
       ++argi;
-      return cmd::issue(argc - argi, argv + argi, options);
+      return action::issue(argc - argi, argv + argi, options);
     }
   }
 

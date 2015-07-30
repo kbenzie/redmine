@@ -10,7 +10,7 @@ struct config_t {
   std::string key;
 };
 
-namespace cmd {
+namespace action {
 result_t config(int argc, char **argv, options_t options);
 
 result_t config_key(int argc, char **argv, options_t options);

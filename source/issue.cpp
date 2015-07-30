@@ -3,13 +3,15 @@
 #include <cstdio>
 #include <cstring>
 
-result_t cmd::issue(int argc, char **argv, options_t options) {
+namespace action {
+result_t issue(int argc, char **argv, options_t options) {
   if (0 == argc) {
-    fprintf(stderr, "usage: redmine issue <action> [args]\n"
-                    "actions:\n"
-                    "        new\n"
-                    "        edit\n"
-                    "        list\n");
+    fprintf(stderr,
+            "usage: redmine issue <action> [args]\n"
+            "actions:\n"
+            "        new\n"
+            "        edit\n"
+            "        list\n");
     return FAILURE;
   }
 
@@ -29,17 +31,18 @@ result_t cmd::issue(int argc, char **argv, options_t options) {
   return INVALID_ARGUMENT;
 }
 
-result_t cmd::issue_new(int argc, char **argv, options_t options) {
+result_t issue_new(int argc, char **argv, options_t options) {
   fprintf(stderr, "unsupported: issue new\n");
   return UNSUPPORTED;
 }
 
-result_t cmd::issue_edit(int argc, char **argv, options_t options) {
+result_t issue_edit(int argc, char **argv, options_t options) {
   fprintf(stderr, "unsupported: issue edit\n");
   return UNSUPPORTED;
 }
 
-result_t cmd::issue_list(int argc, char **argv, options_t options) {
+result_t issue_list(int argc, char **argv, options_t options) {
   fprintf(stderr, "unsupported: issue list\n");
   return UNSUPPORTED;
+}
 }

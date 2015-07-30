@@ -7,12 +7,14 @@
 #include <cstring>
 #include <fstream>
 
-result_t cmd::config(int argc, char **argv, options_t options) {
+namespace action {
+result_t config(int argc, char **argv, options_t options) {
   if (0 == argc) {
-    fprintf(stderr, "usage: redmine config <action> [args]\n"
-                    "actions:\n"
-                    "        key [new key]\n"
-                    "        url [new url]\n");
+    fprintf(stderr,
+            "usage: redmine config <action> [args]\n"
+            "actions:\n"
+            "        key [new key]\n"
+            "        url [new url]\n");
     return FAILURE;
   }
 
@@ -28,7 +30,7 @@ result_t cmd::config(int argc, char **argv, options_t options) {
   return INVALID_ARGUMENT;
 }
 
-result_t cmd::config_key(int argc, char **argv, options_t options) {
+result_t config_key(int argc, char **argv, options_t options) {
   if (0 == argc) {
     config_t config;
     CHECK(config_load(&config), fprintf(stderr, "invalid config file\n");
@@ -51,7 +53,7 @@ result_t cmd::config_key(int argc, char **argv, options_t options) {
   return INVALID_ARGUMENT;
 }
 
-result_t cmd::config_url(int argc, char **argv, options_t options) {
+result_t config_url(int argc, char **argv, options_t options) {
   if (0 == argc) {
     config_t config;
     CHECK(config_load(&config), fprintf(stderr, "invalid config file\n");
@@ -72,6 +74,7 @@ result_t cmd::config_url(int argc, char **argv, options_t options) {
 
   fprintf(stderr, "invalid argument: %s\n", argv[1]);
   return INVALID_ARGUMENT;
+}
 }
 
 std::string config_path() {
