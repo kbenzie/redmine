@@ -131,6 +131,7 @@ json::object read_object(const char *str, position_t &pos, diagnostic_t &diag) {
         object.add({key, value});
       } break;
       case '}': {
+        pos++;
         return object;
       }
       case '\n': {
