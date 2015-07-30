@@ -16,10 +16,15 @@ endif()
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/external/json)
 
-# TODO: curl
+set(BUILD_CURL_EXE OFF)
+set(BUILD_CURL_TESTS OFF)
+set(ENABLE_MANUAL OFF)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/external/curl)
 
 include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}/external/json/include
+  ${CMAKE_CURRENT_SOURCE_DIR}/external/curl/include
+  ${CMAKE_CURRENT_BINARY_DIR}/external/curl/include/curl
   ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 add_executable(redmine
