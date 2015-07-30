@@ -43,7 +43,7 @@ class value;
 typedef std::pair<const std::string, json::value> pair;
 
 // API
-json::value read(const std::string &string);
+json::value read(const std::string &string, bool diag_on = true);
 std::string write(const json::value &value, const char *tab = "\t");
 
 // Objects
