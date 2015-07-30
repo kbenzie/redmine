@@ -18,6 +18,7 @@ enum result_t {
 enum option_t {
   NONE,
   VERBOSE,
+  DEBUG,
 };
 
 /// @brief An options_t is a bitfield of option_t values.
@@ -30,7 +31,7 @@ typedef uint32_t options_t;
 ///
 /// @return true if enabled, false otherwise.
 template <option_t option>
-bool has_opt(options_t options) {
+bool has(options_t options) {
   return option == (option & options);
 }
 

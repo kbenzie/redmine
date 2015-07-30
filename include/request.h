@@ -3,7 +3,7 @@
 
 #include <redmine.h>
 
-#include <sstream>
+#include <string>
 
 /// @brief Set of all HTTP status code values.
 struct http {
@@ -589,6 +589,6 @@ struct http {
 ///
 /// @return Return SUCCESS or FAILURE
 result_t request(const char *url, const char *key, options_t options,
-                 std::stringstream &body);
+                 std::string &body);
 
 #endif

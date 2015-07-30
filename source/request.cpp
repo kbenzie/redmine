@@ -30,15 +30,22 @@ struct curl_raii {
   CURL *handle;
 };
 
-size_t write(void *ptr, size_t size, size_t count, void *stream) {
+size_t write(void *ptr, size_t size, size_t count, void *data) {
+#if 0
   std::stringstream &out = *static_cast<std::stringstream *>(stream);
   const size_t written = size * count;
   out.write(static_cast<char *>(ptr), written);
   return written;
+#endif
+  std::string *str = static_cast<std::string *>(data);
+  char *in = static_cast<char*>(ptr);
+  const size_t bytes = size * count;
+  str->append(in, in + bytes);
+  return bytes;
 }
 
 result_t request(const char *url, const char *key, options_t options,
-                 std::stringstream &body) {
+                 std::string &body) {
   curl_raii curl;
   CHECK_RETURN(curl.init());
   CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_URL, url));
@@ -48,7 +55,7 @@ result_t request(const char *url, const char *key, options_t options,
   CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_PORT, 443));
   CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, false));
 
-  if (has_opt<VERBOSE>(options)) {
+  if (has<DEBUG>(options)) {
     CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_VERBOSE, true));
     CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_HEADER, true));
   }
@@ -68,8 +75,8 @@ result_t request(const char *url, const char *key, options_t options,
         fprintf(stderr, "HTTP request failed with error: %u\n", response);
         return FAILURE);
 
-  if (has_opt<VERBOSE>(options)) {
-    printf("body: %s\n", body.str().c_str());
+  if (has<VERBOSE>(options)) {
+    printf("body: %s\n", body.c_str());
   }
 
   return SUCCESS;

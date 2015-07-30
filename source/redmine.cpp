@@ -15,7 +15,8 @@ int main(int argc, char **argv) {
             "        project\n"
             "        issue\n"
             "options:\n"
-            "        -V - verbose output\n");
+            "        -V - verbose output\n"
+            "        --debug - enable debug output\n");
     return FAILURE;
   }
 
@@ -24,6 +25,13 @@ int main(int argc, char **argv) {
   for (; argi < argc; ++argi) {
     if (!strcmp("-V", argv[argi])) {
       options |= VERBOSE;
+      CHECK(argc - 1 == argi, fprintf(stderr, "action required\n");
+            return ACTION_REQUIRED);
+      continue;
+    }
+
+    if (!strcmp("--debug", argv[argi])) {
+      options |= DEBUG;
       CHECK(argc - 1 == argi, fprintf(stderr, "action required\n");
             return ACTION_REQUIRED);
       continue;

@@ -2,6 +2,8 @@
 #include <project.h>
 #include <request.h>
 
+#include <json/json.hpp>
+
 #include <cstdio>
 #include <cstring>
 
@@ -43,9 +45,60 @@ result_t project_list(int argc, char **argv, options_t options) {
   CHECK(config_load(&config), fprintf(stderr, "invalid config file\n");
         return INVALID_CONFIG);
 
-  std::string url = config.url + "/projects.json";
-  std::stringstream body;
-  CHECK_RETURN(request(url.c_str(), config.key.c_str(), options, body));
+  std::string body;
+  CHECK_RETURN(request(std::string(config.url + "/projects.json").c_str(),
+                       config.key.c_str(), options, body));
+
+
+
+  auto root = json::read(body, false);
+  CHECK(json::TYPE_OBJECT != root.type(),
+        fprintf(stderr, "invalid json data: %s\n", body.c_str());
+        return FAILURE);
+
+  auto projects = root.object().get("projects");
+  CHECK(!projects,
+        fprintf(stderr, "invalid json data: projects array not found\n");
+        CHECK(has<VERBOSE>(options),
+              fprintf(stderr, "%s\n", json::write(body, "  ").c_str()));
+        return FAILURE);
+  CHECK(json::TYPE_ARRAY != projects->type(),
+        fprintf(stderr, "invalid json data: projects to an array\n");
+        CHECK(has<VERBOSE>(options),
+              fprintf(stderr, "%s\n", json::write(body, "  ").c_str()));
+        return FAILURE);
+
+  for (auto project : projects->array()) {
+    CHECK(json::TYPE_OBJECT != project.type(),
+          fprintf(stderr, "invalid json data: project is not an object\n");
+          CHECK(has<VERBOSE>(options),
+                fprintf(stderr, "%s\n", json::write(root, "  ").c_str()));
+          return FAILURE);
+
+    auto id = project.object().get("id");
+    CHECK(!id, fprintf(stderr, "invalid json data: project id not found\n");
+          CHECK(has<VERBOSE>(options),
+                fprintf(stderr, "%s\n", json::write(root, "  ").c_str()));
+          return FAILURE);
+    CHECK(json::TYPE_NUMBER != id->type(),
+          fprintf(stderr, "invalid json data: project id is not a string\n");
+          CHECK(has<VERBOSE>(options),
+                fprintf(stderr, "%s\n", json::write(root, "  ").c_str()));
+          return FAILURE);
+
+    auto name = project.object().get("name");
+    CHECK(!name, fprintf(stderr, "invalid json data: project name not found\n");
+          CHECK(has<VERBOSE>(options),
+                fprintf(stderr, "%s\n", json::write(root, "  ").c_str()));
+          return FAILURE);
+    CHECK(json::TYPE_STRING != name->type(),
+          fprintf(stderr, "invalid json data: project name is not a string\n");
+          CHECK(has<VERBOSE>(options),
+                fprintf(stderr, "%s\n", json::write(root, "  ").c_str()));
+          return FAILURE);
+
+    printf("%d: %s\n", static_cast<int>(id->number()), name->string().c_str());
+  }
 
   return UNSUPPORTED;
 }
