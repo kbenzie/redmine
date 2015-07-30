@@ -8,6 +8,28 @@ result_t curl_print_error(CURLcode error, const char *file, const int line);
     return error;                                                          \
   }
 
+struct curl_raii {
+  curl_raii() : handle(nullptr) {}
+
+  ~curl_raii() {
+    if (handle) {
+      curl_easy_cleanup(handle);
+    }
+    curl_global_cleanup();
+  }
+
+  result_t init() {
+    CURL_CHECK_RETURN(curl_global_init(CURL_GLOBAL_ALL));
+    handle = curl_easy_init();
+    CHECK(!handle, fprintf(stderr, "curl_easy_init failed\n"); return FAILURE);
+    return SUCCESS;
+  }
+
+  operator CURL *() { return handle; }
+
+  CURL *handle;
+};
+
 size_t write(void *ptr, size_t size, size_t count, void *stream) {
   std::stringstream &out = *static_cast<std::stringstream *>(stream);
   const size_t written = size * count;
@@ -17,22 +39,19 @@ size_t write(void *ptr, size_t size, size_t count, void *stream) {
 
 result_t request(const char *url, const char *key, options_t options,
                  std::stringstream &body) {
-  CURL_CHECK_RETURN(curl_global_init(CURL_GLOBAL_ALL));
-  CURL *curl = curl_easy_init();
-  CHECK(!curl, fprintf(stderr, "curl_easy_init failed\n"); return FAILURE);
+  curl_raii curl;
+  CHECK_RETURN(curl.init());
   CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_URL, url));
   CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_USE_SSL, CURLUSESSL_ALL));
   CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write));
   CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_WRITEDATA, &body));
-
   CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_PORT, 443));
+  CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, false));
 
   if (has_opt<VERBOSE>(options)) {
     CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_VERBOSE, true));
     CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_HEADER, true));
   }
-
-  CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, false));
 
   struct curl_slist *header = nullptr;
   std::string api_key_header("X-Redmine-API-Key: ");
@@ -44,9 +63,6 @@ result_t request(const char *url, const char *key, options_t options,
   CURL_CHECK_RETURN(curl_easy_perform(curl));
   uint32_t response;
   curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response);
-
-  curl_easy_cleanup(curl);
-  curl_global_cleanup();
 
   CHECK(http::OK != response,
         fprintf(stderr, "HTTP request failed with error: %u\n", response);
