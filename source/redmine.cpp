@@ -1,30 +1,48 @@
 #include <config.h>
 #include <issue.h>
 #include <project.h>
+#include <redmine.h>
 
 #include <cstdio>
 #include <cstring>
 
 int main(int argc, char **argv) {
   if (1 == argc) {
-    fprintf(stderr, "usage: redmine [options] <action> [args]\n"
-                    "actions:\n"
-                    "        config\n"
-                    "        project\n"
-                    "        issue\n");
+    fprintf(stderr,
+            "usage: redmine [options] <action> [args]\n"
+            "actions:\n"
+            "        config\n"
+            "        project\n"
+            "        issue\n"
+            "options:\n"
+            "        -V - verbose output\n");
     return FAILURE;
   }
 
-  if (!strcmp("config", argv[1])) {
-    return cmd::config(argc - 2, argv + 2);
-  }
+  options_t options = NONE;
+  int argi = 1;
+  for (; argi < argc; ++argi) {
+    if (!strcmp("-V", argv[argi])) {
+      options |= VERBOSE;
+      CHECK(argc - 1 == argi, fprintf(stderr, "action required\n");
+            return ACTION_REQUIRED);
+      continue;
+    }
 
-  if (!strcmp("project", argv[1])) {
-    return cmd::project(argc - 2, argv + 2);
-  }
+    if (!strcmp("config", argv[argi])) {
+      ++argi;
+      return cmd::config(argc - argi, argv + argi, options);
+    }
 
-  if (!strcmp("issue", argv[1])) {
-    return cmd::issue(argc - 2, argv + 2);
+    if (!strcmp("project", argv[argi])) {
+      ++argi;
+      return cmd::project(argc - argi, argv + argi, options);
+    }
+
+    if (!strcmp("issue", argv[argi])) {
+      ++argi;
+      return cmd::issue(argc - argi, argv + argi, options);
+    }
   }
 
   fprintf(stderr, "invalid argument: %s\n", argv[1]);

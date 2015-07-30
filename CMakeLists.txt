@@ -23,8 +23,14 @@ include_directories(
   ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 add_executable(redmine
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/config.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/issue.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/project.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/redmine.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/request.h
   ${CMAKE_CURRENT_SOURCE_DIR}/source/config.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/source/issue.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/source/project.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/source/redmine.cpp)
-target_link_libraries(redmine JSON)
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/redmine.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/request.cpp)
+target_link_libraries(redmine JSON libcurl)

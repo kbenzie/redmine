@@ -1,7 +1,7 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#include <error.h>
+#include <redmine.h>
 
 #include <string>
 
@@ -11,17 +11,16 @@ struct config_t {
 };
 
 namespace cmd {
-result config(int argc, char **argv);
+result_t config(int argc, char **argv, options_t options);
 
-result config_key(int argc, char **argv);
+result_t config_key(int argc, char **argv, options_t options);
 
-result config_url(int argc, char **argv);
+result_t config_url(int argc, char **argv, options_t options);
 }
 
-result config_load(config_t *pConfig);
+result_t config_load(config_t *pConfig);
 
-result config_save(config_t &config);
+result_t config_save(config_t &config);
 
-result config_validate(config_t &config);
-
+result_t config_validate(config_t &config);
 #endif

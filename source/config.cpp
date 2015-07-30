@@ -7,7 +7,7 @@
 #include <cstring>
 #include <fstream>
 
-result cmd::config(int argc, char **argv) {
+result_t cmd::config(int argc, char **argv, options_t options) {
   if (0 == argc) {
     fprintf(stderr, "usage: redmine config <action> [args]\n"
                     "actions:\n"
@@ -17,18 +17,18 @@ result cmd::config(int argc, char **argv) {
   }
 
   if (!strcmp("key", argv[0])) {
-    return config_key(argc - 1, argv + 1);
+    return config_key(argc - 1, argv + 1, options);
   }
 
   if (!strcmp("url", argv[0])) {
-    return config_url(argc - 1, argv + 1);
+    return config_url(argc - 1, argv + 1, options);
   }
 
   fprintf(stderr, "invalid argument: %s\n", argv[0]);
   return INVALID_ARGUMENT;
 }
 
-result cmd::config_key(int argc, char **argv) {
+result_t cmd::config_key(int argc, char **argv, options_t options) {
   if (0 == argc) {
     config_t config;
     CHECK(config_load(&config), fprintf(stderr, "invalid config file\n");
@@ -51,7 +51,7 @@ result cmd::config_key(int argc, char **argv) {
   return INVALID_ARGUMENT;
 }
 
-result cmd::config_url(int argc, char **argv) {
+result_t cmd::config_url(int argc, char **argv, options_t options) {
   if (0 == argc) {
     config_t config;
     CHECK(config_load(&config), fprintf(stderr, "invalid config file\n");
@@ -79,8 +79,8 @@ std::string config_path() {
   return path + "/.redmine.json";
 }
 
-result config_load(config_t *pConfig) {
-  CHECK(!pConfig, return INVALID_POINTER);
+result_t config_load(config_t *pConfig) {
+  ASSERT(!pConfig, "pConfig should not be null!");
   std::ifstream file(config_path());
   std::string str((std::istreambuf_iterator<char>(file)),
                   std::istreambuf_iterator<char>());
@@ -96,7 +96,7 @@ result config_load(config_t *pConfig) {
   return SUCCESS;
 }
 
-result config_save(config_t &config) {
+result_t config_save(config_t &config) {
   std::string path(config_path());
   std::ofstream file(path);
   if (!file.is_open()) {
@@ -109,8 +109,8 @@ result config_save(config_t &config) {
   return SUCCESS;
 }
 
-result config_validate(config_t &config) {
-  result error = SUCCESS;
+result_t config_validate(config_t &config) {
+  result_t error = SUCCESS;
   if (!config.key.size()) {
     fprintf(stderr, "key is empty, set using: redmine config key <key>\n");
     error = INVALID_CONFIG;

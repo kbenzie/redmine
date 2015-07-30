@@ -1,14 +1,14 @@
 #ifndef PROJECT_H
 #define PROJECT_H
 
-#include <error.h>
+#include <redmine.h>
 
 namespace cmd {
-result project(int argc, char **argv);
+result_t project(int argc, char **argv, options_t options);
 
-result project_show(int argc, char **argv);
+result_t project_show(int argc, char **argv, options_t options);
 
-result project_list(int argc, char **argv);
+result_t project_list(int argc, char **argv, options_t options);
 }
 
 #endif
