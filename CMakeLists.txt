@@ -16,9 +16,9 @@ endif()
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/external/json)
 
-set(BUILD_CURL_EXE OFF)
-set(BUILD_CURL_TESTS OFF)
-set(ENABLE_MANUAL OFF)
+option(BUILD_CURL_EXE "Set to ON to build cURL executable." OFF)
+option(BUILD_CURL_TESTS "Set to ON to build cURL tests." OFF)
+option(ENABLE_MANUAL "to provide the built-in manual" OFF)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/external/curl)
 
 include_directories(
