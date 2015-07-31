@@ -19,6 +19,7 @@ enum option_t {
   NONE,
   VERBOSE,
   DEBUG,
+  DEBUG_HTTP,
 };
 
 /// @brief An options_t is a bitfield of option_t values.

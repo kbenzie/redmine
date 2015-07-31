@@ -37,6 +37,13 @@ int main(int argc, char **argv) {
       continue;
     }
 
+    if (!strcmp("--debug-http", argv[argi])) {
+      options |= DEBUG_HTTP;
+      CHECK(argc - 1 == argi, fprintf(stderr, "action required\n");
+            return ACTION_REQUIRED);
+      continue;
+    }
+
     if (!strcmp("config", argv[argi])) {
       ++argi;
       return action::config(argc - argi, argv + argi, options);

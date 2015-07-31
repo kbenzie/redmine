@@ -2,11 +2,12 @@
 
 #include <curl/curl.h>
 
-result_t curl_print_error(CURLcode error, const char *file, const int line);
+result_t print_curl_error(CURLcode error, const char *file, const int line);
 #define CURL_CHECK_RETURN(EXPRESSION)                                      \
-  if (result_t error = curl_print_error(EXPRESSION, __FILE__, __LINE__)) { \
+  if (result_t error = print_curl_error(EXPRESSION, __FILE__, __LINE__)) { \
     return error;                                                          \
   }
+result_t print_http_error(const uint32_t error);
 
 struct curl_raii {
   curl_raii() : handle(nullptr) {}
@@ -55,7 +56,7 @@ result_t request(const char *url, const char *key, options_t options,
   CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_PORT, 443));
   CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, false));
 
-  if (has<DEBUG>(options)) {
+  if (has<DEBUG_HTTP>(options)) {
     CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_VERBOSE, true));
     CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_HEADER, true));
   }
@@ -71,18 +72,16 @@ result_t request(const char *url, const char *key, options_t options,
   uint32_t response;
   curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response);
 
-  CHECK(http::OK != response,
-        fprintf(stderr, "HTTP request failed with error: %u\n", response);
-        return FAILURE);
+  CHECK(http::OK != response, print_http_error(response); return FAILURE);
 
-  if (has<VERBOSE>(options)) {
+  if (has<DEBUG>(options)) {
     printf("body: %s\n", body.c_str());
   }
 
   return SUCCESS;
 }
 
-result_t curl_print_error(CURLcode error, const char *file, const int line) {
+result_t print_curl_error(CURLcode error, const char *file, const int line) {
 #define CASE(ERROR)                                      \
   case ERROR:                                            \
     fprintf(stderr, "%s: %d: %s\n", file, line, #ERROR); \
@@ -182,5 +181,95 @@ result_t curl_print_error(CURLcode error, const char *file, const int line) {
     default:
       return SUCCESS;
   };
+#undef CASE
+}
+
+result_t print_http_error(const uint32_t error) {
+#define CASE(ERROR)                                                  \
+  case http::ERROR:                                                  \
+    fprintf(stderr, "HTTP request failed with error: %s\n", #ERROR); \
+    return FAILURE;
+  switch (error) {
+    CASE(CONTINUE)
+    CASE(SWITCHING_PROTOCOLS)
+    CASE(PROCESSING)
+    CASE(OK)
+    CASE(CREATED)
+    CASE(ACCEPTED)
+    CASE(NON_AUTHORITATIVE_INFORMATION)
+    CASE(NO_CONTENT)
+    CASE(RESET_CONTENT)
+    CASE(PARTIAL_CONTENT)
+    CASE(MULTI_STATUS)
+    CASE(ALREADY_REPORTED)
+    CASE(IM_USED)
+    CASE(MULTIPLE_CHOICES)
+    CASE(MOVED_PERMANENTLY)
+    CASE(FOUND)
+    CASE(SEE_OTHER)
+    CASE(NOT_MODIFIED)
+    CASE(USE_PROXY)
+    CASE(SWITCH_PROXY)
+    CASE(TEMPORARY_REDIRECT)
+    CASE(PERMANENT_REDIRECT)
+    CASE(BAD_REQUEST)
+    CASE(UNAUTHORIZED)
+    CASE(PAYMENT_REQUIRED)
+    CASE(FORBIDDEN)
+    CASE(NOT_FOUND)
+    CASE(NOT_ALLOWED)
+    CASE(NOT_ACCEPTABLE)
+    CASE(PROXY_AUTHENTICATION_REQUIRED)
+    CASE(REQUEST_TIMEOUT)
+    CASE(CONFLICT)
+    CASE(GONE)
+    CASE(LENGTH_REQUIRED)
+    CASE(PRECONDITION_FAILED)
+    CASE(PAYLOAD_TOO_LARGE)
+    CASE(REQUEST_URI_TOO_LONG)
+    CASE(UNSUPPORTED_MEDIA_TYPE)
+    CASE(REQUESTED_RANGE_NOT_SATISFIABLE)
+    CASE(EXPECTATION_FAILED)
+    CASE(IM_A_TEAPOT)
+    CASE(AUTHENTICATION_TIMEOUT)
+    CASE(METHOD_FAILURE)
+    CASE(MISDIRECTION_REQUEST)
+    CASE(UNPROCESSABLE_ENTITY)
+    CASE(LOCKED)
+    CASE(FAILED_DEPENDENCY)
+    CASE(UPGRADE_REQUIRED)
+    CASE(PRECONDITION_REQUIRED)
+    CASE(TOO_MANY_REQUESTS)
+    CASE(REQUEST_HEADER_FIELDS_TOO_LARGE)
+    CASE(LOGIN_TIMEOUT)
+    CASE(NO_RESPONSE)
+    CASE(RETRY_WITH)
+    CASE(BLOCKED_BY_WINDOWS_PARENTAL_CONTROLS)
+    CASE(REDIRECT)
+    CASE(REQUEST_HEADER_TOO_LARGE)
+    CASE(CERT_ERROR)
+    CASE(NO_CERT)
+    CASE(HTTP_TO_HTTPS)
+    CASE(TOKEN_EXPIRED_INVALID)
+    CASE(CLIENT_CLOSED_REQUEST)
+    CASE(INTERNAL_SERVER_ERROR)
+    CASE(NOT_IMPLEMENTED)
+    CASE(BAD_GATEWAY)
+    CASE(SERVICE_UNAVAILABLE)
+    CASE(GATEWAY_TIMEOUT)
+    CASE(HTTP_VERSION_NOT_SUPPORTED)
+    CASE(VARIANT_ALSO_NEGOTIATES)
+    CASE(INSUFFICIENT_STORAGE)
+    CASE(LOOP_DETECTION)
+    CASE(BANDWIDTH_LIMIT_EXCEEDED)
+    CASE(NOT_EXTENDED)
+    CASE(NETWORK_AUTHENTICATION_REQUIRED)
+    CASE(UNKNOWN_ERROR)
+    CASE(ORIGIN_CONNECTION_TIMEOUT)
+    CASE(NETWORK_READ_TIMEOUT_ERROR)
+    CASE(NETWORK_CONNECT_TIMEOUT_ERROR)
+    default:
+      return SUCCESS;
+  }
 #undef CASE
 }

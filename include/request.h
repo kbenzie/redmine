@@ -173,12 +173,6 @@ struct http {
   /// a permanently redirected resource may continue smoothly.
   static const uint32_t PERMANENT_REDIRECT = 308;
 
-  /// @brief Resume Incomplete (Google) redirection status code.
-  ///
-  /// This code is used in the Resumable HTTP Requests Proposal to resume
-  /// aborted PUT or POST requests.
-  static const uint32_t RESUME_INCOMPLETE = 308;
-
   /// @brief Bad Request client error status code.
   ///
   /// The server cannot or will not process the request due to something that is
