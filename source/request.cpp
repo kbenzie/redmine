@@ -9,22 +9,23 @@ result_t print_curl_error(CURLcode error, const char *file, const int line);
   }
 result_t print_http_error(const uint32_t error);
 
+result_t request_global_raii::init() {
+  CURL_CHECK_RETURN(curl_global_init(CURL_GLOBAL_ALL));
+  return SUCCESS;
+}
+
+request_global_raii::~request_global_raii() { curl_global_cleanup(); }
+
 struct curl_raii {
-  curl_raii() : handle(nullptr) {}
+  curl_raii() : handle(curl_easy_init()) {}
 
   ~curl_raii() {
     if (handle) {
       curl_easy_cleanup(handle);
     }
-    curl_global_cleanup();
   }
 
-  result_t init() {
-    CURL_CHECK_RETURN(curl_global_init(CURL_GLOBAL_ALL));
-    handle = curl_easy_init();
-    CHECK(!handle, fprintf(stderr, "curl_easy_init failed\n"); return FAILURE);
-    return SUCCESS;
-  }
+  bool is_valid() { return handle; }
 
   operator CURL *() { return handle; }
 
@@ -45,11 +46,12 @@ size_t write(void *ptr, size_t size, size_t count, void *data) {
   return bytes;
 }
 
-result_t request(const char *url, const char *key, options_t options,
-                 std::string &body) {
+result_t request(const std::string &url, const std::string &key,
+                 options_t options, std::string &body) {
   curl_raii curl;
-  CHECK_RETURN(curl.init());
-  CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_URL, url));
+  CHECK(!curl.is_valid(), fprintf(stderr, "curl init failed\n");
+        return FAILURE);
+  CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_URL, url.c_str()));
   CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_USE_SSL, CURLUSESSL_ALL));
   CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write));
   CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_WRITEDATA, &body));

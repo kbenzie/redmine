@@ -33,7 +33,7 @@ result_t config(int argc, char **argv, options_t options) {
 result_t config_key(int argc, char **argv, options_t options) {
   if (0 == argc) {
     config_t config;
-    CHECK(config_load(&config), fprintf(stderr, "invalid config file\n");
+    CHECK(config_load(config), fprintf(stderr, "invalid config file\n");
           return INVALID_CONFIG);
     printf("key: %s\n", config.key.c_str());
     return SUCCESS;
@@ -41,7 +41,7 @@ result_t config_key(int argc, char **argv, options_t options) {
     config_t config;
     // NOTE: We don't care if config load fails because we are writing a new key
     // to it.
-    config_load(&config);
+    config_load(config);
     config.key = argv[0];
     CHECK(config_save(config), fprintf(stderr, "failed to write config file\n");
           return FAILURE);
@@ -56,19 +56,21 @@ result_t config_key(int argc, char **argv, options_t options) {
 result_t config_url(int argc, char **argv, options_t options) {
   if (0 == argc) {
     config_t config;
-    CHECK(config_load(&config), fprintf(stderr, "invalid config file\n");
+    CHECK(config_load(config), fprintf(stderr, "invalid config file\n");
           return INVALID_CONFIG);
     printf("url: %s\n", config.url.c_str());
+    CHECK(config_validate(config), return INVALID_CONFIG);
     return SUCCESS;
   } else if (1 == argc) {
     config_t config;
     // NOTE: We don't care if config load fails because we are writing a new url
     // to it.
-    config_load(&config);
+    config_load(config);
     config.url = argv[0];
     CHECK(config_save(config), fprintf(stderr, "failed to write config file\n");
           return FAILURE);
     printf("set url: %s\n", config.url.c_str());
+    CHECK(config_validate(config), return INVALID_CONFIG);
     return SUCCESS;
   }
 
@@ -82,8 +84,7 @@ std::string config_path() {
   return path + "/.redmine.json";
 }
 
-result_t config_load(config_t *pConfig) {
-  ASSERT(!pConfig, "pConfig should not be null!");
+result_t config_load(config_t &out) {
   std::ifstream file(config_path());
   std::string str((std::istreambuf_iterator<char>(file)),
                   std::istreambuf_iterator<char>());
@@ -94,8 +95,8 @@ result_t config_load(config_t *pConfig) {
   CHECK(json::TYPE_STRING != url->type(), return INVALID_CONFIG);
   json::value *key = config.get("key");
   CHECK(json::TYPE_STRING != key->type(), return INVALID_CONFIG);
-  pConfig->url = url->string();
-  pConfig->key = key->string();
+  out.url = url->string();
+  out.key = key->string();
   return SUCCESS;
 }
 

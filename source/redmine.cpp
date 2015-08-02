@@ -2,6 +2,7 @@
 #include <issue.h>
 #include <project.h>
 #include <redmine.h>
+#include <request.h>
 
 #include <cstdio>
 #include <cstring>
@@ -19,6 +20,8 @@ int main(int argc, char **argv) {
             "        --debug - enable debug output\n");
     return FAILURE;
   }
+
+  request_global_raii requst_global;
 
   options_t options = NONE;
   int argi = 1;

@@ -574,6 +574,12 @@ struct http {
   static const uint32_t NETWORK_CONNECT_TIMEOUT_ERROR = 599;
 };
 
+struct request_global_raii {
+  result_t init();
+
+  ~request_global_raii();
+};
+
 /// @brief Perform a URL request.
 ///
 /// @param[in] url The URL to send the request to.
@@ -582,7 +588,7 @@ struct http {
 /// @param[out] body Response data body.
 ///
 /// @return Return SUCCESS or FAILURE
-result_t request(const char *url, const char *key, options_t options,
-                 std::string &body);
+result_t request(const std::string &url, const std::string &key,
+                 options_t options, std::string &body);
 
 #endif

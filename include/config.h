@@ -18,7 +18,7 @@ result_t config_key(int argc, char **argv, options_t options);
 result_t config_url(int argc, char **argv, options_t options);
 }
 
-result_t config_load(config_t *pConfig);
+result_t config_load(config_t &config);
 
 result_t config_save(config_t &config);
 
