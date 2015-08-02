@@ -5,13 +5,23 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
+if(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+  set(REDMINE_PLATFORM_LINUX 1)
+elseif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+  set(REDMINE_PLATFORM_MAC 1)
+elseif(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
+  set(REDMINE_PLATFORM_WINDOWS 1)
+endif()
+
+configure_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/generate/include/redmine_config.h.cmake
+  ${CMAKE_CURRENT_BINARY_DIR}/include/redmine_config.h)
+
 if(UNIX)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
   if(${CMAKE_CXX_COMPILER_ID} MATCHES "Clang")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fcolor-diagnostics")
   endif()
-else()
-  message(FATAL_ERROR "Platform ${CMAKE_SYSTEM_NAME} not supported.")
 endif()
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/external/json)
@@ -26,10 +36,11 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/external/curl)
 set_target_properties(libcurl PROPERTIES COMPILE_FLAGS -w)
 
 include_directories(
+  ${CMAKE_CURRENT_BINARY_DIR}/include
+  ${CMAKE_CURRENT_SOURCE_DIR}/include
   ${CMAKE_CURRENT_SOURCE_DIR}/external/json/include
   ${CMAKE_CURRENT_SOURCE_DIR}/external/curl/include
-  ${CMAKE_CURRENT_BINARY_DIR}/external/curl/include/curl
-  ${CMAKE_CURRENT_SOURCE_DIR}/include)
+  ${CMAKE_CURRENT_BINARY_DIR}/external/curl/include/curl)
 
 add_executable(redmine
   ${CMAKE_CURRENT_SOURCE_DIR}/include/config.h

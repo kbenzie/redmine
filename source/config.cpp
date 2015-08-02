@@ -81,11 +81,19 @@ result_t config_url(int argc, char **argv, options_t options) {
 
 std::string config_path() {
   std::string path(std::getenv("HOME"));
-  return path + "/.redmine.json";
+#if defined(REDMINE_PLATFORM_LINUX) || (REDMINE_PLATFORM_MAC)
+  path += "/.redmine.json";
+#elif defined(REDMINE_PLATFORM_WINDOWS)
+  path += "\\AppData\\Local\\redmine.json";
+#endif
+  return path;
 }
 
 result_t config_load(config_t &out) {
-  std::ifstream file(config_path());
+  std::string path(config_path());
+  std::ifstream file(path);
+  CHECK(!file.is_open(), fprintf(stderr, "could not open: %s\n", path.c_str());
+        return INVALID_CONFIG);
   std::string str((std::istreambuf_iterator<char>(file)),
                   std::istreambuf_iterator<char>());
   json::value value = json::read(str);
@@ -103,10 +111,8 @@ result_t config_load(config_t &out) {
 result_t config_save(config_t &config) {
   std::string path(config_path());
   std::ofstream file(path);
-  if (!file.is_open()) {
-    fprintf(stderr, "could not open: %s\n", path.c_str());
-    return FAILURE;
-  }
+  CHECK(!file.is_open(), fprintf(stderr, "could not open: %s\n", path.c_str());
+        return FAILURE);
   json::value json{json::object{json::pair("url", json::value(config.url)),
                                 json::pair("key", json::value(config.key))}};
   file << json::write(json, "  ");
