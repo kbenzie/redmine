@@ -1,8 +1,8 @@
 #include <config.h>
 #include <issue.h>
+#include <http.h>
 #include <project.h>
 #include <redmine.h>
-#include <request.h>
 
 #include <cstdio>
 #include <cstring>
@@ -21,7 +21,7 @@ int main(int argc, char **argv) {
     return FAILURE;
   }
 
-  request_global_raii requst_global;
+  http::session http;
 
   options_t options = NONE;
   int argi = 1;

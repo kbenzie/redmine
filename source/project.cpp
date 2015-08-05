@@ -1,6 +1,6 @@
 #include <config.h>
+#include <http.h>
 #include <project.h>
-#include <request.h>
 
 #include <json/json.hpp>
 
@@ -42,8 +42,8 @@ result_t project_show(int argc, char **argv, options_t options) {
   std::string id(argv[0]);
 
   std::string body;
-  CHECK_RETURN(request(config.url + std::string("/projects/") + id + ".json",
-                       config.key, options, body));
+  CHECK_RETURN(http::post(config.url + std::string("/projects/") + id + ".json",
+                          config.key, options, body));
 
   json::value root = json::read(body, false);
 
@@ -80,8 +80,7 @@ result_t project_list(int argc, char **argv, options_t options) {
   for (auto &project : projects) {
     printf("%d: %s\n", project.id, project.name.c_str());
     if (project.parent.id) {
-      printf(" '- %d: %s\n", project.parent.id,
-             project.parent.name.c_str());
+      printf(" '- %d: %s\n", project.parent.id, project.parent.name.c_str());
     }
   }
 
@@ -92,8 +91,8 @@ result_t project_list(int argc, char **argv, options_t options) {
 result_t project_list_fetch(config_t &config, options_t options,
                             std::vector<project_t> &out) {
   std::string body;
-  CHECK_RETURN(request(std::string(config.url + "/projects.json").c_str(),
-                       config.key.c_str(), options, body));
+  CHECK_RETURN(http::post(std::string(config.url + "/projects.json").c_str(),
+                          config.key.c_str(), options, body));
 
   auto root = json::read(body, false);
   CHECK(json::TYPE_OBJECT != root.type(),

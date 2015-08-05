@@ -1,12 +1,13 @@
-#ifndef REQUEST_H
-#define REQUEST_H
+#ifndef HTTP_H
+#define HTTP_H
 
 #include <redmine.h>
 
 #include <string>
 
+namespace http {
 /// @brief Set of all HTTP status code values.
-struct http {
+struct status {
   /// @brief Continue informational status code.
   ///
   /// This means that the server has received the request headers, and that the
@@ -574,13 +575,18 @@ struct http {
   static const uint32_t NETWORK_CONNECT_TIMEOUT_ERROR = 599;
 };
 
-struct request_global_raii {
+/// @brief Global HTTP session RAII helper.
+struct session {
+  /// @brief Initialise HTTP session.
+  ///
+  /// @return Any CURL error code, or SUCCESS.
   result_t init();
 
-  ~request_global_raii();
+  /// @brief Clean up global HTTP handler state.
+  ~session();
 };
 
-/// @brief Perform a URL request.
+/// @brief Perform a POST request.
 ///
 /// @param[in] url The URL to send the request to.
 /// @param[in] key The users redmine API key.
@@ -588,7 +594,8 @@ struct request_global_raii {
 /// @param[out] body Response data body.
 ///
 /// @return Return SUCCESS or FAILURE
-result_t request(const std::string &url, const std::string &key,
-                 options_t options, std::string &body);
+result_t post(const std::string &url, const std::string &key, options_t options,
+              std::string &body);
+}
 
 #endif
