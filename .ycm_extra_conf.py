@@ -43,6 +43,7 @@ flags = [
 'c++',
 # Add your project specific flags here
 '-Iinclude',
+'-Ibuild/include',
 ]
 
 
