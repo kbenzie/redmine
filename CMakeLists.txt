@@ -14,8 +14,8 @@ elseif(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
 endif()
 
 configure_file(
-  ${CMAKE_CURRENT_SOURCE_DIR}/generate/include/redmine_config.h.cmake
-  ${CMAKE_CURRENT_BINARY_DIR}/include/redmine_config.h)
+  ${CMAKE_CURRENT_SOURCE_DIR}/generate/include/defines.h.cmake
+  ${CMAKE_CURRENT_BINARY_DIR}/include/defines.h)
 
 if(UNIX)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")

@@ -1,7 +1,7 @@
 #ifndef REDMINE_H
 #define REDMINE_H
 
-#include <redmine_config.h>
+#include <defines.h>
 
 #include <cstddef>
 #include <cstdint>
