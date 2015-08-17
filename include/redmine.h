@@ -5,6 +5,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <cstdlib>
 
 /// @brief Enumeration of all possible result codes.
 enum result_t {

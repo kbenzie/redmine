@@ -44,6 +44,7 @@ flags = [
 # Add your project specific flags here
 '-Iinclude',
 '-Ibuild/include',
+'-Ibuild/external/curl/include/curl',
 ]
 
 

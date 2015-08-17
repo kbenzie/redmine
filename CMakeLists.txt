@@ -11,6 +11,8 @@ elseif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
   set(REDMINE_PLATFORM_MAC 1)
 elseif(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
   set(REDMINE_PLATFORM_WINDOWS 1)
+else()
+  message(FATAL_ERROR "Platform ${CMAKE_SYSTEM_NAME} not supported.")
 endif()
 
 configure_file(
@@ -48,9 +50,11 @@ add_executable(redmine
   ${CMAKE_CURRENT_SOURCE_DIR}/include/http.h
   ${CMAKE_CURRENT_SOURCE_DIR}/include/project.h
   ${CMAKE_CURRENT_SOURCE_DIR}/include/redmine.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/util.h
   ${CMAKE_CURRENT_SOURCE_DIR}/source/config.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/source/issue.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/source/http.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/source/project.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/source/redmine.cpp)
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/redmine.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/util.cpp)
 target_link_libraries(redmine JSON libcurl)

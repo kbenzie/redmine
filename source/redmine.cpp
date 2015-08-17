@@ -22,6 +22,7 @@ int main(int argc, char **argv) {
   }
 
   http::session http;
+  CHECK(http.init(), return FAILURE);
 
   options_t options = NONE;
   int argi = 1;
