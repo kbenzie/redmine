@@ -267,7 +267,7 @@ inline double &value::number() { return CAST(double); }
 inline const double &value::number() const { return CAST(double); }
 template <typename Number>
 Number value::number() {
-  return CAST(Number);
+  return static_cast<Number>(CAST(double));
 }
 inline std::string &value::string() { return CAST(std::string); }
 inline const std::string &value::string() const { return CAST(std::string); }
