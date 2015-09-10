@@ -15,6 +15,10 @@ else()
   message(FATAL_ERROR "Platform ${CMAKE_SYSTEM_NAME} not supported.")
 endif()
 
+if(${CMAKE_BUILD_TYPE} MATCHES "Debug" OR ${CMAKE_BUILD_TYPE} MATCHES "DEBUG")
+  set(REDMINE_DEBUG 1)
+endif()
+
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/generate/include/defines.h.cmake
   ${CMAKE_CURRENT_BINARY_DIR}/include/defines.h)
