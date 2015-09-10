@@ -17,10 +17,14 @@ result_t project(int argc, char **argv, options_t options) {
     fprintf(stderr,
             "usage: redmine project <action> [args]\n"
             "actions:\n"
+            "        list\n"
             "        new <name> <identifier>\n"
-            "        show <id|name>\n"
-            "        list\n");
+            "        show <show>\n");
     return FAILURE;
+  }
+
+  if (!strcmp("list", argv[0])) {
+    return project_list(argc - 1, argv + 1, options);
   }
 
   if (!strcmp("new", argv[0])) {
@@ -31,12 +35,37 @@ result_t project(int argc, char **argv, options_t options) {
     return project_show(argc - 1, argv + 1, options);
   }
 
-  if (!strcmp("list", argv[0])) {
-    return project_list(argc - 1, argv + 1, options);
-  }
-
   fprintf(stderr, "invalid argument: %s\n", argv[0]);
   return INVALID_ARGUMENT;
+}
+
+result_t project_list(int argc, char **argv, options_t options) {
+  CHECK(0 != argc, fprintf(stderr, "invalid argument: %s\n", argv[0]);
+        return INVALID_ARGUMENT);
+
+  // TODO: Support cached project list for command line completion.
+
+  config_t config;
+  CHECK(config_load(config), fprintf(stderr, "invalid config file\n");
+        return INVALID_CONFIG);
+
+  std::vector<project_t> projects;
+  CHECK_RETURN(project_list_fetch(config, options, projects));
+
+  // TODO: Display information about the output of the fields below?
+  printf(
+      "id: identifier: name\n"
+      "--: ----------: ----\n");
+  for (auto &project : projects) {
+    printf("%s: %s: %s\n", project.id.c_str(), project.identifier.c_str(),
+           project.name.c_str());
+    if (!project.parent.id.empty()) {
+      printf(" '- %s: %s: %s\n", project.parent.id.c_str(),
+             project.identifier.c_str(), project.parent.name.c_str());
+    }
+  }
+
+  return SUCCESS;
 }
 
 result_t project_new(int argc, char **argv, options_t options) {
@@ -158,17 +187,6 @@ result_t project_new(int argc, char **argv, options_t options) {
     project.add("inherit_members", inherit_members);
   }
 
-#if 0
-  std::string tracker_ids;
-  std::getline(content, tracker_ids);
-  //"tracker_ids: \n";  // (repeatable element) the tracker id: 1 for Bug, etc.
-
-  std::string enabled_module_names;
-  std::getline(content, enabled_module_names);
-//"enabled_module_names: boards, calendar, documents, files, gantt,
-// issue_tracking, news, repository, time_tracking, wiki\n";
-#endif
-
   std::string data = json::write(json::object("project", project));
 
   CHECK(has<DEBUG>(options), printf("%s\n", data.c_str()));
@@ -177,12 +195,11 @@ result_t project_new(int argc, char **argv, options_t options) {
                               http::status::CREATED, data, body);
   json::value root = json::read(body, false);
   if (error) {
-    CHECK(json::TYPE_OBJECT != root.type(), return FAILURE);
+    CHECK_JSON_TYPE(root, json::TYPE_OBJECT);
     json::value *errors = root.object().get("errors");
-    CHECK(!errors, return FAILURE);
-    CHECK(json::TYPE_ARRAY != errors->type(), return FAILURE);
+    CHECK_JSON_PTR(errors, json::TYPE_ARRAY);
     for (json::value &error : errors->array()) {
-      CHECK(json::TYPE_STRING != error.type(), return FAILURE);
+      CHECK_JSON_TYPE(error, json::TYPE_STRING);
       fprintf(stderr, "error: %s\n", error.string().c_str());
     }
   }
@@ -201,7 +218,7 @@ result_t project_new(int argc, char **argv, options_t options) {
 
     auto id = project->object().get("id");
     CHECK(!id, return FAILURE);
-    printf("id: %d\n", static_cast<int>(id->number()));
+    printf("id: %u\n", static_cast<uint32_t>(id->number()));
 
     auto identifier = project->object().get("identifier");
     CHECK(!identifier, return FAILURE);
@@ -229,7 +246,8 @@ result_t project_new(int argc, char **argv, options_t options) {
 
 result_t project_show(int argc, char **argv, options_t options) {
   CHECK(0 == argc, fprintf(stderr, "missing id or name\n"); return FAILURE);
-  CHECK(1 < argc, fprintf(stderr, "invalid argument: %s\n", argv[1]));
+  CHECK(1 < argc, fprintf(stderr, "invalid argument: %s\n", argv[1]);
+        return FAILURE);
 
   config_t config;
   CHECK(config_load(config), fprintf(stderr, "invalid config file\n");
@@ -248,38 +266,13 @@ result_t project_show(int argc, char **argv, options_t options) {
 
   auto &project = root.object().get("project")->object();
 
-  printf("id: %d\n", static_cast<int>(project.get("id")->number()));
   printf("name: %s\n", project.get("name")->string().c_str());
+  printf("id: %d\n", static_cast<int>(project.get("id")->number()));
   printf("description: %s\n", project.get("description")->string().c_str());
-
-  if (has<VERBOSE>(options)) {
-    printf("identifier: %s\n", project.get("identifier")->string().c_str());
-    printf("homepage: %s\n", project.get("homepage")->string().c_str());
-    printf("created_on: %s\n", project.get("created_on")->string().c_str());
-    printf("updated_on: %s\n", project.get("updated_on")->string().c_str());
-    printf("status: %d\n", static_cast<int>(project.get("status")->number()));
-  }
-
-  return SUCCESS;
-}
-
-result_t project_list(int argc, char **argv, options_t options) {
-  CHECK(0 != argc, fprintf(stderr, "invalid argument: %s\n", argv[0]);
-        return INVALID_ARGUMENT);
-
-  config_t config;
-  CHECK(config_load(config), fprintf(stderr, "invalid config file\n");
-        return INVALID_CONFIG);
-
-  std::vector<project_t> projects;
-  CHECK_RETURN(project_list_fetch(config, options, projects));
-
-  for (auto &project : projects) {
-    printf("%d: %s\n", project.id, project.name.c_str());
-    if (project.parent.id) {
-      printf(" '- %d: %s\n", project.parent.id, project.parent.name.c_str());
-    }
-  }
+  printf("identifier: %s\n", project.get("identifier")->string().c_str());
+  printf("homepage: %s\n", project.get("homepage")->string().c_str());
+  printf("created_on: %s\n", project.get("created_on")->string().c_str());
+  printf("updated_on: %s\n", project.get("updated_on")->string().c_str());
 
   return SUCCESS;
 }
@@ -291,98 +284,56 @@ result_t project_list_fetch(config_t &config, options_t options,
   CHECK_RETURN(http::get("/projects.json", config, options, body));
 
   auto root = json::read(body, false);
-  CHECK(json::TYPE_OBJECT != root.type(),
-        fprintf(stderr, "invalid json data: %s\n", body.c_str());
-        return FAILURE);
+  CHECK_JSON_TYPE(root, json::TYPE_OBJECT);
 
   CHECK(has<DEBUG>(options), printf("%s\n", json::write(root, "  ").c_str()));
 
   auto projects = root.object().get("projects");
-  CHECK(!projects,
-        fprintf(stderr, "invalid json data: projects array not found\n");
-        CHECK(has<VERBOSE>(options),
-              fprintf(stderr, "%s\n", json::write(body, "  ").c_str()));
-        return FAILURE);
-  CHECK(json::TYPE_ARRAY != projects->type(),
-        fprintf(stderr, "invalid json data: projects to an array\n");
-        CHECK(has<VERBOSE>(options),
-              fprintf(stderr, "%s\n", json::write(body, "  ").c_str()));
-        return FAILURE);
+  CHECK_JSON_PTR(projects, json::TYPE_ARRAY);
 
   for (auto project : projects->array()) {
-    CHECK(json::TYPE_OBJECT != project.type(),
-          fprintf(stderr, "invalid json data: project is not an object\n");
-          CHECK(has<VERBOSE>(options),
-                fprintf(stderr, "%s\n", json::write(root, "  ").c_str()));
-          return FAILURE);
+    CHECK_JSON_TYPE(project, json::TYPE_OBJECT);
 
-#define CHECK_PROJECT_PARAM(PARAM, TYPE)                                       \
-  json::value *PARAM = project.object().get(#PARAM);                           \
-  CHECK(!PARAM,                                                                \
-        fprintf(stderr, "invalid json data: project %s not found\n", #PARAM);  \
-        CHECK(has<VERBOSE>(options),                                           \
-              fprintf(stderr, "%s\n", json::write(root, "  ").c_str()));       \
-        return FAILURE);                                                       \
-  CHECK(TYPE != PARAM->type(),                                                 \
-        fprintf(stderr, "invalid json data: project %s is not a %s\n", #PARAM, \
-                #TYPE);                                                        \
-        CHECK(has<VERBOSE>(options),                                           \
-              fprintf(stderr, "%s\n", json::write(root, "  ").c_str()));       \
-        return FAILURE)
+    project_t P;
 
-    CHECK_PROJECT_PARAM(name, json::TYPE_STRING);
-    CHECK_PROJECT_PARAM(id, json::TYPE_NUMBER);
-    CHECK_PROJECT_PARAM(identifier, json::TYPE_STRING);
-    CHECK_PROJECT_PARAM(description, json::TYPE_STRING);
-    CHECK_PROJECT_PARAM(created_on, json::TYPE_STRING);
-    CHECK_PROJECT_PARAM(updated_on, json::TYPE_STRING);
-    CHECK_PROJECT_PARAM(status, json::TYPE_NUMBER);
+    auto name = project.object().get("name");
+    CHECK_JSON_PTR(name, json::TYPE_STRING);
+    P.name = name->string();
 
-#undef CHECK_PROJECT_PARAM
+    auto id = project.object().get("id");
+    CHECK_JSON_PTR(id, json::TYPE_NUMBER);
+    P.id = std::to_string(id->number<uint32_t>());
 
-    json::value *parent = project.object().get("parent");
-    std::string parent_name;
-    int parent_id = 0;
+    auto identifier = project.object().get("identifier");
+    CHECK_JSON_PTR(identifier, json::TYPE_STRING);
+    P.identifier = identifier->string();
+
+    auto description = project.object().get("description");
+    CHECK_JSON_PTR(description, json::TYPE_STRING);
+    P.description = description->string();
+
+    auto created_on = project.object().get("created_on");
+    CHECK_JSON_PTR(created_on, json::TYPE_STRING);
+    P.created_on = created_on->string();
+
+    auto updated_on = project.object().get("updated_on");
+    CHECK_JSON_PTR(updated_on, json::TYPE_STRING);
+    P.updated_on = updated_on->string();
+
+    auto parent = project.object().get("parent");
     if (parent) {
-      CHECK(json::TYPE_OBJECT != parent->type(),
-            fprintf(stderr,
-                    "invalid json data: project parent is not an object\n");
-            CHECK(has<VERBOSE>(options),
-                  fprintf(stderr, "%s\n", json::write(root, "  ").c_str()));
-            return FAILURE);
+      CHECK_JSON_TYPE((*parent), json::TYPE_OBJECT);
 
-#define CHECK_PARENT_PARAM(PARAM, TYPE)                                       \
-  json::value *PARAM = parent->object().get(#PARAM);                          \
-  CHECK(!PARAM,                                                               \
-        fprintf(stderr, "invalid json data: project parent %s not found\n",   \
-                #PARAM);                                                      \
-        CHECK(has<VERBOSE>(options),                                          \
-              fprintf(stderr, "%s\n", json::write(root, "  ").c_str()));      \
-        return FAILURE);                                                      \
-  CHECK(TYPE != PARAM->type(),                                                \
-        fprintf(stderr, "invalid json data: project parent %s is not a %s\n", \
-                #PARAM, #TYPE);                                               \
-        CHECK(has<VERBOSE>(options),                                          \
-              fprintf(stderr, "%s\n", json::write(root, "  ").c_str()));      \
-        return FAILURE)
+      auto name = parent->object().get("name");
+      CHECK_JSON_PTR(name, json::TYPE_STRING);
+      P.parent.name = name->string();
 
-      CHECK_PARENT_PARAM(name, json::TYPE_STRING);
-      CHECK_PARENT_PARAM(id, json::TYPE_NUMBER);
-
-      parent_name = name->string();
-      parent_id = static_cast<int>(id->number());
-
-#undef CHECK_PARENT_PARAM
+      auto id = parent->object().get("id");
+      CHECK_JSON_PTR(id, json::TYPE_NUMBER);
+      P.parent.id = id->string();
     }
 
-    out.push_back({name->string(),
-                   static_cast<int>(id->number()),
-                   identifier->string(),
-                   created_on->string(),
-                   updated_on->string(),
-                   description->string(),
-                   static_cast<int>(status->number()),
-                   {parent_name.c_str(), parent_id}});
+    out.push_back(P);
   }
 
   return SUCCESS;

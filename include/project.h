@@ -9,26 +9,22 @@
 
 struct project_t {
   std::string name;
-  int id;
+  std::string id;
   std::string identifier;
   std::string description;
   std::string created_on;  // TODO: Convert to date type
   std::string updated_on;  // TODO: Convert to date type
-  int status;
-  struct {
-    std::string name;
-    int id;
-  } parent;
+  reference_t parent;
 };
 
 namespace action {
 result_t project(int argc, char **argv, options_t options);
 
+result_t project_list(int argc, char **argv, options_t options);
+
 result_t project_new(int argc, char **argv, options_t options);
 
 result_t project_show(int argc, char **argv, options_t options);
-
-result_t project_list(int argc, char **argv, options_t options);
 }
 
 result_t project_list_fetch(config_t &config, options_t options,

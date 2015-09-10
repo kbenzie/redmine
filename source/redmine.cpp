@@ -67,3 +67,22 @@ int main(int argc, char **argv) {
   fprintf(stderr, "invalid argument: %s\n", argv[1]);
   return INVALID_ARGUMENT;
 }
+
+#ifdef REDMINE_DEBUG
+const char *result_string(result_t result) {
+  switch (result) {
+    case SUCCESS:
+      return "success";
+    case FAILURE:
+      return "failure";
+    case UNSUPPORTED:
+      return "unsupported";
+    case ACTION_REQUIRED:
+      return "action required";
+    case INVALID_ARGUMENT:
+      return "invalid argument";
+    case INVALID_CONFIG:
+      return "invalid config";
+  }
+}
+#endif

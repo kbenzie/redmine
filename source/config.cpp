@@ -155,7 +155,7 @@ result_t config_load(config_t &out) {
   }
   if (auto port = config.get("port")) {
     CHECK(json::TYPE_NUMBER != port->type(), return INVALID_CONFIG);
-    out.port = static_cast<uint32_t>(port->number());
+    out.port = port->number<uint32_t>();
   }
   if (auto use_ssl = config.get("use_ssl")) {
     CHECK(json::TYPE_BOOL != use_ssl->type(), return INVALID_CONFIG);
