@@ -55,7 +55,8 @@ result_t issue_list(int argc, char **argv, options_t options) {
   if (1 == argc) {
     std::string project_id;
     for (auto &project : projects) {
-      if (project.name == argv[0] || project.id == argv[0] ||
+      uint32_t id = std::strtoul(argv[0], nullptr, 0);
+      if (project.name == argv[0] || project.id == id ||
           project.identifier == argv[0]) {
         project_id = project.id;
         break;
@@ -88,7 +89,32 @@ result_t issue_list(int argc, char **argv, options_t options) {
 
 result_t issue_new(int argc, char **argv, options_t options) {
   fprintf(stderr, "unsupported: issue new\n");
+#if 0
+project_id
+tracker_id
+status_id
+priority_id
+subject
+description
+category_id
+fixed_version_id
+assigned_to_id
+parent_issue_id
+custom_fields
+watcher_user_ids
+is_private
+estimated_hours
+#endif
   return UNSUPPORTED;
+}
+
+void replace_all(std::string &str, const std::string &old_str,
+                 const std::string &new_str) {
+  size_t pos = 0;
+  while ((pos = str.find(old_str, pos)) != std::string::npos) {
+    str.replace(pos, old_str.length(), new_str);
+    pos += new_str.length();
+  }
 }
 
 result_t issue_show(int argc, char **argv, options_t options) {
@@ -117,7 +143,31 @@ result_t issue_show(int argc, char **argv, options_t options) {
   issue_t I;
   CHECK_RETURN(issue_deserialize(issue->object(), I));
 
-  issue_print(I);
+  printf("%s: %s\n", I.id.c_str(), I.subject.c_str());
+  printf("%s %s ", I.status.name.c_str(), I.tracker.name.c_str());
+  printf("(%u %%) | ", I.done_ratio);
+  printf("%s | ", I.priority.name.c_str());
+  printf("%s (%u)\n", I.project.name.c_str(), I.project.id);
+  printf("started: %s | ", I.start_date.c_str());
+  if (!I.due_date.empty()) {
+    printf("due: %s | ", I.due_date.c_str());
+  }
+  printf("created: %s | ", I.created_on.c_str());
+  printf("updated: %s\n", I.updated_on.c_str());
+  if (I.estimated_hours) {
+    printf("estimated_hours: %u\n", I.estimated_hours);
+  }
+  printf("author: %s (%u) | ", I.author.name.c_str(),
+         I.author.id);
+  printf("assigned: %s (%u)\n", I.author.name.c_str(),
+         I.author.id);
+  if (!I.category.name.empty()) {
+    printf("category: id: %u: name: %s\n", I.category.id,
+           I.category.name.c_str());
+  }
+  std::string description = I.description;
+  replace_all(description, "\\r\\n", "\n");
+  printf("----------------\n%s\n", description.c_str());
 
   return SUCCESS;
 }
@@ -126,43 +176,6 @@ result_t issue_edit(int argc, char **argv, options_t options) {
   fprintf(stderr, "unsupported: issue edit\n");
   return UNSUPPORTED;
 }
-}
-
-void replace_all(std::string &str, const std::string &old_str,
-                 const std::string &new_str) {
-  size_t pos = 0;
-  while ((pos = str.find(old_str, pos)) != std::string::npos) {
-    str.replace(pos, old_str.length(), new_str);
-    pos += new_str.length();
-  }
-}
-
-void issue_print(const issue_t &issue) {
-  printf("%s: %s\n", issue.id.c_str(), issue.subject.c_str());
-  printf("%s %s ", issue.status.name.c_str(), issue.tracker.name.c_str());
-  printf("(%u %%) | ", issue.done_ratio);
-  printf("%s | ", issue.priority.name.c_str());
-  printf("%s (%s)\n", issue.project.name.c_str(), issue.project.id.c_str());
-  printf("started: %s | ", issue.start_date.c_str());
-  if (!issue.due_date.empty()) {
-    printf("due: %s | ", issue.due_date.c_str());
-  }
-  printf("created: %s | ", issue.created_on.c_str());
-  printf("updated: %s\n", issue.updated_on.c_str());
-  if (issue.estimated_hours) {
-    printf("estimated_hours: %u\n", issue.estimated_hours);
-  }
-  printf("author: %s (%s) | ", issue.author.name.c_str(),
-         issue.author.id.c_str());
-  printf("assigned: %s (%s)\n", issue.author.name.c_str(),
-         issue.author.id.c_str());
-  if (!issue.category.name.empty()) {
-    printf("category: id: %s: name: %s\n", issue.category.id.c_str(),
-           issue.category.name.c_str());
-  }
-  std::string description = issue.description;
-  replace_all(description, "\\r\\n", "\n");
-  printf("----------------\n%s\n", description.c_str());
 }
 
 result_t issue_serialize(const issue_t &issue, json::object &out) {
@@ -219,7 +232,7 @@ result_t issue_deserialize(const json::object &issue, issue_t &out) {
 
     auto id = object.get("id");
     CHECK_JSON_PTR(id, json::TYPE_NUMBER);
-    reference.id = std::to_string(id->number<uint32_t>());
+    reference.id = id->number<uint32_t>();
 
     return SUCCESS;
   };

@@ -3,6 +3,7 @@
 #include <http.h>
 #include <project.h>
 #include <redmine.h>
+#include <user.h>
 
 #include <cstdio>
 #include <cstring>
@@ -15,9 +16,11 @@ int main(int argc, char **argv) {
             "        config\n"
             "        project\n"
             "        issue\n"
+            "        user\n"
             "options:\n"
-            "        -V - verbose output\n"
-            "        --debug - enable debug output\n");
+            "        --verbose - verbose output\n"
+            "        --debug - enable debug output\n"
+            "        --debug-http - enable http debug output\n");
     return FAILURE;
   }
 
@@ -27,7 +30,7 @@ int main(int argc, char **argv) {
   options_t options = NONE;
   int argi = 1;
   for (; argi < argc; ++argi) {
-    if (!strcmp("-V", argv[argi])) {
+    if (!strcmp("--verbose", argv[argi])) {
       options |= VERBOSE;
       CHECK(argc - 1 == argi, fprintf(stderr, "action required\n");
             return ACTION_REQUIRED);
@@ -61,6 +64,11 @@ int main(int argc, char **argv) {
     if (!strcmp("issue", argv[argi])) {
       ++argi;
       return action::issue(argc - argi, argv + argi, options);
+    }
+
+    if (!strcmp("user", argv[argi])) {
+      ++argi;
+      return action::user(argc - argi, argv + argi, options);
     }
   }
 

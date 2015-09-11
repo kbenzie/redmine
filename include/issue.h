@@ -61,8 +61,6 @@ result_t issue_show(int argc, char **argv, options_t options);
 result_t issue_edit(int argc, char **argv, options_t options);
 }
 
-void issue_print(const issue_t &issue);
-
 result_t issue_serialize(const issue_t &issue, json::object &out);
 
 result_t issue_deserialize(const json::object &issue, issue_t &out);

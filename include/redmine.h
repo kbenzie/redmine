@@ -32,7 +32,7 @@ struct reference_t {
   /// @brief Human readable name of the referenced item.
   std::string name;
   /// @brief The items unique ID number.
-  std::string id;
+  uint32_t id;
 };
 
 /// @brief An options_t is a bitfield of option_t values.
@@ -101,10 +101,10 @@ const char *result_string(result_t result);
 /// @param TYPE Enumberation of json type.
 ///
 /// @return FAILURE if check is true.
-#define CHECK_JSON_TYPE(REFERENCE, TYPE) \
-  if (TYPE != REFERENCE.type()) {        \
-    return FAILURE;
-}
+#define CHECK_JSON_TYPE(REFERENCE, TYPE)                                      \
+  if (TYPE != REFERENCE.type()) {                                             \
+    return FAILURE;                                                           \
+  }
 #else
 #define CHECK_JSON_TYPE(REFERENCE, TYPE)                                      \
   if (TYPE != REFERENCE.type()) {                                             \
@@ -120,11 +120,11 @@ const char *result_string(result_t result);
 /// @param TYPE Enumberation of json type.
 ///
 /// @return FAILURE if check is true.
-#define CHECK_JSON_PTR(POINTER, TYPE) \
-  if (!POINTER) {                     \
-    return FAILURE;                   \
-  }                                   \
-  CHECK_JSON_TYPE(*POINTER, TYPE)
+#define CHECK_JSON_PTR(POINTER, TYPE)                              \
+  if (!POINTER) {                                                  \
+    return FAILURE;                                                \
+  }                                                                \
+  CHECK_JSON_TYPE((*POINTER), TYPE)
 #else
 #define CHECK_JSON_PTR(POINTER, TYPE)                              \
   if (!POINTER) {                                                  \

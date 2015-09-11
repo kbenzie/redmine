@@ -54,11 +54,13 @@ add_executable(redmine
   ${CMAKE_CURRENT_SOURCE_DIR}/include/http.h
   ${CMAKE_CURRENT_SOURCE_DIR}/include/project.h
   ${CMAKE_CURRENT_SOURCE_DIR}/include/redmine.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/user.h
   ${CMAKE_CURRENT_SOURCE_DIR}/include/util.h
   ${CMAKE_CURRENT_SOURCE_DIR}/source/config.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/source/issue.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/source/http.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/source/project.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/source/redmine.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/user.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/source/util.cpp)
 target_link_libraries(redmine JSON libcurl)

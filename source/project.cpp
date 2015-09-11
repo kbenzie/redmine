@@ -54,15 +54,15 @@ result_t project_list(int argc, char **argv, options_t options) {
 
   // TODO: Display information about the output of the fields below?
   printf(
-      "id: identifier: name\n"
-      "--: ----------: ----\n");
+      "  id | identifier                        | name\n"
+      "-----|-----------------------------------|------------------------------"
+      "--------\n");
   for (auto &project : projects) {
-    printf("%s: %s: %s\n", project.id.c_str(), project.identifier.c_str(),
-           project.name.c_str());
-    if (!project.parent.id.empty()) {
-      printf(" '- %s: %s: %s\n", project.parent.id.c_str(),
-             project.identifier.c_str(), project.parent.name.c_str());
-    }
+    int32_t numSpaces = 34 - project.identifier.size();
+    std::vector<char> spaces((0 > numSpaces) ? 0 : numSpaces, ' ');
+    spaces.back() = '\0';
+    printf("%4u | %s%s | %s\n", project.id, project.identifier.c_str(),
+           spaces.data(), project.name.c_str());
   }
 
   return SUCCESS;
@@ -261,21 +261,69 @@ result_t project_show(int argc, char **argv, options_t options) {
                          options, body));
 
   json::value root = json::read(body, false);
-
   CHECK(has<DEBUG>(options), printf("%s\n", json::write(root, "  ").c_str()));
 
   auto &project = root.object().get("project")->object();
+  project_t P;
+  CHECK_RETURN(project_deserialize(project, P));
 
-  printf("name: %s\n", project.get("name")->string().c_str());
-  printf("id: %d\n", static_cast<int>(project.get("id")->number()));
-  printf("description: %s\n", project.get("description")->string().c_str());
-  printf("identifier: %s\n", project.get("identifier")->string().c_str());
-  printf("homepage: %s\n", project.get("homepage")->string().c_str());
-  printf("created_on: %s\n", project.get("created_on")->string().c_str());
-  printf("updated_on: %s\n", project.get("updated_on")->string().c_str());
+  printf("       name: %s\n", P.name.c_str());
+  printf("         id: %u\n", P.id);
+  printf(" identifier: %s\n", P.identifier.c_str());
+  printf("description: %s\n", P.description.c_str());
+  if (!P.homepage.empty()) {
+    printf("   homepage: %s\n", P.homepage.c_str());
+  }
+  printf(" created_on: %s\n", P.created_on.c_str());
+  printf(" updated_on: %s\n", P.updated_on.c_str());
+  if (!P.parent.name.empty()) {
+    printf("parent name: %s\n", P.parent.name.c_str());
+    printf("  parent id: %u\n", P.parent.id);
+  }
 
   return SUCCESS;
 }
+}
+
+result_t project_deserialize(const json::object &project, project_t &out) {
+  auto name = project.get("name");
+  CHECK_JSON_PTR(name, json::TYPE_STRING);
+  out.name = name->string();
+
+  auto id = project.get("id");
+  CHECK_JSON_PTR(id, json::TYPE_NUMBER);
+  out.id = id->number<uint32_t>();
+
+  auto identifier = project.get("identifier");
+  CHECK_JSON_PTR(identifier, json::TYPE_STRING);
+  out.identifier = identifier->string();
+
+  auto description = project.get("description");
+  CHECK_JSON_PTR(description, json::TYPE_STRING);
+  out.description = description->string();
+
+  auto created_on = project.get("created_on");
+  CHECK_JSON_PTR(created_on, json::TYPE_STRING);
+  out.created_on = created_on->string();
+
+  auto updated_on = project.get("updated_on");
+  CHECK_JSON_PTR(updated_on, json::TYPE_STRING);
+  out.updated_on = updated_on->string();
+
+  auto parent = project.get("parent");
+  if (parent) {
+    CHECK_JSON_TYPE((*parent), json::TYPE_OBJECT);
+
+    auto name = parent->object().get("name");
+    CHECK_JSON_PTR(name, json::TYPE_STRING);
+    out.parent.name = name->string();
+
+    auto id = parent->object().get("id");
+    CHECK_JSON_PTR(id, json::TYPE_NUMBER);
+    out.parent.id = id->number<uint32_t>();
+  }
+
+  return SUCCESS;
 }
 
 result_t project_list_fetch(config_t &config, options_t options,
@@ -295,43 +343,7 @@ result_t project_list_fetch(config_t &config, options_t options,
     CHECK_JSON_TYPE(project, json::TYPE_OBJECT);
 
     project_t P;
-
-    auto name = project.object().get("name");
-    CHECK_JSON_PTR(name, json::TYPE_STRING);
-    P.name = name->string();
-
-    auto id = project.object().get("id");
-    CHECK_JSON_PTR(id, json::TYPE_NUMBER);
-    P.id = std::to_string(id->number<uint32_t>());
-
-    auto identifier = project.object().get("identifier");
-    CHECK_JSON_PTR(identifier, json::TYPE_STRING);
-    P.identifier = identifier->string();
-
-    auto description = project.object().get("description");
-    CHECK_JSON_PTR(description, json::TYPE_STRING);
-    P.description = description->string();
-
-    auto created_on = project.object().get("created_on");
-    CHECK_JSON_PTR(created_on, json::TYPE_STRING);
-    P.created_on = created_on->string();
-
-    auto updated_on = project.object().get("updated_on");
-    CHECK_JSON_PTR(updated_on, json::TYPE_STRING);
-    P.updated_on = updated_on->string();
-
-    auto parent = project.object().get("parent");
-    if (parent) {
-      CHECK_JSON_TYPE((*parent), json::TYPE_OBJECT);
-
-      auto name = parent->object().get("name");
-      CHECK_JSON_PTR(name, json::TYPE_STRING);
-      P.parent.name = name->string();
-
-      auto id = parent->object().get("id");
-      CHECK_JSON_PTR(id, json::TYPE_NUMBER);
-      P.parent.id = id->string();
-    }
+    CHECK_RETURN(project_deserialize(project.object(), P));
 
     out.push_back(P);
   }
