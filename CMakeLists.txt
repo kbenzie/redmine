@@ -50,6 +50,7 @@ include_directories(
 
 add_executable(redmine
   ${CMAKE_CURRENT_SOURCE_DIR}/include/config.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/enumerations.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/include/issue.h
   ${CMAKE_CURRENT_SOURCE_DIR}/include/http.h
   ${CMAKE_CURRENT_SOURCE_DIR}/include/project.h
@@ -58,6 +59,7 @@ add_executable(redmine
   ${CMAKE_CURRENT_SOURCE_DIR}/include/query.h
   ${CMAKE_CURRENT_SOURCE_DIR}/include/util.h
   ${CMAKE_CURRENT_SOURCE_DIR}/source/config.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/enumerations.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/source/issue.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/source/http.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/source/project.cpp

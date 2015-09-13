@@ -81,9 +81,6 @@ result_t issues(std::string &filter, config_t &config, options_t options,
 
 result_t issue_statuses(config_t &config, options_t options,
                         std::vector<issue_status_t> &statuses);
-
-result_t issue_priorities(config_t &config, options_t options,
-                          std::vector<enumeration_t> &priorities);
 }
 
 #endif

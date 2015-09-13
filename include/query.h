@@ -14,13 +14,6 @@ struct enumeration_t {
 namespace query {
 result_t trackers(config_t &config, options_t options,
                   std::vector<reference_t> &trackers);
-
-result_t enumerations(const std::string &enum_name, config_t &config,
-                      options_t options, std::vector<enumeration_t> &enums);
-
-result_t time_entry_activities(
-    config_t &config, options_t options,
-    std::vector<enumeration_t> &time_entry_activities);
 }
 
 #endif  // REDMINE_QUERY_H

@@ -10,36 +10,6 @@
 #include <cstdlib>
 #include <string>
 
-/// @brief Enumeration of all possible result codes.
-enum result_t {
-  SUCCESS,
-  FAILURE,
-  UNSUPPORTED,
-  ACTION_REQUIRED,
-  INVALID_ARGUMENT,
-  INVALID_CONFIG,
-};
-
-/// @brief Enumeration of all possible options.
-enum option_t {
-  NONE,
-  VERBOSE,
-  DEBUG,
-  DEBUG_HTTP,
-};
-
-/// @brief Common pattern used to reference a redmine projcet, issue, and other
-/// items.
-struct reference_t {
-  /// @brief Human readable name of the referenced item.
-  std::string name;
-  /// @brief The items unique ID number.
-  uint32_t id;
-};
-
-/// @brief An options_t is a bitfield of option_t values.
-typedef uint32_t options_t;
-
 #ifndef NDEBUG
 /// @brief Force abort and display message when condition is true.
 ///
@@ -98,11 +68,10 @@ typedef uint32_t options_t;
     return result;                      \
   }
 #else
-const char *result_string(result_t result);
 #define CHECK_RETURN(EXPRESSION)                        \
   if (result_t result = (EXPRESSION)) {                 \
     fprintf(stderr, "%s: %d: %s\n", __FILE__, __LINE__, \
-            result_string(result));                     \
+            resdmine::result_string(result));           \
     return result;                                      \
   }
 #endif
@@ -147,16 +116,56 @@ const char *result_string(result_t result);
   CHECK_JSON_TYPE((*POINTER), TYPE)
 #endif
 
+namespace redmine {
+/// @brief Enumeration of all possible result codes.
+enum result {
+  SUCCESS,
+  FAILURE,
+  UNSUPPORTED,
+  ACTION_REQUIRED,
+  INVALID_ARGUMENT,
+  INVALID_CONFIG,
+};
+
+/// @brief Enumeration of all possible options.
+enum option {
+  NONE,
+  VERBOSE,
+  DEBUG,
+  DEBUG_HTTP,
+};
+
+/// @brief Common pattern used to reference a redmine projcet, issue, and other
+/// items.
+struct reference {
+  /// @brief Human readable name of the referenced item.
+  std::string name;
+  /// @brief The items unique ID number.
+  uint32_t id;
+};
+
+/// @brief An options_t is a bitfield of option_t values.
+typedef uint32_t options;
+
 /// @brief Check if an option is enabled.
 ///
 /// @tparam option Desired option to check for.
 /// @param options Bitfield of enabled options.
 ///
 /// @return true if enabled, false otherwise.
-template <option_t option>
-bool has(options_t options) {
+template <redmine::option option>
+bool has(redmine::options options) {
   return option == (option & options);
 }
+
+#ifdef REDMINE_DEBUG
+/// @brief Return human readable result string, only enbaled in debug builds.
+///
+/// @param result The result.
+///
+/// @return The result string.
+const char *result_string(redmine::result result);
+#endif
 
 /// @brief Read a json object consisting of name and id members.
 ///
@@ -164,6 +173,7 @@ bool has(options_t options) {
 /// @param out The reference_t struct.
 ///
 /// @return SUCCESS on succes, FAILURE otherwise.
-result_t reference_deserialize(const json::object &ref, reference_t &out);
+result reference_deserialize(const json::object &ref, reference &out);
+}
 
 #endif

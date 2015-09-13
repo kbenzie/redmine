@@ -15,6 +15,10 @@ struct config_t {
   bool verify_ssl;
 };
 
+namespace redmine {
+typedef config_t config;
+}
+
 namespace action {
 result_t config(int argc, char **argv, options_t options);
 result_t config_url(int argc, char **argv, options_t options);

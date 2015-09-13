@@ -1,3 +1,4 @@
+#include <enumerations.hpp>
 #include <http.h>
 #include <issue.h>
 #include <project.h>
@@ -129,8 +130,8 @@ result_t issue_new(int argc, char **argv, options_t options) {
   }
 #endif
 
-  std::vector<enumeration_t> priorities;
-  CHECK_RETURN(query::issue_priorities(config, options, priorities));
+  std::vector<redmine::enumeration> priorities;
+  CHECK_RETURN(redmine::query::issue_priorities(config, options, priorities));
 
 #if 0
   for (auto &priority : priorities) {
@@ -376,9 +377,4 @@ result_t query::issue_statuses(config_t &config, options_t options,
   }
 
   return SUCCESS;
-}
-
-result_t query::issue_priorities(config_t &config, options_t options,
-                                 std::vector<enumeration_t> &priorities) {
-  return query::enumerations("issue_priorities", config, options, priorities);
 }
