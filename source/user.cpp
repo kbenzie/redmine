@@ -35,7 +35,7 @@ result_t user_list(int argc, char **argv, options_t options) {
         return INVALID_CONFIG);
 
   std::vector<user_t> users;
-  CHECK_RETURN(user_list_fetch(config, options, users));
+  CHECK_RETURN(query::users(config, options, users));
 
   printf(
       "  id | name\n"
@@ -130,8 +130,8 @@ result_t user_deserialize(const json::object &user, user_t &out) {
   return SUCCESS;
 }
 
-result_t user_list_fetch(config_t &config, options_t options,
-                         std::vector<user_t> &out) {
+result_t query::users(config_t &config, options_t options,
+                      std::vector<user_t> &out) {
   std::string body;
   CHECK_RETURN(http::get("/users.json", config, options, body));
 

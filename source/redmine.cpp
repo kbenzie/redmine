@@ -94,3 +94,16 @@ const char *result_string(result_t result) {
   }
 }
 #endif
+
+result_t reference_deserialize(const json::object &ref, reference_t &out) {
+  auto name = ref.get("name");
+  CHECK_JSON_PTR(name, json::TYPE_STRING);
+
+  auto id = ref.get("id");
+  CHECK_JSON_PTR(id, json::TYPE_NUMBER);
+
+  out.name = name->string();
+  out.id = id->number<uint32_t>();
+
+  return SUCCESS;
+}

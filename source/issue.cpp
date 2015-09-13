@@ -1,6 +1,7 @@
 #include <http.h>
 #include <issue.h>
 #include <project.h>
+#include <query.h>
 
 #include <json/json.hpp>
 
@@ -49,63 +50,105 @@ result_t issue_list(int argc, char **argv, options_t options) {
         return INVALID_CONFIG);
 
   std::vector<project_t> projects;
-  CHECK_RETURN(project_list_fetch(config, options, projects));
+  CHECK_RETURN(query::projects(config, options, projects));
 
   std::string filter;
   if (1 == argc) {
     std::string project_id;
-    for (auto &project : projects) {
-      uint32_t id = std::strtoul(argv[0], nullptr, 0);
-      if (project.name == argv[0] || project.id == id ||
-          project.identifier == argv[0]) {
-        project_id = project.id;
-        break;
-      }
-    }
+    project_t *project = project::find(projects, argv[0]);
 
-    CHECK(project_id.empty(),
-          fprintf(stderr, "invalid argument: %s\n", argv[0]);
+    CHECK(!project,
+          fprintf(stderr, "invalid project id or identifier: %s\n", argv[0]);
           return FAILURE);
 
-    filter = "?project_id=" + project_id;
+    filter = "?project_id=" + std::to_string(project->id);
 
     // TODO: Support listing all issues for a project
+
+    std::vector<char> spaces(
+        ((80 - project->name.size()) / 2) - project->name.size() / 2, ' ');
+    spaces.back() = '\0';
+    printf("%s%s issues\n", spaces.data(), project->name.c_str());
   }
 
   // TODO: Support listing other users issues
 
   std::vector<issue_t> issues;
-  CHECK_RETURN(issue_list_fetch(filter, config, options, issues));
+  CHECK_RETURN(query::issues(filter, config, options, issues));
 
   printf(
-      "id: subject\n"
-      "--: -------\n");
+      "    id | subject\n"
+      "-------|----------------------------------------------------------------"
+      "-------\n");
   for (auto &issue : issues) {
-    printf("%s: %s\n", issue.id.c_str(), issue.subject.c_str());
+    printf("%6s | %s\n", issue.id.c_str(), issue.subject.c_str());
   }
 
   return SUCCESS;
 }
 
 result_t issue_new(int argc, char **argv, options_t options) {
-  fprintf(stderr, "unsupported: issue new\n");
+  CHECK_MSG(0 == argc, "missing project id or identifier", return FAILURE);
+
+  config_t config;
+  CHECK(config_load(config), fprintf(stderr, "invalid config file\n");
+        return INVALID_CONFIG);
+
+  std::vector<project_t> projects;
+  CHECK_RETURN(query::projects(config, options, projects));
+
+  project_t *project = project::find(projects, argv[0]);
+  CHECK(!project, fprintf(stderr, "invalid project: %s\n", argv[0]);
+        return FAILURE);
+
+  std::string subject;
+  if (1 < argc) {
+    CHECK(std::strcmp("-m", argv[1]),
+          fprintf(stderr, "invliad option: %s\n", argv[1]);
+          return FAILURE);
+    CHECK(3 != argc, fprintf(stderr, "invalid argument: %s\n", argv[argc - 1]);
+          return FAILURE);
+    subject = argv[2];
+  }
+
+  std::vector<reference_t> trackers;
+  CHECK_RETURN(query::trackers(config, options, trackers));
+
 #if 0
-project_id
-tracker_id
-status_id
-priority_id
-subject
-description
-category_id
-fixed_version_id
-assigned_to_id
-parent_issue_id
-custom_fields
-watcher_user_ids
-is_private
-estimated_hours
+  for (auto &tracker : trackers) {
+    printf("%s\n", tracker.name.c_str());
+  }
 #endif
-  return UNSUPPORTED;
+
+  std::vector<issue_status_t> statuses;
+  CHECK_RETURN(query::issue_statuses(config, options, statuses));
+
+#if 0
+  for (auto &status : statuses) {
+    printf("%s\n", status.name.c_str());
+  }
+#endif
+
+  std::vector<enumeration_t> priorities;
+  CHECK_RETURN(query::issue_priorities(config, options, priorities));
+
+#if 0
+  for (auto &priority : priorities) {
+    printf("%s\n", priority.name.c_str());
+  }
+#endif
+
+  static const char *fields[] = {
+      "tracker_id",       "status_id",      "priority_id",     "category_id",
+      "fixed_version_id", "assigned_to_id", "parent_issue_id", "custom_fields",
+      "watcher_user_ids", "is_private",     "estimated_hours"};
+
+  static const char *editor_fields[] = {"subject", "description"};
+
+  for (auto field : fields) {
+  }
+
+  return SUCCESS;
 }
 
 void replace_all(std::string &str, const std::string &old_str,
@@ -157,10 +200,8 @@ result_t issue_show(int argc, char **argv, options_t options) {
   if (I.estimated_hours) {
     printf("estimated_hours: %u\n", I.estimated_hours);
   }
-  printf("author: %s (%u) | ", I.author.name.c_str(),
-         I.author.id);
-  printf("assigned: %s (%u)\n", I.author.name.c_str(),
-         I.author.id);
+  printf("author: %s (%u) | ", I.author.name.c_str(), I.author.id);
+  printf("assigned: %s (%u)\n", I.author.name.c_str(), I.author.id);
   if (!I.category.name.empty()) {
     printf("category: id: %u: name: %s\n", I.category.id,
            I.category.name.c_str());
@@ -270,8 +311,8 @@ result_t issue_deserialize(const json::object &issue, issue_t &out) {
   return SUCCESS;
 }
 
-result_t issue_list_fetch(std::string &filter, config_t &config,
-                          options_t options, std::vector<issue_t> &out) {
+result_t query::issues(std::string &filter, config_t &config, options_t options,
+                       std::vector<issue_t> &out) {
   std::string body;
   CHECK_RETURN(http::get("/issues.json" + filter, config, options, body));
 
@@ -287,10 +328,57 @@ result_t issue_list_fetch(std::string &filter, config_t &config,
     CHECK_JSON_TYPE(issue, json::TYPE_OBJECT);
 
     issue_t I;
-    issue_deserialize(issue.object(), I);
+    CHECK_RETURN(issue_deserialize(issue.object(), I));
 
     out.push_back(I);
   }
 
   return SUCCESS;
+}
+
+result_t query::issue_statuses(config_t &config, options_t options,
+                               std::vector<issue_status_t> &statuses) {
+  std::string body;
+  CHECK_RETURN(http::get("/issue_statuses.json", config, options, body));
+
+  auto root = json::read(body, false);
+  CHECK_JSON_TYPE(root, json::TYPE_OBJECT);
+  CHECK(has<DEBUG>(options), printf("%s\n", json::write(root, "  ").c_str()));
+
+  auto Statuses = root.object().get("issue_statuses");
+  CHECK_JSON_PTR(Statuses, json::TYPE_ARRAY);
+
+  for (auto &Status : Statuses->array()) {
+    CHECK_JSON_TYPE(Status, json::TYPE_OBJECT);
+    issue_status_t status;
+
+    auto name = Status.object().get("name");
+    CHECK_JSON_PTR(name, json::TYPE_STRING);
+    status.name = name->string();
+
+    auto id = Status.object().get("id");
+    CHECK_JSON_PTR(id, json::TYPE_NUMBER);
+    status.id = id->number<uint32_t>();
+
+    auto is_default = Status.object().get("is_default");
+    if (is_default) {
+      CHECK_JSON_TYPE((*is_default), json::TYPE_BOOL);
+      status.is_default = is_default->boolean();
+    }
+
+    auto is_closed = Status.object().get("is_closed");
+    if (is_closed) {
+      CHECK_JSON_TYPE((*is_closed), json::TYPE_BOOL);
+      status.is_closed = is_closed->boolean();
+    }
+
+    statuses.push_back(status);
+  }
+
+  return SUCCESS;
+}
+
+result_t query::issue_priorities(config_t &config, options_t options,
+                                 std::vector<enumeration_t> &priorities) {
+  return query::enumerations("issue_priorities", config, options, priorities);
 }

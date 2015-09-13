@@ -50,7 +50,7 @@ result_t project_list(int argc, char **argv, options_t options) {
         return INVALID_CONFIG);
 
   std::vector<project_t> projects;
-  CHECK_RETURN(project_list_fetch(config, options, projects));
+  CHECK_RETURN(query::projects(config, options, projects));
 
   // TODO: Display information about the output of the fields below?
   printf(
@@ -265,7 +265,7 @@ result_t project_show(int argc, char **argv, options_t options) {
 
   auto &project = root.object().get("project")->object();
   project_t P;
-  CHECK_RETURN(project_deserialize(project, P));
+  CHECK_RETURN(project::deserialize(project, P));
 
   printf("       name: %s\n", P.name.c_str());
   printf("         id: %u\n", P.id);
@@ -285,7 +285,7 @@ result_t project_show(int argc, char **argv, options_t options) {
 }
 }
 
-result_t project_deserialize(const json::object &project, project_t &out) {
+result_t project::deserialize(const json::object &project, project_t &out) {
   auto name = project.get("name");
   CHECK_JSON_PTR(name, json::TYPE_STRING);
   out.name = name->string();
@@ -326,8 +326,24 @@ result_t project_deserialize(const json::object &project, project_t &out) {
   return SUCCESS;
 }
 
-result_t project_list_fetch(config_t &config, options_t options,
-                            std::vector<project_t> &out) {
+project_t *project::find(std::vector<project_t> &projects,
+                         const char *pattern) {
+  project_t *ret = nullptr;
+
+  uint32_t id = std::strtoul(pattern, nullptr, 0);
+  for (auto &project : projects) {
+    if (project.id == id || project.name == pattern ||
+        project.identifier == pattern) {
+      ret = &project;
+      break;
+    }
+  }
+
+  return ret;
+}
+
+result_t query::projects(config_t &config, options_t options,
+                         std::vector<project_t> &out) {
   std::string body;
   CHECK_RETURN(http::get("/projects.json", config, options, body));
 
@@ -343,7 +359,7 @@ result_t project_list_fetch(config_t &config, options_t options,
     CHECK_JSON_TYPE(project, json::TYPE_OBJECT);
 
     project_t P;
-    CHECK_RETURN(project_deserialize(project.object(), P));
+    CHECK_RETURN(project::deserialize(project.object(), P));
 
     out.push_back(P);
   }

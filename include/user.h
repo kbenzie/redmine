@@ -30,7 +30,8 @@ result_t user_serialize(const user_t &user, std::string &out);
 
 result_t user_deserialize(const json::object &user, user_t &out);
 
-result_t user_list_fetch(config_t &config, options_t options,
-                         std::vector<user_t> &out);
+namespace query {
+result_t users(config_t &config, options_t options, std::vector<user_t> &out);
+}
 
 #endif

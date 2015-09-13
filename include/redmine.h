@@ -3,6 +3,8 @@
 
 #include <defines.h>
 
+#include <json/json.hpp>
+
 #include <cstddef>
 #include <cstdint>
 #include <cstdlib>
@@ -38,17 +40,7 @@ struct reference_t {
 /// @brief An options_t is a bitfield of option_t values.
 typedef uint32_t options_t;
 
-/// @brief Check if an option is enabled.
-///
-/// @tparam option Desired option to check for.
-/// @param options Bitfield of enabled options.
-///
-/// @return true if enabled, false otherwise.
-template <option_t option>
-bool has(options_t options) {
-  return option == (option & options);
-}
-
+#ifndef NDEBUG
 /// @brief Force abort and display message when condition is true.
 ///
 /// @param CONDITION Boolean condition to check.
@@ -58,6 +50,9 @@ bool has(options_t options) {
     fprintf(stderr, "%s: %d: %s\n", __FILE__, __LINE__, MESSAGE); \
     abort();                                                      \
   }
+#else
+#define ASSERT(CONDITION, MESSAGE)
+#endif
 
 #ifndef REDMINE_DEBUG
 /// @brief Check the condition and perform the action.
@@ -73,6 +68,24 @@ bool has(options_t options) {
   if (CONDITION) {                                   \
     fprintf(stderr, "%s: %d: ", __FILE__, __LINE__); \
     ACTION;                                          \
+  }
+#endif
+
+#ifndef REDMINE_DEBUG
+/// @brief Check the condition and perform the action.
+///
+/// @param CONDITION Boolean condition to check.
+/// @param ACTION Action to perform if check is true.
+#define CHECK_MSG(CONDITION, MESSAGE, ACTION) \
+  if (CONDITION) {                            \
+    fprintf(stderr, "%s\n", MESSAGE);         \
+    ACTION;                                   \
+  }
+#else
+#define CHECK_MSG(CONDITION, MESSAGE, ACTION)                     \
+  if (CONDITION) {                                                \
+    fprintf(stderr, "%s: %d: %s\n", __FILE__, __LINE__, MESSAGE); \
+    ACTION;                                                       \
   }
 #endif
 
@@ -133,5 +146,24 @@ const char *result_string(result_t result);
   }                                                                \
   CHECK_JSON_TYPE((*POINTER), TYPE)
 #endif
+
+/// @brief Check if an option is enabled.
+///
+/// @tparam option Desired option to check for.
+/// @param options Bitfield of enabled options.
+///
+/// @return true if enabled, false otherwise.
+template <option_t option>
+bool has(options_t options) {
+  return option == (option & options);
+}
+
+/// @brief Read a json object consisting of name and id members.
+///
+/// @param ref The json object to parse.
+/// @param out The reference_t struct.
+///
+/// @return SUCCESS on succes, FAILURE otherwise.
+result_t reference_deserialize(const json::object &ref, reference_t &out);
 
 #endif

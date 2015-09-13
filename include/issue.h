@@ -3,6 +3,7 @@
 
 #include <config.h>
 #include <redmine.h>
+#include <query.h>
 
 #include <json/json.hpp>
 
@@ -49,6 +50,15 @@ struct issue_t {
   // TODO: Custom fields
 };
 
+struct issue_status_t {
+  issue_status_t() : name(), id(0), is_default(false), is_closed(false) {}
+
+  std::string name;
+  uint32_t id;
+  bool is_default;
+  bool is_closed;
+};
+
 namespace action {
 result_t issue(int argc, char **argv, options_t options);
 
@@ -65,7 +75,15 @@ result_t issue_serialize(const issue_t &issue, json::object &out);
 
 result_t issue_deserialize(const json::object &issue, issue_t &out);
 
-result_t issue_list_fetch(std::string &filter, config_t &config,
-                          options_t options, std::vector<issue_t> &out);
+namespace query {
+result_t issues(std::string &filter, config_t &config, options_t options,
+                std::vector<issue_t> &issues);
+
+result_t issue_statuses(config_t &config, options_t options,
+                        std::vector<issue_status_t> &statuses);
+
+result_t issue_priorities(config_t &config, options_t options,
+                          std::vector<enumeration_t> &priorities);
+}
 
 #endif

@@ -30,11 +30,17 @@ result_t project_new(int argc, char **argv, options_t options);
 result_t project_show(int argc, char **argv, options_t options);
 }
 
-result_t project_serialize(const project_t &project, json::object &out);
+namespace project {
+result_t serialize(const project_t &project, json::object &out);
 
-result_t project_deserialize(const json::object &project, project_t &out);
+result_t deserialize(const json::object &project, project_t &out);
 
-result_t project_list_fetch(config_t &config, options_t options,
-                            std::vector<project_t> &out);
+project_t *find(std::vector<project_t> &projects, const char *pattern);
+}
+
+namespace query {
+result_t projects(config_t &config, options_t options,
+                  std::vector<project_t> &out);
+}
 
 #endif
