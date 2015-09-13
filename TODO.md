@@ -3,84 +3,84 @@
 The following checklist encapsulates all current features of the redmine rest
 API and their feature completeness in the redmine CLI utility.
 
-* Issues (redmine v1.0)
+* [ ] Issues (stable redmine v1.0)
     * [ ] List
     * [ ] Show
     * [ ] Create
     * [ ] Update
     * [ ] Delete
-* Projects (redmine v1.0)
+* [ ] Projects (stable redmine v1.0)
     * [ ] List
     * [ ] Show
     * [ ] Create
     * [ ] Update
     * [ ] Delete
-* Project Membership (redmine v1.4)
+* [ ] Project Membership (alpha redmine v1.4)
     * [ ] List
     * [ ] Add
     * [ ] Show
     * [ ] Update
     * [ ] Delete
-* Users (redmine v1.1)
+* [ ] Users (stable redmine v1.1)
     * [ ] List
     * [ ] Create
     * [ ] Show
     * [ ] Update
     * [ ] Delete
-* Time Entries (redmine v1.1)
+* [ ] Time Entries (stable redmine v1.1)
     * [ ] List
     * [ ] Show
     * [ ] Create
     * [ ] Update
     * [ ] Delete
-* News (redmine v1.1)
+* [ ] News (prototype redmine v1.1)
     * [ ] Show
-* Issue Relations (redmine v1.3)
+* [ ] Issue Relations (alpha redmine v1.3)
     * [ ] List
     * [ ] Create
     * [ ] Show
     * [ ] Delete
-* Versions (redmine v1.3)
+* [ ] Versions (alpha redmine v1.3)
     * [ ] List
     * [ ] Create
     * [ ] Show
     * [ ] Update
     * [ ] Delete
-* Wiki Pages (redmine v2.2)
+* [ ] Wiki Pages (alpha redmine v2.2)
     * [ ] List
     * [ ] Show
     * [ ] Create
     * [ ] Update
     * [ ] Delete
-* Queries (redmine v1.3)
+* [ ] Queries (alpha redmine v1.3)
     * [ ] List
-* Attachments (redmine v1.3)
+* [ ] Attachments (beta redmine v1.3)
     * [ ] Upload
     * [ ] Show
-* Issue Statuses (redmine v1.3)
+* [ ] Issue Statuses (alpha redmine v1.3)
     * [ ] List
-* Trackers (redmine v1.3)
+* [ ] Trackers (alpha redmine v1.3)
     * [ ] List
-* Enumerations (redmine v2.2)
-    * Issue Priorities
+* [ ] Enumerations (alpha redmine v2.2)
+    * [ ] Issue Priorities
         * [ ] List
-    * Time Entry Activities
+    * [ ] Time Entry Activities
         * [ ] List
-* Issue Categories (redmine v1.3)
+* [ ] Issue Categories (alpha redmine v1.3)
     * [ ] List
     * [ ] Create
     * [ ] Show
     * [ ] Update
     * [ ] Delete
-* Roles (redmine v1.4)
+* [ ] Roles (alpha redmine v1.4)
     * [ ] List
     * [ ] Show
-* Groups (redmine v2.1)
+* [ ] Groups (alpha redmine v2.1)
     * [ ] List
     * [ ] Create
     * [ ] Show
     * [ ] Update
     * [ ] Delete
     * [ ] Add
-* Custom Fields (redmine v2.4)
+* [ ] Custom Fields (alpha redmine v2.4)
     * [ ] List
