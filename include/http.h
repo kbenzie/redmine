@@ -6,12 +6,13 @@
 
 #include <string>
 
+namespace redmine {
 namespace http {
 /// @brief HTTP status code type.
-typedef uint32_t status_t;
+typedef uint32_t status;
 
 /// @brief Set of all HTTP status code values.
-struct status {
+struct code {
   /// @brief Continue informational status code.
   ///
   /// This means that the server has received the request headers, and that the
@@ -24,19 +25,19 @@ struct status {
   /// initial request and check if a 100 Continue status code is received in
   /// response before continuing (or receive 417 Expectation Failed and not
   /// continue).
-  static const status_t CONTINUE = 100;
+  static const status CONTINUE = 100;
 
   /// @brief Switching Protocols informational status code.
   ///
   /// This means the requester has asked the server to switch protocols and the
   /// server is acknowledging that it will do so.
-  static const status_t SWITCHING_PROTOCOLS = 101;
+  static const status SWITCHING_PROTOCOLS = 101;
 
   /// @brief Processing (WebDAV; RFC 2518) informational status code.
   ///
   /// This means the requester has asked the server to switch protocols and the
   /// server is acknowledging that it will do so.
-  static const status_t PROCESSING = 102;
+  static const status PROCESSING = 102;
 
   /// @brief OK success status code.
   ///
@@ -45,39 +46,39 @@ struct status {
   /// contain an entity corresponding to the requested resource. In a POST
   /// request, the response will contain an entity describing or containing the
   /// result of the action.
-  static const status_t OK = 200;
+  static const status OK = 200;
 
   /// @brief Created success status code.
   ///
   /// The request has been fulfilled and resulted in a new resource being
   /// created.
-  static const status_t CREATED = 201;
+  static const status CREATED = 201;
 
   /// @brief Accepted
   ///
   /// The request has been accepted for processing, but the processing has not
   /// been completed. The request might or might not eventually be acted upon,
   /// as it might be disallowed when processing actually takes place.
-  static const status_t ACCEPTED = 202;
+  static const status ACCEPTED = 202;
 
   /// @brief Non-Authoritative Information (since HTTP/1.1)
   ///
   /// The server successfully processed the request, but is returning
   /// information that may be from another source.
-  static const status_t NON_AUTHORITATIVE_INFORMATION = 203;
+  static const status NON_AUTHORITATIVE_INFORMATION = 203;
 
   /// @brief No Content
   ///
   /// The server successfully processed the request, but is not returning any
   /// content. Usually used as a response to a successful delete request.
-  static const status_t NO_CONTENT = 204;
+  static const status NO_CONTENT = 204;
 
   /// @brief Reset Content
   ///
   /// The server successfully processed the request, but is not returning any
   /// content. Unlike a 204 response, this response requires that the requester
   /// reset the document view.
-  static const status_t RESET_CONTENT = 205;
+  static const status RESET_CONTENT = 205;
 
   /// @brief Partial Content (RFC 7233)
   ///
@@ -85,39 +86,39 @@ struct status {
   /// range header sent by the client. The range header is used by tools like
   /// wget to enable resuming of interrupted downloads, or split a download into
   /// multiple simultaneous streams.
-  static const status_t PARTIAL_CONTENT = 206;
+  static const status PARTIAL_CONTENT = 206;
 
   /// @brief Multi-Status (WebDAV; RFC 4918)
   ///
   /// The message body that follows is an XML message and can contain a number
   /// of separate response codes, depending on how many sub-requests were
   /// made.
-  static const status_t MULTI_STATUS = 207;
+  static const status MULTI_STATUS = 207;
 
   /// @brief Already Reported (WebDAV; RFC 5842)
   ///
   /// The members of a DAV binding have already been enumerated in a previous
   /// reply to this request, and are not being included again.
-  static const status_t ALREADY_REPORTED = 208;
+  static const status ALREADY_REPORTED = 208;
 
   /// @brief IM Used (RFC 3229)
   ///
   /// The server has fulfilled a request for the resource, and the response is a
   /// representation of the result of one or more instance-manipulations applied
   /// to the current instance.
-  static const status_t IM_USED = 226;
+  static const status IM_USED = 226;
 
   /// @brief Multiple Choices redirection status code.
   ///
   /// Indicates multiple options for the resource that the client may follow.
   /// It, for instance, could be used to present different format options for
   /// video, list files with different extensions, or word sense disambiguation.
-  static const status_t MULTIPLE_CHOICES = 300;
+  static const status MULTIPLE_CHOICES = 300;
 
   /// @brief Moved Permanently redirection status code.
   ///
   /// This and all future requests should be directed to the given URI.
-  static const status_t MOVED_PERMANENTLY = 301;
+  static const status MOVED_PERMANENTLY = 301;
 
   /// @brief Found redirection status code.
   ///
@@ -129,7 +130,7 @@ struct status {
   /// 303 and 307 to distinguish between the two behaviours. However, some
   /// Web applications and frameworks use the 302 status code as if it were the
   /// 303.
-  static const status_t FOUND = 302;
+  static const status FOUND = 302;
 
   /// @brief See Other (since HTTP/1.1) redirection status code.
   ///
@@ -137,7 +138,7 @@ struct status {
   /// method. When received in response to a POST (or PUT/DELETE), it should be
   /// assumed that the server has received the data and the redirect should be
   /// issued with a separate GET message.
-  static const status_t SEE_OTHER = 303;
+  static const status SEE_OTHER = 303;
 
   /// @brief Not Modified (RFC 7232) redirection status code.
   ///
@@ -145,7 +146,7 @@ struct status {
   /// specified by the request headers If-Modified-Since or If-None-Match. This
   /// means that there is no need to retransmit the resource, since the client
   /// still has a previously-downloaded copy.
-  static const status_t NOT_MODIFIED = 304;
+  static const status NOT_MODIFIED = 304;
 
   /// @brief Use Proxy (since HTTP/1.1) redirection status code.
   ///
@@ -153,13 +154,13 @@ struct status {
   /// provided in the response. Many HTTP clients (such as Mozilla and
   /// Internet Explorer) do not correctly handle responses with this status
   /// code, primarily for security reasons.
-  static const status_t USE_PROXY = 305;
+  static const status USE_PROXY = 305;
 
   /// @brief Switch Proxy redirection status code.
   ///
   /// No longer used. Originally meant "Subsequent requests should use the
   /// specified proxy."
-  static const status_t SWITCH_PROXY = 306;
+  static const status SWITCH_PROXY = 306;
 
   /// @brief Temporary Redirect (since HTTP/1.1) redirection status code.
   ///
@@ -168,7 +169,7 @@ struct status {
   /// was historically implemented, the request method is not allowed to be
   /// changed when reissuing the original request. For instance, a POST request
   /// should be repeated using another POST request.
-  static const status_t TEMPORARY_REDIRECT = 307;
+  static const status TEMPORARY_REDIRECT = 307;
 
   /// @brief Permanent Redirect (RFC 7538) redirection status code.
   ///
@@ -176,14 +177,14 @@ struct status {
   /// 307 and 308 (as proposed) parallel the behaviours of 302 and 301, but do
   /// not allow the HTTP method to change. So, for example, submitting a form to
   /// a permanently redirected resource may continue smoothly.
-  static const status_t PERMANENT_REDIRECT = 308;
+  static const status PERMANENT_REDIRECT = 308;
 
   /// @brief Bad Request client error status code.
   ///
   /// The server cannot or will not process the request due to something that is
   /// perceived to be a client error (e.g., malformed request syntax, invalid
   /// request message framing, or deceptive request routing).
-  static const status_t BAD_REQUEST = 400;
+  static const status BAD_REQUEST = 400;
 
   /// @brief Unauthorized (RFC 7235) client error status code.
   ///
@@ -192,7 +193,7 @@ struct status {
   /// include a WWW-Authenticate header field containing a challenge applicable
   /// to the requested resource. See Basic access authentication and Digest
   /// access authentication.
-  static const status_t UNAUTHORIZED = 401;
+  static const status UNAUTHORIZED = 401;
 
   /// @brief Payment Required client error status code.
   ///
@@ -201,38 +202,38 @@ struct status {
   /// that has not happened, and this code is not usually used. YouTube uses
   /// this status if a particular IP address has made excessive requests, and
   /// requires the person to enter a CAPTCHA.
-  static const status_t PAYMENT_REQUIRED = 402;
+  static const status PAYMENT_REQUIRED = 402;
 
   /// @brief Forbidden client error status code.
   ///
   /// The request was a valid request, but the server is refusing to respond to
   /// it. Unlike a 401 Unauthorized response, authenticating will make no
   /// difference.
-  static const status_t FORBIDDEN = 403;
+  static const status FORBIDDEN = 403;
 
   /// @brief Not Found client error status code.
   ///
   /// The requested resource could not be found but may be available again in
   /// the future. Subsequent requests by the client are permissible.
-  static const status_t NOT_FOUND = 404;
+  static const status NOT_FOUND = 404;
 
   /// @brief Method Not Allowed client error status code.
   ///
   /// A request was made of a resource using a request method not supported by
   /// that resource; for example, using GET on a form which requires data to be
   /// presented via POST, or using PUT on a read-only resource.
-  static const status_t NOT_ALLOWED = 405;
+  static const status NOT_ALLOWED = 405;
 
   /// @brief Not Acceptable client error status code.
   ///
   /// The requested resource is only capable of generating content not
   /// acceptable according to the Accept headers sent in the request.
-  static const status_t NOT_ACCEPTABLE = 406;
+  static const status NOT_ACCEPTABLE = 406;
 
   /// @brief Proxy Authentication Required (RFC 7235) client error status code.
   ///
   /// The client must first authenticate itself with the proxy.
-  static const status_t PROXY_AUTHENTICATION_REQUIRED = 407;
+  static const status PROXY_AUTHENTICATION_REQUIRED = 407;
 
   /// @brief Request Timeout client error status code.
   ///
@@ -240,13 +241,13 @@ struct status {
   /// specifications: "The client did not produce a request within the time that
   /// the server was prepared to wait. The client MAY repeat the request without
   /// modifications at any later time."
-  static const status_t REQUEST_TIMEOUT = 408;
+  static const status REQUEST_TIMEOUT = 408;
 
   /// @brief Conflict client error status code.
   ///
   /// Indicates that the request could not be processed because of conflict in
   /// the request, such as an edit conflict in the case of multiple updates.
-  static const status_t CONFLICT = 409;
+  static const status CONFLICT = 409;
 
   /// @brief Gone client error status code.
   ///
@@ -257,39 +258,39 @@ struct status {
   /// future. Clients such as search engines should remove the resource from
   /// their indices. Most use cases do not require clients and search
   /// engines to purge the resource, and a "404 Not Found" may be used instead.
-  static const status_t GONE = 410;
+  static const status GONE = 410;
 
   /// @brief Length Required client error status code.
   ///
   /// The request did not specify the length of its content, which is required
   /// by the requested resource.
-  static const status_t LENGTH_REQUIRED = 411;
+  static const status LENGTH_REQUIRED = 411;
 
   /// @brief Precondition Failed (RFC 7232) client error status code.
   ///
   /// The server does not meet one of the preconditions that the requester put
   /// on the request.
-  static const status_t PRECONDITION_FAILED = 412;
+  static const status PRECONDITION_FAILED = 412;
 
   /// @brief Payload Too Large (RFC 7231) client error status code.
   ///
   /// The request is larger than the server is willing or able to process.
   /// Called "Request Entity Too Large " previously.
-  static const status_t PAYLOAD_TOO_LARGE = 413;
+  static const status PAYLOAD_TOO_LARGE = 413;
 
   /// @brief Request-URI Too Long client error status code.
   ///
   /// The URI provided was too long for the server to process. Often the result
   /// of too much data being encoded as a query-string of a GET request, in
   /// which case it should be converted to a POST request.
-  static const status_t REQUEST_URI_TOO_LONG = 414;
+  static const status REQUEST_URI_TOO_LONG = 414;
 
   /// @brief Unsupported Media Type client error status code.
   ///
   /// The request entity has a media type which the server or resource does not
   /// support. For example, the client uploads an image as image/svg+xml, but
   /// the server requires that images use a different format.
-  static const status_t UNSUPPORTED_MEDIA_TYPE = 415;
+  static const status UNSUPPORTED_MEDIA_TYPE = 415;
 
   /// @brief Requested Range Not Satisfiable (RFC 7233) client error status
   /// code.
@@ -297,13 +298,13 @@ struct status {
   /// The client has asked for a portion of the file (byte serving), but the
   /// server cannot supply that portion. For example, if the client asked for a
   /// part of the file that lies beyond the end of the file.
-  static const status_t REQUESTED_RANGE_NOT_SATISFIABLE = 416;
+  static const status REQUESTED_RANGE_NOT_SATISFIABLE = 416;
 
   /// @brief Expectation Failed client error status code.
   ///
   /// The server cannot meet the requirements of the Expect request-header
   /// field.
-  static const status_t EXPECTATION_FAILED = 417;
+  static const status EXPECTATION_FAILED = 417;
 
   /// @brief I'm a teapot (RFC 2324) client error status code.
   ///
@@ -311,7 +312,7 @@ struct status {
   /// jokes, in RFC 2324, Hyper Text Coffee Pot Control Protocol, and is not
   /// expected to be implemented by actual HTTP servers. The RFC specifies this
   /// code should be returned by tea pots requested to brew coffee.
-  static const status_t IM_A_TEAPOT = 418;
+  static const status IM_A_TEAPOT = 418;
 
   /// @brief Authentication Timeout (not in RFC 2616) client error status code.
   ///
@@ -319,14 +320,14 @@ struct status {
   /// previously valid authentication has expired. It is used as an alternative
   /// to 401 Unauthorized in order to differentiate from otherwise authenticated
   /// clients being denied access to specific server resources.
-  static const status_t AUTHENTICATION_TIMEOUT = 419;
+  static const status AUTHENTICATION_TIMEOUT = 419;
 
   /// @brief Method Failure (Spring Framework) client error status code.
   ///
   /// Not part of the HTTP standard, but defined by Spring in the HttpStatus
   /// class to be used when a method failed. This status code is deprecated by
   /// Spring.
-  static const status_t METHOD_FAILURE = 420;
+  static const status METHOD_FAILURE = 420;
 
   /// @brief Enhance Your Calm (Twitter) client error status code.
   ///
@@ -334,36 +335,36 @@ struct status {
   /// Search and Trends API when the client is being rate limited. Other
   /// services may wish to implement the 429 Too Many Requests response code
   /// instead.
-  static const status_t ENHANCE_YOUR_CALM = 420;
+  static const status ENHANCE_YOUR_CALM = 420;
 
   /// @brief Misdirected Request (HTTP/2) client error status code.
   ///
   /// The request was directed at a server that is not able to produce a
   /// response (for example because a connection reuse).
-  static const status_t MISDIRECTION_REQUEST = 421;
+  static const status MISDIRECTION_REQUEST = 421;
 
   /// @brief Unprocessable Entity (WebDAV; RFC 4918) client error status code.
   ///
   /// The request was well-formed but was unable to be followed due to semantic
   /// errors.
-  static const status_t UNPROCESSABLE_ENTITY = 422;
+  static const status UNPROCESSABLE_ENTITY = 422;
 
   /// @brief Locked (WebDAV; RFC 4918) client error status code.
   ///
   /// The resource that is being accessed is locked.
-  static const status_t LOCKED = 423;
+  static const status LOCKED = 423;
 
   /// @brief Failed Dependency (WebDAV; RFC 4918) client error status code.
   ///
   /// The request failed due to failure of a previous request (e.g., a
   /// PROPPATCH).
-  static const status_t FAILED_DEPENDENCY = 424;
+  static const status FAILED_DEPENDENCY = 424;
 
   /// @brief Upgrade Required client error status code.
   ///
   /// The client should switch to a different protocol such as TLS/1.0, given in
   /// the Upgrade header field.
-  static const status_t UPGRADE_REQUIRED = 426;
+  static const status UPGRADE_REQUIRED = 426;
 
   /// @brief Precondition Required (RFC 6585) client error status code.
   ///
@@ -371,13 +372,13 @@ struct status {
   /// prevent "the 'lost update' problem, where a client GETs a resource's
   /// state, modifies it, and PUTs it back to the server, when meanwhile a third
   /// party has modified the state on the server, leading to a conflict."
-  static const status_t PRECONDITION_REQUIRED = 428;
+  static const status PRECONDITION_REQUIRED = 428;
 
   /// @brief Too Many Requests (RFC 6585) client error status code.
   ///
   /// The user has sent too many requests in a given amount of time. Intended
   /// for use with rate limiting schemes.
-  static const status_t TOO_MANY_REQUESTS = 429;
+  static const status TOO_MANY_REQUESTS = 429;
 
   /// @brief Request Header Fields Too Large (RFC 6585) client error status
   /// code.
@@ -385,32 +386,32 @@ struct status {
   /// The server is unwilling to process the request because either an
   /// individual header field, or all the header fields collectively, are too
   /// large.
-  static const status_t REQUEST_HEADER_FIELDS_TOO_LARGE = 431;
+  static const status REQUEST_HEADER_FIELDS_TOO_LARGE = 431;
 
   /// @brief Login Timeout (Microsoft) client error status code.
   ///
   /// A Microsoft extension. Indicates that your session has expired.
-  static const status_t LOGIN_TIMEOUT = 440;
+  static const status LOGIN_TIMEOUT = 440;
 
   /// @brief No Response (Nginx) client error status code.
   ///
   /// Used in Nginx logs to indicate that the server has returned no information
   /// to the client and closed the connection (useful as a deterrent for
   /// malware).
-  static const status_t NO_RESPONSE = 444;
+  static const status NO_RESPONSE = 444;
 
   /// @brief Retry With (Microsoft) client error status code.
   ///
   /// A Microsoft extension. The request should be retried after performing the
   /// appropriate action.
-  static const status_t RETRY_WITH = 449;
+  static const status RETRY_WITH = 449;
 
   /// @brief Blocked by Windows Parental Controls (Microsoft) client error
   /// status code.
   ///
   /// A Microsoft extension. This error is given when Windows Parental Controls
   /// are turned on and are blocking access to the given webpage.
-  static const status_t BLOCKED_BY_WINDOWS_PARENTAL_CONTROLS = 450;
+  static const status BLOCKED_BY_WINDOWS_PARENTAL_CONTROLS = 450;
 
   /// @brief Unavailable For Legal Reasons (Internet draft) client error status
   /// code.
@@ -420,7 +421,7 @@ struct status {
   /// access is denied for legal reasons, e.g. censorship or government-mandated
   /// blocked access. A reference to the 1953 dystopian novel Fahrenheit 451,
   /// where books are outlawed.
-  static const status_t UNAVAILABLE_FOR_LEGAL_REASONS = 451;
+  static const status UNAVAILABLE_FOR_LEGAL_REASONS = 451;
 
   /// @brief Redirect (Microsoft) client error status code.
   ///
@@ -428,117 +429,117 @@ struct status {
   /// use or the server cannot access the users' mailbox.
   /// The client is supposed to re-run the HTTP Autodiscovery protocol to find a
   /// better suited server.
-  static const status_t REDIRECT = 451;
+  static const status REDIRECT = 451;
 
   /// @brief Request Header Too Large (Nginx) client error status code.
   ///
   /// Nginx internal code similar to 431 but it was introduced earlier in
   /// version 0.9.4 (on January 21, 2011).
-  static const status_t REQUEST_HEADER_TOO_LARGE = 494;
+  static const status REQUEST_HEADER_TOO_LARGE = 494;
 
   /// @brief Cert Error (Nginx) client error status code.
   ///
   /// Nginx internal code used when SSL client certificate error occurred to
   /// distinguish it from 4XX in a log and an error page redirection.
-  static const status_t CERT_ERROR = 495;
+  static const status CERT_ERROR = 495;
 
   /// @brief No Cert (Nginx) client error status code.
   ///
   /// Nginx internal code used when client didn't provide certificate to
   /// distinguish it from 4XX in a log and an error page redirection.
-  static const status_t NO_CERT = 496;
+  static const status NO_CERT = 496;
 
   /// @brief HTTP to HTTPS (Nginx) client error status code.
   ///
   /// Nginx internal code used for the plain HTTP requests that are sent to
   /// HTTPS port to distinguish it from 4XX in a log and an error page
   /// redirection.
-  static const status_t HTTP_TO_HTTPS = 497;
+  static const status HTTP_TO_HTTPS = 497;
 
   /// @brief Token expired/invalid (Esri) client error status code.
   ///
   /// Returned by ArcGIS for Server. A code of 498 indicates an expired or
   /// otherwise invalid token.
-  static const status_t TOKEN_EXPIRED_INVALID = 498;
+  static const status TOKEN_EXPIRED_INVALID = 498;
 
   /// @brief Client Closed Request (Nginx) client error status code.
   ///
   /// Used in Nginx logs to indicate when the connection has been closed by
   /// client while the server is still processing its request, making server
   /// unable to send a status code back.
-  static const status_t CLIENT_CLOSED_REQUEST = 499;
+  static const status CLIENT_CLOSED_REQUEST = 499;
 
   /// @brief Token required (Esri) client error status code.
   ///
   /// Returned by ArcGIS for Server. A code of 499 indicates that a token is
   /// required (if no token was submitted).
-  static const status_t TOKEN_REQUIRED = 499;
+  static const status TOKEN_REQUIRED = 499;
 
   /// @brief Internal Server Error server error status code.
   ///
   /// A generic error message, given when an unexpected condition was
   /// encountered and no more specific message is suitable.
-  static const status_t INTERNAL_SERVER_ERROR = 500;
+  static const status INTERNAL_SERVER_ERROR = 500;
 
   /// @brief Not Implemented server error status code.
   ///
   /// The server either does not recognize the request method, or it lacks the
   /// ability to fulfill the request. Usually this implies future availability
   /// (e.g., a new feature of a web-service API).
-  static const status_t NOT_IMPLEMENTED = 501;
+  static const status NOT_IMPLEMENTED = 501;
 
   /// @brief Bad Gateway server error status code.
   ///
   /// The server was acting as a gateway or proxy and received an invalid
   /// response from the upstream server.
-  static const status_t BAD_GATEWAY = 502;
+  static const status BAD_GATEWAY = 502;
 
   /// @brief Service Unavailable server error status code.
   ///
   /// The server is currently unavailable (because it is overloaded or down for
   /// maintenance). Generally, this is a temporary state.
-  static const status_t SERVICE_UNAVAILABLE = 503;
+  static const status SERVICE_UNAVAILABLE = 503;
 
   /// @brief Gateway Timeout server error status code.
   ///
   /// The server was acting as a gateway or proxy and did not receive a timely
   /// response from the upstream server.
-  static const status_t GATEWAY_TIMEOUT = 504;
+  static const status GATEWAY_TIMEOUT = 504;
 
   /// @brief HTTP Version Not Supported server error status code.
   ///
   /// The server does not support the HTTP protocol version used in the request.
-  static const status_t HTTP_VERSION_NOT_SUPPORTED = 505;
+  static const status HTTP_VERSION_NOT_SUPPORTED = 505;
 
   /// @brief Variant Also Negotiates (RFC 2295) server error status code.
   ///
   /// Transparent content negotiation for the request results in a circular
   /// reference.
-  static const status_t VARIANT_ALSO_NEGOTIATES = 506;
+  static const status VARIANT_ALSO_NEGOTIATES = 506;
 
   /// @brief Insufficient Storage (WebDAV; RFC 4918) server error status code.
   ///
   /// The server is unable to store the representation needed to complete the
   /// request.
-  static const status_t INSUFFICIENT_STORAGE = 507;
+  static const status INSUFFICIENT_STORAGE = 507;
 
   /// @brief Loop Detected (WebDAV; RFC 5842) server error status code.
   ///
   /// The server detected an infinite loop while processing the request (sent in
   /// lieu of 208 Already Reported).
-  static const status_t LOOP_DETECTION = 508;
+  static const status LOOP_DETECTION = 508;
 
   /// @brief Bandwidth Limit Exceeded (Apache bw/limited extension) server
   /// error status code.
   ///
   /// This status code is not specified in any RFCs. Its use is unknown.
-  static const status_t BANDWIDTH_LIMIT_EXCEEDED = 509;
+  static const status BANDWIDTH_LIMIT_EXCEEDED = 509;
 
   /// @brief Not Extended (RFC 2774) server error status code.
   ///
   /// Further extensions to the request are required for the server to fulfil
   /// it.
-  static const status_t NOT_EXTENDED = 510;
+  static const status NOT_EXTENDED = 510;
 
   /// @brief Network Authentication Required (RFC 6585) server error status
   /// code.
@@ -547,7 +548,7 @@ struct status {
   /// by intercepting proxies used to control access to the network (e.g.,
   /// "captive portals" used to require agreement to Terms of Service before
   /// granting full Internet access via a Wi-Fi hotspot).
-  static const status_t NETWORK_AUTHENTICATION_REQUIRED = 511;
+  static const status NETWORK_AUTHENTICATION_REQUIRED = 511;
 
   /// @brief Unknown Error server error status code.
   ///
@@ -556,27 +557,27 @@ struct status {
   /// error is essentially a “catch-all” response for when the origin server
   /// returns something unexpected or something that is not
   /// tolerated/interpreted (protocol violation or empty response)."
-  static const status_t UNKNOWN_ERROR = 520;
+  static const status UNKNOWN_ERROR = 520;
 
   /// @brief Origin Connection Time-out server error status code.
   ///
   /// This status code is not specified in any RFCs, but is used by CloudFlare's
   /// reverse proxies to signal that a server connection timed out.
-  static const status_t ORIGIN_CONNECTION_TIMEOUT = 522;
+  static const status ORIGIN_CONNECTION_TIMEOUT = 522;
 
   /// @brief Network read timeout error (Unknown) server error status code.
   ///
   /// This status code is not specified in any RFCs, but is used by Microsoft
   /// HTTP proxies to signal a network read timeout behind the proxy to a client
   /// in front of the proxy.
-  static const status_t NETWORK_READ_TIMEOUT_ERROR = 598;
+  static const status NETWORK_READ_TIMEOUT_ERROR = 598;
 
   /// @brief Network connect timeout error (Unknown) server error status code.
   ///
   /// This status code is not specified in any RFCs, but is used by Microsoft
   /// HTTP proxies to signal a network connect timeout behind the proxy to a
   /// client in front of the proxy.
-  static const status_t NETWORK_CONNECT_TIMEOUT_ERROR = 599;
+  static const status NETWORK_CONNECT_TIMEOUT_ERROR = 599;
 };
 
 /// @brief Global HTTP session RAII helper.
@@ -584,14 +585,14 @@ struct session {
   /// @brief Initialise HTTP session.
   ///
   /// @return Any CURL error code, or SUCCESS.
-  result_t init();
+  result init();
 
   /// @brief Clean up global HTTP handler state.
   ~session();
 };
 
-result_t get(const std::string &path, const config_t &config,
-             const options_t options, std::string &body);
+result get(const std::string &path, const config &config, const options options,
+           std::string &body);
 
 /// @brief Perform a POST request.
 ///
@@ -602,9 +603,10 @@ result_t get(const std::string &path, const config_t &config,
 /// @param[out] body Response data body.
 ///
 /// @return Return SUCCESS or FAILURE
-result_t post(const std::string &path, const config_t &config,
-              options_t options, const http::status_t expected,
-              const std::string &data, std::string &body);
+result post(const std::string &path, const config &config, options options,
+            const http::status expected, const std::string &data,
+            std::string &body);
+}
 }
 
 #endif

@@ -1,11 +1,12 @@
-#include <enumerations.hpp>
+#include <enumeration.hpp>
 #include <http.h>
 
 #include <json/json.hpp>
 
-static redmine::result query_enumerations(
-    const std::string &enum_name, config_t &config, options_t options,
-    std::vector<redmine::enumeration> &enums) {
+namespace redmine {
+static result query_enumerations(const std::string &enum_name, config &config,
+                                 options options,
+                                 std::vector<redmine::enumeration> &enums) {
   std::string body;
   CHECK_RETURN(
       http::get("/enumerations/" + enum_name + ".json", config, options, body));
@@ -41,14 +42,15 @@ static redmine::result query_enumerations(
   return SUCCESS;
 }
 
-redmine::result redmine::query::issue_priorities(
-    config &config, options options, std::vector<enumeration> &priorities) {
+result query::issue_priorities(config &config, options options,
+                               std::vector<enumeration> &priorities) {
   return query_enumerations("issue_priorities", config, options, priorities);
 }
 
-redmine::result redmine::query::time_entry_activities(
+result query::time_entry_activities(
     config &config, options options,
     std::vector<enumeration> &time_entry_activities) {
   return query_enumerations("time_entry_activities", config, options,
                             time_entry_activities);
+}
 }

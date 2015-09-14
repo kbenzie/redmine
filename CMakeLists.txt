@@ -50,21 +50,21 @@ include_directories(
 
 add_executable(redmine
   ${CMAKE_CURRENT_SOURCE_DIR}/include/config.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/enumerations.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/enumeration.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/include/issue.h
   ${CMAKE_CURRENT_SOURCE_DIR}/include/http.h
   ${CMAKE_CURRENT_SOURCE_DIR}/include/project.h
   ${CMAKE_CURRENT_SOURCE_DIR}/include/redmine.h
   ${CMAKE_CURRENT_SOURCE_DIR}/include/user.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/query.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/tracker.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/include/util.h
   ${CMAKE_CURRENT_SOURCE_DIR}/source/config.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/source/enumerations.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/enumeration.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/source/issue.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/source/http.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/source/project.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/source/redmine.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/source/query.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/tracker.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/source/user.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/source/util.cpp)
 target_link_libraries(redmine JSON libcurl)

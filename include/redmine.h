@@ -20,8 +20,18 @@
     fprintf(stderr, "%s: %d: %s\n", __FILE__, __LINE__, MESSAGE); \
     abort();                                                      \
   }
+
+/// @brief Used to abort on reaching an unreachable code path.
+///
+/// @param MESSAGE An informative message why the UNREACHABLE occured.
+#define UNREACHABLE(MESSAGE)                                      \
+  {                                                               \
+    fprintf(stderr, "%s: %d: %s\n", __FILE__, __LINE__, MESSAGE); \
+    abort();                                                      \
+  }
 #else
 #define ASSERT(CONDITION, MESSAGE)
+#define UNREACHABLE(MESSAGE)
 #endif
 
 #ifndef REDMINE_DEBUG
@@ -63,15 +73,15 @@
 /// @brief Evaluate expression and return result if true.
 ///
 /// @param EXPRESSION Expression to evaluate.
-#define CHECK_RETURN(EXPRESSION)        \
-  if (result_t result = (EXPRESSION)) { \
-    return result;                      \
+#define CHECK_RETURN(EXPRESSION)      \
+  if (result result = (EXPRESSION)) { \
+    return result;                    \
   }
 #else
 #define CHECK_RETURN(EXPRESSION)                        \
-  if (result_t result = (EXPRESSION)) {                 \
+  if (result result = (EXPRESSION)) {                   \
     fprintf(stderr, "%s: %d: %s\n", __FILE__, __LINE__, \
-            resdmine::result_string(result));           \
+            redmine::result_string(result));            \
     return result;                                      \
   }
 #endif
@@ -83,9 +93,9 @@
 /// @param TYPE Enumberation of json type.
 ///
 /// @return FAILURE if check is true.
-#define CHECK_JSON_TYPE(REFERENCE, TYPE)                                      \
-  if (TYPE != REFERENCE.type()) {                                             \
-    return FAILURE;                                                           \
+#define CHECK_JSON_TYPE(REFERENCE, TYPE) \
+  if (TYPE != REFERENCE.type()) {        \
+    return FAILURE;                      \
   }
 #else
 #define CHECK_JSON_TYPE(REFERENCE, TYPE)                                      \
@@ -102,10 +112,10 @@
 /// @param TYPE Enumberation of json type.
 ///
 /// @return FAILURE if check is true.
-#define CHECK_JSON_PTR(POINTER, TYPE)                              \
-  if (!POINTER) {                                                  \
-    return FAILURE;                                                \
-  }                                                                \
+#define CHECK_JSON_PTR(POINTER, TYPE) \
+  if (!POINTER) {                     \
+    return FAILURE;                   \
+  }                                   \
   CHECK_JSON_TYPE((*POINTER), TYPE)
 #else
 #define CHECK_JSON_PTR(POINTER, TYPE)                              \

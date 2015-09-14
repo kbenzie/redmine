@@ -7,8 +7,9 @@
 #include <cstring>
 #include <fstream>
 
+namespace redmine {
 namespace action {
-result_t config(int argc, char **argv, options_t options) {
+result config(int argc, char **argv, options options) {
   if (0 == argc) {
     fprintf(stderr,
             "usage: redmine config <action> [args]\n"
@@ -42,8 +43,8 @@ result_t config(int argc, char **argv, options_t options) {
   return INVALID_ARGUMENT;
 }
 
-result_t config_url(int argc, char **argv, options_t options) {
-  config_t config;
+result config_url(int argc, char **argv, options options) {
+  redmine::config config;
   if (0 == argc) {
     CHECK(config_load(config), fprintf(stderr, "invalid config file\n");
           return INVALID_CONFIG);
@@ -69,8 +70,8 @@ result_t config_url(int argc, char **argv, options_t options) {
   return INVALID_ARGUMENT;
 }
 
-result_t config_key(int argc, char **argv, options_t options) {
-  config_t config;
+result config_key(int argc, char **argv, options options) {
+  redmine::config config;
   if (0 == argc) {
     CHECK(config_load(config), fprintf(stderr, "invalid config file\n");
           return INVALID_CONFIG);
@@ -91,8 +92,8 @@ result_t config_key(int argc, char **argv, options_t options) {
   return INVALID_ARGUMENT;
 }
 
-result_t config_port(int argc, char **argv, options_t options) {
-  config_t config;
+result config_port(int argc, char **argv, options options) {
+  redmine::config config;
   if (0 == argc) {
     CHECK(config_load(config), fprintf(stderr, "invalid config file\n"));
     printf("port: %u\n", config.port);
@@ -116,11 +117,11 @@ result_t config_port(int argc, char **argv, options_t options) {
   return INVALID_ARGUMENT;
 }
 
-result_t config_use_ssl(int argc, char **argv, options_t options) {
+result config_use_ssl(int argc, char **argv, options options) {
   return UNSUPPORTED;
 }
 
-result_t config_verify_ssl(int argc, char **argv, options_t options) {
+result config_verify_ssl(int argc, char **argv, options options) {
   return UNSUPPORTED;
 }
 }
@@ -135,7 +136,7 @@ std::string config_path() {
   return path;
 }
 
-result_t config_load(config_t &out) {
+result config_load(config &out) {
   std::string path(config_path());
   std::ifstream file(path);
   CHECK(!file.is_open(), fprintf(stderr, "could not open: %s\n", path.c_str());
@@ -168,7 +169,7 @@ result_t config_load(config_t &out) {
   return SUCCESS;
 }
 
-result_t config_save(config_t &config) {
+result config_save(config &config) {
   std::string path(config_path());
   std::ofstream file(path);
   CHECK(!file.is_open(), fprintf(stderr, "could not open: %s\n", path.c_str());
@@ -183,8 +184,8 @@ result_t config_save(config_t &config) {
   return SUCCESS;
 }
 
-result_t config_validate(config_t &config) {
-  result_t error = SUCCESS;
+result config_validate(config &config) {
+  redmine::result error = SUCCESS;
   if (!config.key.size()) {
     fprintf(stderr, "key is empty, set using: redmine config key <key>\n");
     error = INVALID_CONFIG;
@@ -195,4 +196,5 @@ result_t config_validate(config_t &config) {
   }
   // TODO: Validate port
   return error;
+}
 }

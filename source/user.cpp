@@ -3,8 +3,55 @@
 
 #include <json/json.hpp>
 
+namespace redmine {
+user::user() {}
+
+result user::init(const json::object &object) {
+  auto Firstname = object.get("firstname");
+  CHECK_JSON_PTR(Firstname, json::TYPE_STRING);
+  firstname = Firstname->string();
+
+  auto Lastname = object.get("lastname");
+  CHECK_JSON_PTR(Lastname, json::TYPE_STRING);
+  lastname = Lastname->string();
+
+  auto Id = object.get("id");
+  CHECK_JSON_PTR(Id, json::TYPE_NUMBER);
+  id = Id->number<uint32_t>();
+
+  auto Mail = object.get("mail");
+  CHECK_JSON_PTR(Mail, json::TYPE_STRING);
+  mail = Mail->string();
+
+  auto Login = object.get("login");
+  CHECK_JSON_PTR(Login, json::TYPE_STRING);
+  login = Login->string();
+
+  auto ApiKey = object.get("api_key");
+  if (ApiKey) {
+    CHECK_JSON_TYPE((*ApiKey), json::TYPE_STRING);
+    api_key = ApiKey->string();
+  }
+
+  auto CreatedOn = object.get("created_on");
+  CHECK_JSON_PTR(CreatedOn, json::TYPE_STRING);
+  created_on = CreatedOn->string();
+
+  auto LastLoginOn = object.get("last_login_on");
+  CHECK_JSON_PTR(LastLoginOn, json::TYPE_STRING);
+  last_login_on = LastLoginOn->string();
+
+  auto Status = object.get("status");
+  if (Status) {
+    CHECK_JSON_PTR(Status, json::TYPE_NUMBER);
+    status = Status->number<uint32_t>();
+  }
+
+  return SUCCESS;
+}
+
 namespace action {
-result_t user(int argc, char **argv, options_t options) {
+result user(int argc, char **argv, options options) {
   if (0 == argc) {
     fprintf(stderr,
             "usage: redmine issue <action> [args]\n"
@@ -26,15 +73,15 @@ result_t user(int argc, char **argv, options_t options) {
   return INVALID_ARGUMENT;
 }
 
-result_t user_list(int argc, char **argv, options_t options) {
+result user_list(int argc, char **argv, options options) {
   CHECK(argc, fprintf(stderr, "invalid argument: %s\n", argv[0]);
         return FAILURE);
 
-  config_t config;
+  redmine::config config;
   CHECK(config_load(config), fprintf(stderr, "invalid config file\n");
         return INVALID_CONFIG);
 
-  std::vector<user_t> users;
+  std::vector<redmine::user> users;
   CHECK_RETURN(query::users(config, options, users));
 
   printf(
@@ -49,11 +96,11 @@ result_t user_list(int argc, char **argv, options_t options) {
   return SUCCESS;
 }
 
-result_t user_show(int argc, char **argv, options_t options) {
+result user_show(int argc, char **argv, options options) {
   CHECK(0 == argc, fprintf(stderr, "missing id\n"));
   CHECK(1 < argc, fprintf(stderr, "invalid argument: %s\n", argv[1]));
 
-  config_t config;
+  redmine::config config;
   CHECK(config_load(config), fprintf(stderr, "invalid config file\n");
         return INVALID_CONFIG);
 
@@ -61,96 +108,52 @@ result_t user_show(int argc, char **argv, options_t options) {
   CHECK_RETURN(http::get("/users/" + std::string(argv[0]) + ".json", config,
                          options, body));
 
-  auto root = json::read(body, false);
-  CHECK_JSON_TYPE(root, json::TYPE_OBJECT);
-  CHECK(has<DEBUG>(options), printf("%s\n", json::write(root, "  ").c_str()));
+  auto Root = json::read(body, false);
+  CHECK_JSON_TYPE(Root, json::TYPE_OBJECT);
+  CHECK(has<DEBUG>(options), printf("%s\n", json::write(Root, "  ").c_str()));
 
-  auto user = root.object().get("user");
-  CHECK_JSON_PTR(user, json::TYPE_OBJECT);
+  auto User = Root.object().get("user");
+  CHECK_JSON_PTR(User, json::TYPE_OBJECT);
 
-  user_t U;
-  CHECK_RETURN(user_deserialize(user->object(), U));
+  redmine::user user;
+  CHECK_RETURN(user.init(User->object()));
 
-  printf("      name: %s %s\n", U.firstname.c_str(), U.lastname.c_str());
-  printf("        id: %u\n", U.id);
-  printf("     email: %s\n", U.mail.c_str());
-  printf("     login: %s\n", U.login.c_str());
-  if (!U.api_key.empty()) {
-    printf("   api key: %s\n", U.api_key.c_str());
+  printf("      name: %s %s\n", user.firstname.c_str(), user.lastname.c_str());
+  printf("        id: %u\n", user.id);
+  printf("     email: %s\n", user.mail.c_str());
+  printf("     login: %s\n", user.login.c_str());
+  if (!user.api_key.empty()) {
+    printf("   api key: %s\n", user.api_key.c_str());
   }
-  printf("   created: %s\n", U.created_on.c_str());
-  printf("last login: %s\n", U.last_login_on.c_str());
-  printf("    status: %u\n", U.status);
+  printf("   created: %s\n", user.created_on.c_str());
+  printf("last login: %s\n", user.last_login_on.c_str());
+  printf("    status: %u\n", user.status);
 
   return SUCCESS;
 }
 }
 
-result_t user_deserialize(const json::object &user, user_t &out) {
-  auto firstname = user.get("firstname");
-  CHECK_JSON_PTR(firstname, json::TYPE_STRING);
-  out.firstname = firstname->string();
-
-  auto lastname = user.get("lastname");
-  CHECK_JSON_PTR(lastname, json::TYPE_STRING);
-  out.lastname = lastname->string();
-
-  auto id = user.get("id");
-  CHECK_JSON_PTR(id, json::TYPE_NUMBER);
-  out.id = id->number<uint32_t>();
-
-  auto mail = user.get("mail");
-  CHECK_JSON_PTR(mail, json::TYPE_STRING);
-  out.mail = mail->string();
-
-  auto login = user.get("login");
-  CHECK_JSON_PTR(login, json::TYPE_STRING);
-  out.login = login->string();
-
-  auto api_key = user.get("api_key");
-  if (api_key) {
-    CHECK_JSON_TYPE((*api_key), json::TYPE_STRING);
-    out.api_key = api_key->string();
-  }
-
-  auto created_on = user.get("created_on");
-  CHECK_JSON_PTR(created_on, json::TYPE_STRING);
-  out.created_on = created_on->string();
-
-  auto last_login_on = user.get("last_login_on");
-  CHECK_JSON_PTR(last_login_on, json::TYPE_STRING);
-  out.last_login_on = last_login_on->string();
-
-  auto status = user.get("status");
-  if (status) {
-    CHECK_JSON_PTR(status, json::TYPE_NUMBER);
-    out.status = status->number<uint32_t>();
-  }
-
-  return SUCCESS;
-}
-
-result_t query::users(config_t &config, options_t options,
-                      std::vector<user_t> &out) {
+result query::users(config &config, options options, std::vector<user> &out) {
   std::string body;
   CHECK_RETURN(http::get("/users.json", config, options, body));
 
-  auto root = json::read(body, false);
-  CHECK_JSON_TYPE(root, json::TYPE_OBJECT);
+  auto Root = json::read(body, false);
+  CHECK_JSON_TYPE(Root, json::TYPE_OBJECT);
 
-  CHECK(has<DEBUG>(options), printf("%s\n", json::write(root, "  ").c_str()));
+  CHECK(has<DEBUG>(options), printf("%s\n", json::write(Root, "  ").c_str()));
 
-  auto users = root.object().get("users");
-  CHECK_JSON_PTR(users, json::TYPE_ARRAY);
+  auto Users = Root.object().get("users");
+  CHECK_JSON_PTR(Users, json::TYPE_ARRAY);
 
-  for (auto &user : users->array()) {
-    CHECK_JSON_TYPE(user, json::TYPE_OBJECT);
+  for (auto &User : Users->array()) {
+    CHECK_JSON_TYPE(User, json::TYPE_OBJECT);
 
-    user_t U;
-    CHECK_RETURN(user_deserialize(user.object(), U));
+    redmine::user user;
+    CHECK_RETURN(user.init(User.object()));
 
-    out.push_back(U);
+    out.push_back(user);
   }
 
   return SUCCESS;
+}
 }

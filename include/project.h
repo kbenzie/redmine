@@ -1,5 +1,5 @@
-#ifndef PROJECT_H
-#define PROJECT_H
+#ifndef PROJECT_HPP
+#define PROJECT_HPP
 
 #include <config.h>
 #include <redmine.h>
@@ -9,38 +9,63 @@
 #include <string>
 #include <vector>
 
-struct project_t {
-  std::string name;
+namespace redmine {
+struct project {
+  /// @brief Default constructor.
+  project();
+
+  /// @brief Initialise from a json::object.
+  ///
+  /// @param object Object to initilise redmine::project with.
+  ///
+  /// @return Returns either redmine::SUCCESS or redmine::FAILURE.
+  result init(const json::object &object);
+
+  /// @brief Construct a json::object from this redmine::project.
+  ///
+  /// @return The constructed json::object.
+  json::object jsonify() const;
+
+  /// @brief Equality operator for redmine::project.
+  ///
+  /// @param other Another redmine::project object.
+  ///
+  /// @return Returns true if equal, false otherwise.
+  bool operator==(const project &other) const;
+
+  /// @brief Equality operator for string.
+  ///
+  /// @param str String containing either an id, name or identifier.
+  ///
+  /// @return Returns true if equal, false otherwise.
+  bool operator==(const char *str) const;
+
   uint32_t id;
+  std::string name;
   std::string identifier;
   std::string description;
   std::string homepage;
-  std::string created_on;  // TODO: Convert to date type
-  std::string updated_on;  // TODO: Convert to date type
-  reference_t parent;
+  std::string created_on;
+  std::string updated_on;
+  reference parent;
 };
 
 namespace action {
-result_t project(int argc, char **argv, options_t options);
+result project(int argc, char **argv, options options);
 
-result_t project_list(int argc, char **argv, options_t options);
+result project_list(int argc, char **argv, options options);
 
-result_t project_new(int argc, char **argv, options_t options);
+result project_new(int argc, char **argv, options options);
 
-result_t project_show(int argc, char **argv, options_t options);
+result project_show(int argc, char **argv, options options);
 }
 
-namespace project {
-result_t serialize(const project_t &project, json::object &out);
-
-result_t deserialize(const json::object &project, project_t &out);
-
-project_t *find(std::vector<project_t> &projects, const char *pattern);
-}
+project *find(std::vector<project> &projects, const char *pattern);
 
 namespace query {
-result_t projects(config_t &config, options_t options,
-                  std::vector<project_t> &out);
+result projects(config &config, options options,
+                std::vector<project> &projects);
+}
 }
 
 #endif

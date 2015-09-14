@@ -9,6 +9,7 @@
 #include <Windows.h>
 #endif
 
+namespace redmine {
 namespace util {
 std::string getcwd() {
   char buffer[4096] = {};
@@ -20,16 +21,17 @@ std::string getcwd() {
   return std::string(buffer);
 }
 
-result_t rm(const std::string &filename) {
+result rm(const std::string &filename) {
 #if defined(REDMINE_PLATFORM_LINUX) || defined(REDMINE_PLATFORM_MAC)
   CHECK(unlink(filename.c_str()),
         fprintf(stderr, "could not delete file: %s\n", filename.c_str());
         return FAILURE);
 #elif defined(REDMINE_PLATFORM_WINDOWS)
-  CHECK(!DeleteFile(filename.c_str()),
-        fprintf(stderr, "could not delete file: %s\n", filename.c_str());
-        return FAILURE));
+    CHECK(!DeleteFile(filename.c_str()),
+          fprintf(stderr, "could not delete file: %s\n", filename.c_str());
+          return FAILURE));
 #endif
   return SUCCESS;
+}
 }
 }

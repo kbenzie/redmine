@@ -21,63 +21,63 @@ int main(int argc, char **argv) {
             "        --verbose - verbose output\n"
             "        --debug - enable debug output\n"
             "        --debug-http - enable http debug output\n");
-    return FAILURE;
+    return redmine::FAILURE;
   }
 
-  http::session http;
-  CHECK(http.init(), return FAILURE);
+  redmine::http::session http;
+  CHECK(http.init(), return redmine::FAILURE);
 
-  options_t options = NONE;
+  redmine::options options = redmine::NONE;
   int argi = 1;
   for (; argi < argc; ++argi) {
     if (!strcmp("--verbose", argv[argi])) {
-      options |= VERBOSE;
+      options |= redmine::VERBOSE;
       CHECK(argc - 1 == argi, fprintf(stderr, "action required\n");
-            return ACTION_REQUIRED);
+            return redmine::ACTION_REQUIRED);
       continue;
     }
 
     if (!strcmp("--debug", argv[argi])) {
-      options |= DEBUG;
+      options |= redmine::DEBUG;
       CHECK(argc - 1 == argi, fprintf(stderr, "action required\n");
-            return ACTION_REQUIRED);
+            return redmine::ACTION_REQUIRED);
       continue;
     }
 
     if (!strcmp("--debug-http", argv[argi])) {
-      options |= DEBUG_HTTP;
+      options |= redmine::DEBUG_HTTP;
       CHECK(argc - 1 == argi, fprintf(stderr, "action required\n");
-            return ACTION_REQUIRED);
+            return redmine::ACTION_REQUIRED);
       continue;
     }
 
     if (!strcmp("config", argv[argi])) {
       ++argi;
-      return action::config(argc - argi, argv + argi, options);
+      return redmine::action::config(argc - argi, argv + argi, options);
     }
 
     if (!strcmp("project", argv[argi])) {
       ++argi;
-      return action::project(argc - argi, argv + argi, options);
+      return redmine::action::project(argc - argi, argv + argi, options);
     }
 
     if (!strcmp("issue", argv[argi])) {
       ++argi;
-      return action::issue(argc - argi, argv + argi, options);
+      return redmine::action::issue(argc - argi, argv + argi, options);
     }
 
     if (!strcmp("user", argv[argi])) {
       ++argi;
-      return action::user(argc - argi, argv + argi, options);
+      return redmine::action::user(argc - argi, argv + argi, options);
     }
   }
 
   fprintf(stderr, "invalid argument: %s\n", argv[1]);
-  return INVALID_ARGUMENT;
+  return redmine::INVALID_ARGUMENT;
 }
 
 #ifdef REDMINE_DEBUG
-const char *result_string(result_t result) {
+const char *redmine::result_string(result result) {
   switch (result) {
     case SUCCESS:
       return "success";
@@ -95,7 +95,8 @@ const char *result_string(result_t result) {
 }
 #endif
 
-result_t reference_deserialize(const json::object &ref, reference_t &out) {
+redmine::result redmine::reference_deserialize(const json::object &ref,
+                                               redmine::reference &out) {
   auto name = ref.get("name");
   CHECK_JSON_PTR(name, json::TYPE_STRING);
 

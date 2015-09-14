@@ -11,8 +11,75 @@
 #include <iterator>
 #include <sstream>
 
+namespace redmine {
+project::project()
+    : id(),
+      name(),
+      identifier(),
+      description(),
+      homepage(),
+      created_on(),
+      updated_on(),
+      parent() {}
+
+result project::init(const json::object &object) {
+  auto Name = object.get("name");
+  CHECK_JSON_PTR(Name, json::TYPE_STRING);
+  name = Name->string();
+
+  auto Id = object.get("id");
+  CHECK_JSON_PTR(Id, json::TYPE_NUMBER);
+  id = Id->number<uint32_t>();
+
+  auto Identifier = object.get("identifier");
+  CHECK_JSON_PTR(Identifier, json::TYPE_STRING);
+  identifier = Identifier->string();
+
+  auto Description = object.get("description");
+  CHECK_JSON_PTR(Description, json::TYPE_STRING);
+  description = Description->string();
+
+  auto CreatedOn = object.get("created_on");
+  CHECK_JSON_PTR(CreatedOn, json::TYPE_STRING);
+  created_on = CreatedOn->string();
+
+  auto UpdatedOn = object.get("updated_on");
+  CHECK_JSON_PTR(UpdatedOn, json::TYPE_STRING);
+  updated_on = UpdatedOn->string();
+
+  auto Parent = object.get("parent");
+  if (Parent) {
+    CHECK_JSON_TYPE((*Parent), json::TYPE_OBJECT);
+
+    auto Name = Parent->object().get("name");
+    CHECK_JSON_PTR(Name, json::TYPE_STRING);
+    parent.name = Name->string();
+
+    auto Id = Parent->object().get("id");
+    CHECK_JSON_PTR(Id, json::TYPE_NUMBER);
+    parent.id = Id->number<uint32_t>();
+  }
+
+  return SUCCESS;
+}
+
+json::object project::jsonify() const {
+  UNREACHABLE("redmine::project::jsonify() not implemented!");
+  return json::object();
+}
+
+bool project::operator==(const project &other) const { return id == other.id; }
+
+bool project::operator==(const char *str) const {
+  const uint32_t Id = std::strtoul(str, nullptr, 0);
+  if (id == Id || name == str || identifier == str) {
+    return true;
+  }
+  return false;
+}
+
 namespace action {
-result_t project(int argc, char **argv, options_t options) {
+result project(int argc, char **argv, options options) {
   if (0 == argc) {
     fprintf(stderr,
             "usage: redmine project <action> [args]\n"
@@ -39,17 +106,17 @@ result_t project(int argc, char **argv, options_t options) {
   return INVALID_ARGUMENT;
 }
 
-result_t project_list(int argc, char **argv, options_t options) {
+result project_list(int argc, char **argv, options options) {
   CHECK(0 != argc, fprintf(stderr, "invalid argument: %s\n", argv[0]);
         return INVALID_ARGUMENT);
 
   // TODO: Support cached project list for command line completion.
 
-  config_t config;
+  redmine::config config;
   CHECK(config_load(config), fprintf(stderr, "invalid config file\n");
         return INVALID_CONFIG);
 
-  std::vector<project_t> projects;
+  std::vector<redmine::project> projects;
   CHECK_RETURN(query::projects(config, options, projects));
 
   // TODO: Display information about the output of the fields below?
@@ -68,7 +135,7 @@ result_t project_list(int argc, char **argv, options_t options) {
   return SUCCESS;
 }
 
-result_t project_new(int argc, char **argv, options_t options) {
+result project_new(int argc, char **argv, options options) {
   CHECK(2 > argc,
         fprintf(stderr, "usage: redmine project new <name> <identifier>\n");
         return FAILURE);
@@ -80,7 +147,7 @@ result_t project_new(int argc, char **argv, options_t options) {
     return FAILURE;
   };
 
-  config_t config;
+  redmine::config config;
   CHECK(config_load(config), fprintf(stderr, "invalid config file\n");
         return INVALID_CONFIG);
 
@@ -102,7 +169,7 @@ result_t project_new(int argc, char **argv, options_t options) {
     file << "parent_id: \n";  // the parent project number
     file << "inherit_members: false\n";
     file << "tracker_ids: \n";  // (repeatable element) the tracker id: 1 for
-                                // Bug, etc.
+    // Bug, etc.
     file << "enabled_module_names: boards, calendar, documents, files, gantt, "
             "issue_tracking, news, repository, time_tracking, wiki\n";
   }
@@ -191,8 +258,8 @@ result_t project_new(int argc, char **argv, options_t options) {
 
   CHECK(has<DEBUG>(options), printf("%s\n", data.c_str()));
   std::string body;
-  result_t error = http::post("/projects.json", config, options,
-                              http::status::CREATED, data, body);
+  redmine::result error = http::post("/projects.json", config, options,
+                                     http::code::CREATED, data, body);
   json::value root = json::read(body, false);
   if (error) {
     CHECK_JSON_TYPE(root, json::TYPE_OBJECT);
@@ -244,12 +311,12 @@ result_t project_new(int argc, char **argv, options_t options) {
   return SUCCESS;
 }
 
-result_t project_show(int argc, char **argv, options_t options) {
+result project_show(int argc, char **argv, options options) {
   CHECK(0 == argc, fprintf(stderr, "missing id or name\n"); return FAILURE);
   CHECK(1 < argc, fprintf(stderr, "invalid argument: %s\n", argv[1]);
         return FAILURE);
 
-  config_t config;
+  redmine::config config;
   CHECK(config_load(config), fprintf(stderr, "invalid config file\n");
         return INVALID_CONFIG);
 
@@ -263,87 +330,30 @@ result_t project_show(int argc, char **argv, options_t options) {
   json::value root = json::read(body, false);
   CHECK(has<DEBUG>(options), printf("%s\n", json::write(root, "  ").c_str()));
 
-  auto &project = root.object().get("project")->object();
-  project_t P;
-  CHECK_RETURN(project::deserialize(project, P));
+  auto &Project = root.object().get("project")->object();
+  redmine::project project;
+  CHECK_RETURN(project.init(Project));
 
-  printf("       name: %s\n", P.name.c_str());
-  printf("         id: %u\n", P.id);
-  printf(" identifier: %s\n", P.identifier.c_str());
-  printf("description: %s\n", P.description.c_str());
-  if (!P.homepage.empty()) {
-    printf("   homepage: %s\n", P.homepage.c_str());
+  printf("       name: %s\n", project.name.c_str());
+  printf("         id: %u\n", project.id);
+  printf(" identifier: %s\n", project.identifier.c_str());
+  printf("description: %s\n", project.description.c_str());
+  if (!project.homepage.empty()) {
+    printf("   homepage: %s\n", project.homepage.c_str());
   }
-  printf(" created_on: %s\n", P.created_on.c_str());
-  printf(" updated_on: %s\n", P.updated_on.c_str());
-  if (!P.parent.name.empty()) {
-    printf("parent name: %s\n", P.parent.name.c_str());
-    printf("  parent id: %u\n", P.parent.id);
-  }
-
-  return SUCCESS;
-}
-}
-
-result_t project::deserialize(const json::object &project, project_t &out) {
-  auto name = project.get("name");
-  CHECK_JSON_PTR(name, json::TYPE_STRING);
-  out.name = name->string();
-
-  auto id = project.get("id");
-  CHECK_JSON_PTR(id, json::TYPE_NUMBER);
-  out.id = id->number<uint32_t>();
-
-  auto identifier = project.get("identifier");
-  CHECK_JSON_PTR(identifier, json::TYPE_STRING);
-  out.identifier = identifier->string();
-
-  auto description = project.get("description");
-  CHECK_JSON_PTR(description, json::TYPE_STRING);
-  out.description = description->string();
-
-  auto created_on = project.get("created_on");
-  CHECK_JSON_PTR(created_on, json::TYPE_STRING);
-  out.created_on = created_on->string();
-
-  auto updated_on = project.get("updated_on");
-  CHECK_JSON_PTR(updated_on, json::TYPE_STRING);
-  out.updated_on = updated_on->string();
-
-  auto parent = project.get("parent");
-  if (parent) {
-    CHECK_JSON_TYPE((*parent), json::TYPE_OBJECT);
-
-    auto name = parent->object().get("name");
-    CHECK_JSON_PTR(name, json::TYPE_STRING);
-    out.parent.name = name->string();
-
-    auto id = parent->object().get("id");
-    CHECK_JSON_PTR(id, json::TYPE_NUMBER);
-    out.parent.id = id->number<uint32_t>();
+  printf(" created_on: %s\n", project.created_on.c_str());
+  printf(" updated_on: %s\n", project.updated_on.c_str());
+  if (!project.parent.name.empty()) {
+    printf("parent name: %s\n", project.parent.name.c_str());
+    printf("  parent id: %u\n", project.parent.id);
   }
 
   return SUCCESS;
 }
-
-project_t *project::find(std::vector<project_t> &projects,
-                         const char *pattern) {
-  project_t *ret = nullptr;
-
-  uint32_t id = std::strtoul(pattern, nullptr, 0);
-  for (auto &project : projects) {
-    if (project.id == id || project.name == pattern ||
-        project.identifier == pattern) {
-      ret = &project;
-      break;
-    }
-  }
-
-  return ret;
 }
 
-result_t query::projects(config_t &config, options_t options,
-                         std::vector<project_t> &out) {
+result query::projects(config &config, options options,
+                       std::vector<project> &projects) {
   std::string body;
   CHECK_RETURN(http::get("/projects.json", config, options, body));
 
@@ -352,17 +362,18 @@ result_t query::projects(config_t &config, options_t options,
 
   CHECK(has<DEBUG>(options), printf("%s\n", json::write(root, "  ").c_str()));
 
-  auto projects = root.object().get("projects");
-  CHECK_JSON_PTR(projects, json::TYPE_ARRAY);
+  auto Projects = root.object().get("projects");
+  CHECK_JSON_PTR(Projects, json::TYPE_ARRAY);
 
-  for (auto project : projects->array()) {
-    CHECK_JSON_TYPE(project, json::TYPE_OBJECT);
+  for (auto Project : Projects->array()) {
+    CHECK_JSON_TYPE(Project, json::TYPE_OBJECT);
 
-    project_t P;
-    CHECK_RETURN(project::deserialize(project.object(), P));
+    redmine::project project;
+    CHECK_RETURN(project.init(Project.object()));
 
-    out.push_back(P);
+    projects.push_back(project);
   }
 
   return SUCCESS;
+}
 }

@@ -5,8 +5,9 @@
 
 #include <string>
 
-struct config_t {
-  config_t() : url(), key(), port(80), use_ssl(false), verify_ssl(false) {}
+namespace redmine {
+struct config {
+  config() : url(), key(), port(80), use_ssl(false), verify_ssl(false) {}
 
   std::string url;
   std::string key;
@@ -15,22 +16,20 @@ struct config_t {
   bool verify_ssl;
 };
 
-namespace redmine {
-typedef config_t config;
-}
-
 namespace action {
-result_t config(int argc, char **argv, options_t options);
-result_t config_url(int argc, char **argv, options_t options);
-result_t config_key(int argc, char **argv, options_t options);
-result_t config_port(int argc, char **argv, options_t options);
-result_t config_use_ssl(int argc, char **argv, options_t options);
-result_t config_verify_ssl(int argc, char **argv, options_t options);
+result config(int argc, char **argv, options options);
+result config_url(int argc, char **argv, options options);
+result config_key(int argc, char **argv, options options);
+result config_port(int argc, char **argv, options options);
+result config_use_ssl(int argc, char **argv, options options);
+result config_verify_ssl(int argc, char **argv, options options);
 }
 
-result_t config_load(config_t &config);
+result config_load(config &config);
 
-result_t config_save(config_t &config);
+result config_save(config &config);
 
-result_t config_validate(config_t &config);
+result config_validate(config &config);
+}
+
 #endif

@@ -1,8 +1,9 @@
 #include <http.h>
-#include <query.h>
+#include <tracker.hpp>
 
-result_t query::trackers(config_t &config, options_t options,
-                         std::vector<reference_t> &trackers) {
+namespace redmine {
+result query::trackers(config &config, options options,
+                       std::vector<reference> &trackers) {
   std::string body;
   CHECK_RETURN(http::get("/trackers.json", config, options, body));
 
@@ -17,11 +18,12 @@ result_t query::trackers(config_t &config, options_t options,
   for (auto &Tracker : Trackers->array()) {
     CHECK_JSON_TYPE(Tracker, json::TYPE_OBJECT);
 
-    reference_t tracker;
+    reference tracker;
     CHECK_RETURN(reference_deserialize(Tracker.object(), tracker));
 
     trackers.push_back(tracker);
   }
 
   return SUCCESS;
+}
 }

@@ -1,8 +1,8 @@
-#include <enumerations.hpp>
+#include <enumeration.hpp>
 #include <http.h>
 #include <issue.h>
 #include <project.h>
-#include <query.h>
+#include <tracker.hpp>
 
 #include <json/json.hpp>
 
@@ -10,8 +10,97 @@
 #include <cstdio>
 #include <cstring>
 
+namespace redmine {
+issue::issue() {}
+
+result issue::init(const json::object &object) {
+  auto Id = object.get("id");
+  CHECK_JSON_PTR(Id, json::TYPE_NUMBER);
+  id = Id->number<uint32_t>();
+
+  auto Subject = object.get("subject");
+  CHECK_JSON_PTR(Subject, json::TYPE_STRING);
+  subject = Subject->string();
+
+  auto Description = object.get("description");
+  CHECK_JSON_PTR(Description, json::TYPE_STRING);
+  description = Description->string();
+
+  auto StartDate = object.get("start_date");
+  CHECK_JSON_PTR(StartDate, json::TYPE_STRING);
+  start_date = StartDate->string();
+
+  auto DueDate = object.get("due_date");
+  if (DueDate) {
+    CHECK_JSON_TYPE((*DueDate), json::TYPE_STRING);
+    due_date = DueDate->string();
+  }
+
+  auto CreatedOn = object.get("created_on");
+  CHECK_JSON_PTR(CreatedOn, json::TYPE_STRING);
+  created_on = CreatedOn->string();
+
+  auto UpdatedOn = object.get("updated_on");
+  CHECK_JSON_PTR(UpdatedOn, json::TYPE_STRING);
+  updated_on = UpdatedOn->string();
+
+  auto DoneRatio = object.get("done_ratio");
+  CHECK_JSON_PTR(DoneRatio, json::TYPE_NUMBER);
+  done_ratio = DoneRatio->number<uint32_t>();
+
+  auto EstimatedHours = object.get("estimated_hours");
+  if (EstimatedHours) {
+    CHECK_JSON_TYPE((*EstimatedHours), json::TYPE_NUMBER);
+    estimated_hours = EstimatedHours->number<uint32_t>();
+  }
+
+  auto getRef = [](const json::object &object, reference &reference) -> result {
+    auto name = object.get("name");
+    CHECK_JSON_PTR(name, json::TYPE_STRING);
+    reference.name = name->string();
+
+    auto id = object.get("id");
+    CHECK_JSON_PTR(id, json::TYPE_NUMBER);
+    reference.id = id->number<uint32_t>();
+
+    return SUCCESS;
+  };
+
+  auto Project = object.get("project");
+  CHECK_JSON_PTR(Project, json::TYPE_OBJECT);
+  CHECK_RETURN(getRef(Project->object(), project));
+
+  auto Tracker = object.get("tracker");
+  CHECK_JSON_PTR(Tracker, json::TYPE_OBJECT);
+  CHECK_RETURN(getRef(Tracker->object(), tracker));
+
+  auto Status = object.get("status");
+  CHECK_JSON_PTR(Status, json::TYPE_OBJECT);
+  CHECK_RETURN(getRef(Status->object(), status));
+
+  auto Priority = object.get("priority");
+  CHECK_JSON_PTR(Priority, json::TYPE_OBJECT);
+  CHECK_RETURN(getRef(Priority->object(), priority));
+
+  auto Author = object.get("author");
+  CHECK_JSON_PTR(Author, json::TYPE_OBJECT);
+  CHECK_RETURN(getRef(Author->object(), author));
+
+  auto AssignedTo = object.get("assigned_to");
+  CHECK_JSON_PTR(AssignedTo, json::TYPE_OBJECT);
+  CHECK_RETURN(getRef(AssignedTo->object(), assigned_to));
+
+  auto Category = object.get("category");
+  if (Category) {
+    CHECK_JSON_TYPE((*Category), json::TYPE_OBJECT);
+    CHECK_RETURN(getRef(Category->object(), category));
+  }
+
+  return SUCCESS;
+}
+
 namespace action {
-result_t issue(int argc, char **argv, options_t options) {
+result issue(int argc, char **argv, options options) {
   if (0 == argc) {
     fprintf(stderr,
             "usage: redmine issue <action> [args]\n"
@@ -43,20 +132,25 @@ result_t issue(int argc, char **argv, options_t options) {
   return INVALID_ARGUMENT;
 }
 
-result_t issue_list(int argc, char **argv, options_t options) {
+result issue_list(int argc, char **argv, options options) {
   CHECK(argc > 1, fprintf(stderr, "invalid argument: %s\n", argv[1]));
 
-  config_t config;
+  redmine::config config;
   CHECK(config_load(config), fprintf(stderr, "invalid config file\n");
         return INVALID_CONFIG);
 
-  std::vector<project_t> projects;
+  std::vector<redmine::project> projects;
   CHECK_RETURN(query::projects(config, options, projects));
 
   std::string filter;
   if (1 == argc) {
-    std::string project_id;
-    project_t *project = project::find(projects, argv[0]);
+    redmine::project *project = nullptr;
+    for (auto &Project : projects) {
+      if (Project == argv[0]) {
+        project = &Project;
+        break;
+      }
+    }
 
     CHECK(!project,
           fprintf(stderr, "invalid project id or identifier: %s\n", argv[0]);
@@ -74,7 +168,7 @@ result_t issue_list(int argc, char **argv, options_t options) {
 
   // TODO: Support listing other users issues
 
-  std::vector<issue_t> issues;
+  std::vector<redmine::issue> issues;
   CHECK_RETURN(query::issues(filter, config, options, issues));
 
   printf(
@@ -82,23 +176,29 @@ result_t issue_list(int argc, char **argv, options_t options) {
       "-------|----------------------------------------------------------------"
       "-------\n");
   for (auto &issue : issues) {
-    printf("%6s | %s\n", issue.id.c_str(), issue.subject.c_str());
+    printf("%6d | %s\n", issue.id, issue.subject.c_str());
   }
 
   return SUCCESS;
 }
 
-result_t issue_new(int argc, char **argv, options_t options) {
+result issue_new(int argc, char **argv, options options) {
   CHECK_MSG(0 == argc, "missing project id or identifier", return FAILURE);
 
-  config_t config;
+  redmine::config config;
   CHECK(config_load(config), fprintf(stderr, "invalid config file\n");
         return INVALID_CONFIG);
 
-  std::vector<project_t> projects;
+  std::vector<redmine::project> projects;
   CHECK_RETURN(query::projects(config, options, projects));
 
-  project_t *project = project::find(projects, argv[0]);
+  redmine::project *project = nullptr;
+  for (auto &Project : projects) {
+    if (Project == argv[0]) {
+      project = &Project;
+      break;
+    }
+  }
   CHECK(!project, fprintf(stderr, "invalid project: %s\n", argv[0]);
         return FAILURE);
 
@@ -112,31 +212,31 @@ result_t issue_new(int argc, char **argv, options_t options) {
     subject = argv[2];
   }
 
-  std::vector<reference_t> trackers;
+  std::vector<reference> trackers;
   CHECK_RETURN(query::trackers(config, options, trackers));
 
 #if 0
-  for (auto &tracker : trackers) {
-    printf("%s\n", tracker.name.c_str());
-  }
+    for (auto &tracker : trackers) {
+      printf("%s\n", tracker.name.c_str());
+    }
 #endif
 
-  std::vector<issue_status_t> statuses;
-  CHECK_RETURN(query::issue_statuses(config, options, statuses));
+  std::vector<issue_status> issue_statuses;
+  CHECK_RETURN(query::issue_statuses(config, options, issue_statuses));
 
 #if 0
-  for (auto &status : statuses) {
-    printf("%s\n", status.name.c_str());
-  }
+    for (auto &status : statuses) {
+      printf("%s\n", status.name.c_str());
+    }
 #endif
 
   std::vector<redmine::enumeration> priorities;
-  CHECK_RETURN(redmine::query::issue_priorities(config, options, priorities));
+  CHECK_RETURN(query::issue_priorities(config, options, priorities));
 
 #if 0
-  for (auto &priority : priorities) {
-    printf("%s\n", priority.name.c_str());
-  }
+    for (auto &priority : priorities) {
+      printf("%s\n", priority.name.c_str());
+    }
 #endif
 
   static const char *fields[] = {
@@ -161,12 +261,12 @@ void replace_all(std::string &str, const std::string &old_str,
   }
 }
 
-result_t issue_show(int argc, char **argv, options_t options) {
+result issue_show(int argc, char **argv, options options) {
   CHECK(0 == argc, fprintf(stderr, "missing issue id\n"); return FAILURE);
   CHECK(1 < argc, fprintf(stderr, "invalid argument: %s\n", argv[1]);
         return FAILURE);
 
-  config_t config;
+  redmine::config config;
   CHECK(config_load(config), fprintf(stderr, "invalid config file\n");
         return INVALID_CONFIG);
 
@@ -176,169 +276,82 @@ result_t issue_show(int argc, char **argv, options_t options) {
   CHECK_RETURN(
       http::get(std::string("/issues/") + id + ".json", config, options, body));
 
-  json::value root = json::read(body, false);
-  CHECK_JSON_TYPE(root, json::TYPE_OBJECT);
+  json::value Root = json::read(body, false);
+  CHECK_JSON_TYPE(Root, json::TYPE_OBJECT);
 
-  CHECK(has<DEBUG>(options), printf("%s\n", json::write(root, "  ").c_str()));
+  CHECK(has<DEBUG>(options), printf("%s\n", json::write(Root, "  ").c_str()));
 
-  auto issue = root.object().get("issue");
-  CHECK_JSON_PTR(issue, json::TYPE_OBJECT);
+  auto Issue = Root.object().get("issue");
+  CHECK_JSON_PTR(Issue, json::TYPE_OBJECT);
 
-  issue_t I;
-  CHECK_RETURN(issue_deserialize(issue->object(), I));
+  redmine::issue issue;
+  CHECK_RETURN(issue.init(Issue->object()));
 
-  printf("%s: %s\n", I.id.c_str(), I.subject.c_str());
-  printf("%s %s ", I.status.name.c_str(), I.tracker.name.c_str());
-  printf("(%u %%) | ", I.done_ratio);
-  printf("%s | ", I.priority.name.c_str());
-  printf("%s (%u)\n", I.project.name.c_str(), I.project.id);
-  printf("started: %s | ", I.start_date.c_str());
-  if (!I.due_date.empty()) {
-    printf("due: %s | ", I.due_date.c_str());
+  printf("%u: %s\n", issue.id, issue.subject.c_str());
+  printf("%s %s ", issue.status.name.c_str(), issue.tracker.name.c_str());
+  printf("(%u %%) | ", issue.done_ratio);
+  printf("%s | ", issue.priority.name.c_str());
+  printf("%s (%u)\n", issue.project.name.c_str(), issue.project.id);
+  printf("started: %s | ", issue.start_date.c_str());
+  if (!issue.due_date.empty()) {
+    printf("due: %s | ", issue.due_date.c_str());
   }
-  printf("created: %s | ", I.created_on.c_str());
-  printf("updated: %s\n", I.updated_on.c_str());
-  if (I.estimated_hours) {
-    printf("estimated_hours: %u\n", I.estimated_hours);
+  printf("created: %s | ", issue.created_on.c_str());
+  printf("updated: %s\n", issue.updated_on.c_str());
+  if (issue.estimated_hours) {
+    printf("estimated_hours: %u\n", issue.estimated_hours);
   }
-  printf("author: %s (%u) | ", I.author.name.c_str(), I.author.id);
-  printf("assigned: %s (%u)\n", I.author.name.c_str(), I.author.id);
-  if (!I.category.name.empty()) {
-    printf("category: id: %u: name: %s\n", I.category.id,
-           I.category.name.c_str());
+  printf("author: %s (%u) | ", issue.author.name.c_str(), issue.author.id);
+  printf("assigned: %s (%u)\n", issue.author.name.c_str(), issue.author.id);
+  if (!issue.category.name.empty()) {
+    printf("category: id: %u: name: %s\n", issue.category.id,
+           issue.category.name.c_str());
   }
-  std::string description = I.description;
+  std::string description = issue.description;
   replace_all(description, "\\r\\n", "\n");
   printf("----------------\n%s\n", description.c_str());
 
   return SUCCESS;
 }
 
-result_t issue_edit(int argc, char **argv, options_t options) {
+result issue_edit(int argc, char **argv, options options) {
   fprintf(stderr, "unsupported: issue edit\n");
   return UNSUPPORTED;
 }
 }
 
-result_t issue_serialize(const issue_t &issue, json::object &out) {
+result issue_serialize(const issue &issue, json::object &out) {
   fprintf(stderr, "issue_serialize not implemented!\n");
   return UNSUPPORTED;
 }
 
-result_t issue_deserialize(const json::object &issue, issue_t &out) {
-  auto id = issue.get("id");
-  CHECK_JSON_PTR(id, json::TYPE_NUMBER);
-  out.id = std::to_string(id->number<uint32_t>());
-
-  auto subject = issue.get("subject");
-  CHECK_JSON_PTR(subject, json::TYPE_STRING);
-  out.subject = subject->string();
-
-  auto description = issue.get("description");
-  CHECK_JSON_PTR(description, json::TYPE_STRING);
-  out.description = description->string();
-
-  auto start_date = issue.get("start_date");
-  CHECK_JSON_PTR(start_date, json::TYPE_STRING);
-  out.start_date = start_date->string();
-
-  auto due_date = issue.get("due_date");
-  if (due_date) {
-    CHECK_JSON_TYPE((*due_date), json::TYPE_STRING);
-    out.due_date = due_date->string();
-  }
-
-  auto created_on = issue.get("created_on");
-  CHECK_JSON_PTR(created_on, json::TYPE_STRING);
-  out.created_on = created_on->string();
-
-  auto updated_on = issue.get("updated_on");
-  CHECK_JSON_PTR(updated_on, json::TYPE_STRING);
-  out.updated_on = updated_on->string();
-
-  auto done_ratio = issue.get("done_ratio");
-  CHECK_JSON_PTR(done_ratio, json::TYPE_NUMBER);
-  out.done_ratio = done_ratio->number<uint32_t>();
-
-  auto estimated_hours = issue.get("estimated_hours");
-  if (estimated_hours) {
-    CHECK_JSON_TYPE((*estimated_hours), json::TYPE_NUMBER);
-    out.estimated_hours = estimated_hours->number<uint32_t>();
-  }
-
-  auto getRef =
-      [](const json::object &object, reference_t &reference) -> result_t {
-    auto name = object.get("name");
-    CHECK_JSON_PTR(name, json::TYPE_STRING);
-    reference.name = name->string();
-
-    auto id = object.get("id");
-    CHECK_JSON_PTR(id, json::TYPE_NUMBER);
-    reference.id = id->number<uint32_t>();
-
-    return SUCCESS;
-  };
-
-  auto project = issue.get("project");
-  CHECK_JSON_PTR(project, json::TYPE_OBJECT);
-  CHECK_RETURN(getRef(project->object(), out.project));
-
-  auto tracker = issue.get("tracker");
-  CHECK_JSON_PTR(tracker, json::TYPE_OBJECT);
-  CHECK_RETURN(getRef(tracker->object(), out.tracker));
-
-  auto status = issue.get("status");
-  CHECK_JSON_PTR(status, json::TYPE_OBJECT);
-  CHECK_RETURN(getRef(status->object(), out.status));
-
-  auto priority = issue.get("priority");
-  CHECK_JSON_PTR(priority, json::TYPE_OBJECT);
-  CHECK_RETURN(getRef(priority->object(), out.priority));
-
-  auto author = issue.get("author");
-  CHECK_JSON_PTR(author, json::TYPE_OBJECT);
-  CHECK_RETURN(getRef(author->object(), out.author));
-
-  auto assigned_to = issue.get("assigned_to");
-  CHECK_JSON_PTR(assigned_to, json::TYPE_OBJECT);
-  CHECK_RETURN(getRef(assigned_to->object(), out.assigned_to));
-
-  auto category = issue.get("category");
-  if (category) {
-    CHECK_JSON_TYPE((*category), json::TYPE_OBJECT);
-    CHECK_RETURN(getRef(category->object(), out.category));
-  }
-
-  return SUCCESS;
-}
-
-result_t query::issues(std::string &filter, config_t &config, options_t options,
-                       std::vector<issue_t> &out) {
+result query::issues(std::string &filter, config &config, options options,
+                     std::vector<issue> &issues) {
   std::string body;
   CHECK_RETURN(http::get("/issues.json" + filter, config, options, body));
 
-  auto root = json::read(body, false);
-  CHECK_JSON_TYPE(root, json::TYPE_OBJECT);
+  auto Root = json::read(body, false);
+  CHECK_JSON_TYPE(Root, json::TYPE_OBJECT);
 
-  CHECK(has<DEBUG>(options), printf("%s\n", json::write(root, "  ").c_str()));
+  CHECK(has<DEBUG>(options), printf("%s\n", json::write(Root, "  ").c_str()));
 
-  auto issues = root.object().get("issues");
-  CHECK_JSON_PTR(issues, json::TYPE_ARRAY);
+  auto Issues = Root.object().get("issues");
+  CHECK_JSON_PTR(Issues, json::TYPE_ARRAY);
 
-  for (auto issue : issues->array()) {
-    CHECK_JSON_TYPE(issue, json::TYPE_OBJECT);
+  for (auto Issue : Issues->array()) {
+    CHECK_JSON_TYPE(Issue, json::TYPE_OBJECT);
 
-    issue_t I;
-    CHECK_RETURN(issue_deserialize(issue.object(), I));
+    redmine::issue issue;
+    CHECK_RETURN(issue.init(Issue.object()));
 
-    out.push_back(I);
+    issues.push_back(issue);
   }
 
   return SUCCESS;
 }
 
-result_t query::issue_statuses(config_t &config, options_t options,
-                               std::vector<issue_status_t> &statuses) {
+result query::issue_statuses(config &config, options options,
+                               std::vector<issue_status> &statuses) {
   std::string body;
   CHECK_RETURN(http::get("/issue_statuses.json", config, options, body));
 
@@ -351,7 +364,7 @@ result_t query::issue_statuses(config_t &config, options_t options,
 
   for (auto &Status : Statuses->array()) {
     CHECK_JSON_TYPE(Status, json::TYPE_OBJECT);
-    issue_status_t status;
+    issue_status status;
 
     auto name = Status.object().get("name");
     CHECK_JSON_PTR(name, json::TYPE_STRING);
@@ -377,4 +390,5 @@ result_t query::issue_statuses(config_t &config, options_t options,
   }
 
   return SUCCESS;
+}
 }

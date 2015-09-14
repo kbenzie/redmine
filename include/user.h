@@ -8,7 +8,14 @@
 
 #include <vector>
 
-struct user_t {
+namespace redmine {
+struct user {
+  user();
+
+  result init(const json::object &object);
+
+  json::object jsonify();
+
   std::string firstname;
   std::string lastname;
   uint32_t id;
@@ -21,17 +28,14 @@ struct user_t {
 };
 
 namespace action {
-result_t user(int argc, char **argv, options_t options);
-result_t user_list(int argc, char **argv, options_t options);
-result_t user_show(int argc, char **argv, options_t options);
+result user(int argc, char **argv, options options);
+result user_list(int argc, char **argv, options options);
+result user_show(int argc, char **argv, options options);
 }
 
-result_t user_serialize(const user_t &user, std::string &out);
-
-result_t user_deserialize(const json::object &user, user_t &out);
-
 namespace query {
-result_t users(config_t &config, options_t options, std::vector<user_t> &out);
+result users(config &config, options options, std::vector<user> &out);
+}
 }
 
 #endif

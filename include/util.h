@@ -5,10 +5,12 @@
 
 #include <string>
 
+namespace redmine {
 namespace util {
 std::string getcwd();
 
-result_t rm(const std::string &filename);
+result rm(const std::string &filename);
+}
 }
 
 #endif

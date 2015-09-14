@@ -3,14 +3,15 @@
 
 #include <curl/curl.h>
 
-result_t print_curl_error(CURLcode error, const char *file, const int line);
-#define CURL_CHECK_RETURN(EXPRESSION)                                      \
-  if (result_t error = print_curl_error(EXPRESSION, __FILE__, __LINE__)) { \
-    return error;                                                          \
+namespace redmine {
+result print_curl_error(CURLcode error, const char *file, const int line);
+#define CURL_CHECK_RETURN(EXPRESSION)                                    \
+  if (result error = print_curl_error(EXPRESSION, __FILE__, __LINE__)) { \
+    return error;                                                        \
   }
-result_t print_http_error(const uint32_t error);
+result print_http_error(const http::status error);
 
-result_t http::session::init() {
+redmine::result redmine::http::session::init() {
   CURL_CHECK_RETURN(curl_global_init(CURL_GLOBAL_ALL));
   return SUCCESS;
 }
@@ -41,7 +42,7 @@ struct read_data {
 };
 
 size_t read(char *buffer, size_t size, size_t count, void *stream) {
-  read_data *data = static_cast<read_data*>(stream);
+  read_data *data = static_cast<read_data *>(stream);
   ASSERT(false, "Implement http read callback!");
   return 0;
 }
@@ -54,7 +55,7 @@ size_t write(void *ptr, size_t size, size_t count, void *data) {
   return bytes;
 }
 
-result_t set_options(CURL *curl, const config_t &config, const options_t options) {
+result set_options(CURL *curl, const config &config, const options options) {
   CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_USE_SSL, CURLUSESSL_ALL));
   CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write));
   CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_PORT, config.port));
@@ -67,7 +68,7 @@ result_t set_options(CURL *curl, const config_t &config, const options_t options
   return SUCCESS;
 }
 
-struct curl_slist *create_header(const config_t &config, size_t length = 0) {
+struct curl_slist *create_header(const config &config, size_t length = 0) {
   struct curl_slist *header = nullptr;
   std::string api_key_header("X-Redmine-API-Key: ");
   api_key_header += config.key;
@@ -81,8 +82,8 @@ struct curl_slist *create_header(const config_t &config, size_t length = 0) {
   return header;
 }
 
-result_t http::get(const std::string &path, const config_t &config,
-                   options_t options, std::string &body) {
+result http::get(const std::string &path, const config &config, options options,
+                 std::string &body) {
   curl_raii curl;
   CHECK(!curl.valid(), fprintf(stderr, "curl init failed\n"); return FAILURE);
   CHECK_RETURN(set_options(curl, config, options));
@@ -94,21 +95,20 @@ result_t http::get(const std::string &path, const config_t &config,
   CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_HTTPHEADER, header));
 
   CURL_CHECK_RETURN(curl_easy_perform(curl));
-  http::status_t status;
+  http::status status;
   curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &status);
-  CHECK(http::status::OK != status, print_http_error(status); return FAILURE);
+  CHECK(http::code::OK != status, print_http_error(status); return FAILURE);
 
   CHECK(has<DEBUG>(options), printf("body: %s\n", body.c_str()));
 
   return SUCCESS;
 }
 
-result_t http::post(const std::string &path, const config_t &config,
-                    options_t options, const http::status_t expected,
-                    const std::string &str, std::string &body) {
+result http::post(const std::string &path, const config &config,
+                  options options, const http::status expected,
+                  const std::string &str, std::string &body) {
   curl_raii curl;
-  CHECK(!curl.valid(), fprintf(stderr, "curl init failed\n");
-        return FAILURE);
+  CHECK(!curl.valid(), fprintf(stderr, "curl init failed\n"); return FAILURE);
   CHECK_RETURN(set_options(curl, config, options));
   CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_POSTFIELDS, str.c_str()));
   CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_URL,
@@ -118,35 +118,36 @@ result_t http::post(const std::string &path, const config_t &config,
   CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_HTTPHEADER, header));
 
   CURL_CHECK_RETURN(curl_easy_perform(curl));
-  uint32_t response;
-  curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response);
+  status status;
+  curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &status);
 
   CHECK(has<DEBUG>(options), printf("body: %s\n", body.c_str()));
-  CHECK(expected != response, if (has<DEBUG>(options)) {
-                                print_http_error(response);
-                              } return FAILURE);
+  CHECK(expected != status,
+        if (has<DEBUG>(options)) { print_http_error(status); } return FAILURE);
 
   return SUCCESS;
   /*
-$data = array();
-// had to create the string this way to make sure it got valid json format
-$data['issue'] = array("project_id" => 5, "subject" => "test", "priority_id" => 2);
-$data_string = json_encode($data);
+     $data = array();
+  // had to create the string this way to make sure it got valid json format
+  $data['issue'] = array("project_id" => 5, "subject" => "test", "priority_id"
+  => 2);
+  $data_string = json_encode($data);
 
-$ch = curl_init('https://host/redmine/projects/projectname/issues?key=keyid');
-curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
-curl_setopt($ch, CURLOPT_POSTFIELDS, $data_string);
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-//I am posting to https which has some certificate issues, I needed to set the following to false to ignore the issue
-curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-'Content-Type: application/json',
-'Content-Length: ' . strlen($data_string))
-);
-   */
+  $ch = curl_init('https://host/redmine/projects/projectname/issues?key=keyid');
+  curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
+  curl_setopt($ch, CURLOPT_POSTFIELDS, $data_string);
+  curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+  //I am posting to https which has some certificate issues, I needed to set the
+  following to false to ignore the issue
+  curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+  curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+  'Content-Type: application/json',
+  'Content-Length: ' . strlen($data_string))
+  );
+  */
 }
 
-result_t print_curl_error(CURLcode error, const char *file, const int line) {
+result print_curl_error(CURLcode error, const char *file, const int line) {
 #define CASE(ERROR)                                      \
   case ERROR:                                            \
     fprintf(stderr, "%s: %d: %s\n", file, line, #ERROR); \
@@ -249,9 +250,9 @@ result_t print_curl_error(CURLcode error, const char *file, const int line) {
 #undef CASE
 }
 
-result_t print_http_error(const uint32_t error) {
+result print_http_error(const http::status error) {
 #define CASE(ERROR)                                                  \
-  case http::status::ERROR:                                          \
+  case http::code::ERROR:                                            \
     fprintf(stderr, "HTTP request failed with error: %s\n", #ERROR); \
     return FAILURE;
   switch (error) {
@@ -337,4 +338,5 @@ result_t print_http_error(const uint32_t error) {
       return SUCCESS;
   }
 #undef CASE
+}
 }
