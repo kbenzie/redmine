@@ -4,15 +4,15 @@ The following checklist encapsulates all current features of the redmine rest
 API and their feature completeness in the redmine CLI utility.
 
 * [ ] Issues (stable redmine v1.0)
-    * [ ] List
-    * [ ] Show
-    * [ ] Create
+    * [x] List
+    * [x] Show
+    * [x] Create
     * [ ] Update
     * [ ] Delete
 * [ ] Projects (stable redmine v1.0)
-    * [ ] List
-    * [ ] Show
-    * [ ] Create
+    * [x] List
+    * [x] Show
+    * [x] Create
     * [ ] Update
     * [ ] Delete
 * [ ] Project Membership (alpha redmine v1.4)

@@ -152,7 +152,7 @@ result project_new(int argc, char **argv, options options) {
         return INVALID_CONFIG);
 
   std::string filename = util::getcwd();
-  filename += "/REDMINE_PROJECT_NEW";
+  filename += "/REDMINE_NEW_PROJECT";
   CHECK(has<DEBUG>(options), printf("%s\n", filename.c_str()));
   {
     // NOTE: Populate the REDMINE_PROJECT_NEW temporary file

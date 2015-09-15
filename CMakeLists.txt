@@ -58,6 +58,7 @@ add_executable(redmine
   ${CMAKE_CURRENT_SOURCE_DIR}/include/user.h
   ${CMAKE_CURRENT_SOURCE_DIR}/include/tracker.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/include/util.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/version.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/source/config.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/source/enumeration.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/source/issue.cpp
@@ -66,5 +67,6 @@ add_executable(redmine
   ${CMAKE_CURRENT_SOURCE_DIR}/source/redmine.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/source/tracker.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/source/user.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/source/util.cpp)
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/util.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/version.cpp)
 target_link_libraries(redmine JSON libcurl)

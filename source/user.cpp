@@ -15,6 +15,8 @@ result user::init(const json::object &object) {
   CHECK_JSON_PTR(Lastname, json::TYPE_STRING);
   lastname = Lastname->string();
 
+  name = firstname + " " + lastname;
+
   auto Id = object.get("id");
   CHECK_JSON_PTR(Id, json::TYPE_NUMBER);
   id = Id->number<uint32_t>();

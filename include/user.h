@@ -16,9 +16,10 @@ struct user {
 
   json::object jsonify();
 
+  uint32_t id;
   std::string firstname;
   std::string lastname;
-  uint32_t id;
+  std::string name;
   std::string mail;
   std::string login;
   std::string api_key;

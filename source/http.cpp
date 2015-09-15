@@ -84,6 +84,7 @@ struct curl_slist *create_header(const config &config, size_t length = 0) {
 
 result http::get(const std::string &path, const config &config, options options,
                  std::string &body) {
+  CHECK(has<DEBUG>(options), printf("%s\n", path.c_str()));
   curl_raii curl;
   CHECK(!curl.valid(), fprintf(stderr, "curl init failed\n"); return FAILURE);
   CHECK_RETURN(set_options(curl, config, options));

@@ -55,6 +55,13 @@ struct issue_status {
   bool is_closed;
 };
 
+struct issue_category {
+  uint32_t id;
+  std::string name;
+  reference project;
+  reference assigned_to;
+};
+
 namespace action {
 result issue(int argc, char **argv, options options);
 
@@ -73,6 +80,10 @@ result issues(std::string &filter, config &config, options options,
 
 result issue_statuses(config &config, options options,
                       std::vector<issue_status> &issue_statuses);
+
+result issue_categories(const std::string &project, config &config,
+                        options options,
+                        std::vector<issue_category> &issue_categories);
 }
 }
 

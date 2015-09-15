@@ -73,13 +73,13 @@
 /// @brief Evaluate expression and return result if true.
 ///
 /// @param EXPRESSION Expression to evaluate.
-#define CHECK_RETURN(EXPRESSION)      \
-  if (result result = (EXPRESSION)) { \
-    return result;                    \
+#define CHECK_RETURN(EXPRESSION)               \
+  if (redmine::result result = (EXPRESSION)) { \
+    return result;                             \
   }
 #else
 #define CHECK_RETURN(EXPRESSION)                        \
-  if (result result = (EXPRESSION)) {                   \
+  if (redmine::result result = (EXPRESSION)) {          \
     fprintf(stderr, "%s: %d: %s\n", __FILE__, __LINE__, \
             redmine::result_string(result));            \
     return result;                                      \
@@ -148,10 +148,17 @@ enum option {
 /// @brief Common pattern used to reference a redmine projcet, issue, and other
 /// items.
 struct reference {
-  /// @brief Human readable name of the referenced item.
-  std::string name;
+  /// @brief Initialise from a json::object.
+  ///
+  /// @param object Object to initialise json::object from.
+  ///
+  /// @return Returns either redmine::SUCCESS or redmine::FAILURE.
+  result init(const json::object &object);
+
   /// @brief The items unique ID number.
   uint32_t id;
+  /// @brief Human readable name of the referenced item.
+  std::string name;
 };
 
 /// @brief An options_t is a bitfield of option_t values.
@@ -169,21 +176,13 @@ bool has(redmine::options options) {
 }
 
 #ifdef REDMINE_DEBUG
-/// @brief Return human readable result string, only enbaled in debug builds.
+/// @brief Return human readable result string, only defined in debug builds.
 ///
 /// @param result The result.
 ///
 /// @return The result string.
 const char *result_string(redmine::result result);
 #endif
-
-/// @brief Read a json object consisting of name and id members.
-///
-/// @param ref The json object to parse.
-/// @param out The reference_t struct.
-///
-/// @return SUCCESS on succes, FAILURE otherwise.
-result reference_deserialize(const json::object &ref, reference &out);
 }
 
 #endif

@@ -19,7 +19,7 @@ result query::trackers(config &config, options options,
     CHECK_JSON_TYPE(Tracker, json::TYPE_OBJECT);
 
     reference tracker;
-    CHECK_RETURN(reference_deserialize(Tracker.object(), tracker));
+    CHECK_RETURN(tracker.init(Tracker.object()));
 
     trackers.push_back(tracker);
   }

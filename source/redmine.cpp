@@ -95,16 +95,15 @@ const char *redmine::result_string(result result) {
 }
 #endif
 
-redmine::result redmine::reference_deserialize(const json::object &ref,
-                                               redmine::reference &out) {
-  auto name = ref.get("name");
-  CHECK_JSON_PTR(name, json::TYPE_STRING);
+redmine::result redmine::reference::init(const json::object &object) {
+  auto Id = object.get("id");
+  CHECK_JSON_PTR(Id, json::TYPE_NUMBER);
 
-  auto id = ref.get("id");
-  CHECK_JSON_PTR(id, json::TYPE_NUMBER);
+  auto Name = object.get("name");
+  CHECK_JSON_PTR(Name, json::TYPE_STRING);
 
-  out.name = name->string();
-  out.id = id->number<uint32_t>();
+  id = Id->number<uint32_t>();
+  name = Name->string();
 
   return SUCCESS;
 }

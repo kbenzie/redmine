@@ -3,12 +3,17 @@
 #include <issue.h>
 #include <project.h>
 #include <tracker.hpp>
+#include <user.h>
+#include <util.h>
+#include <version.hpp>
 
 #include <json/json.hpp>
 
 #include <algorithm>
 #include <cstdio>
 #include <cstring>
+#include <fstream>
+#include <iostream>
 
 namespace redmine {
 issue::issue() {}
@@ -182,6 +187,44 @@ result issue_list(int argc, char **argv, options options) {
   return SUCCESS;
 }
 
+template <typename Info>
+uint32_t get_answer_id(const std::string &name, const std::vector<Info> &infos){
+  uint32_t id = 0;
+  if (infos.size()) {
+    while (!id) {
+      printf("%s (", name.c_str());
+      for (size_t i = 0; i < infos.size(); ++i) {
+        printf("%s", infos[i].name.c_str());
+        if (i < infos.size() - 1) {
+          printf("|");
+        }
+      }
+      printf("): ");
+      std::string answer;
+      std::getline(std::cin, answer);
+      for (auto &info : infos) {
+        if (answer == info.name) {
+          id = info.id;
+#if 0
+          printf("%s\n", answer.c_str());
+#endif
+          break;
+        }
+      }
+    }
+  }
+  return id;
+}
+
+void replace_all(std::string &str, const std::string &old_str,
+                 const std::string &new_str) {
+  size_t pos = 0;
+  while ((pos = str.find(old_str, pos)) != std::string::npos) {
+    str.replace(pos, old_str.length(), new_str);
+    pos += new_str.length();
+  }
+}
+
 result issue_new(int argc, char **argv, options options) {
   CHECK_MSG(0 == argc, "missing project id or identifier", return FAILURE);
 
@@ -212,53 +255,131 @@ result issue_new(int argc, char **argv, options options) {
     subject = argv[2];
   }
 
-  std::vector<reference> trackers;
+  std::vector<redmine::reference> trackers;
   CHECK_RETURN(query::trackers(config, options, trackers));
 
-#if 0
-    for (auto &tracker : trackers) {
-      printf("%s\n", tracker.name.c_str());
-    }
-#endif
-
-  std::vector<issue_status> issue_statuses;
+  std::vector<redmine::issue_status> issue_statuses;
   CHECK_RETURN(query::issue_statuses(config, options, issue_statuses));
-
-#if 0
-    for (auto &status : statuses) {
-      printf("%s\n", status.name.c_str());
-    }
-#endif
 
   std::vector<redmine::enumeration> priorities;
   CHECK_RETURN(query::issue_priorities(config, options, priorities));
 
-#if 0
-    for (auto &priority : priorities) {
-      printf("%s\n", priority.name.c_str());
+  std::vector<redmine::issue_category> issue_categories;
+  CHECK_RETURN(query::issue_categories(project->identifier, config, options,
+                                       issue_categories));
+
+  std::vector<redmine::version> versions;
+  CHECK_RETURN(query::versions(project->identifier, config, options, versions));
+
+  std::vector<redmine::user> users;
+  CHECK_RETURN(query::users(config, options, users));
+
+  // TODO: Parent Issue.
+  // TODO: Custom Fields.
+  // TODO: Is Private.
+  // TODO: Estimated Hours.
+
+  // NOTE: Open editor optionally populated with subject.
+  std::string filename = util::getcwd();
+  filename += "/issue.redmine";
+  {
+    // TODO: Don't overwrite existing file contents.
+    std::ofstream file(filename);
+    CHECK(!file.is_open(),
+          fprintf(stderr, "could not create temporary file: %s\n",
+                  filename.c_str());
+          return FAILURE);
+    if (!subject.empty()) {
+      file << subject;
     }
+    file << "\n----------------------------------------------------------------"
+            "----------------\n\n";
+  }
+
+  // TODO: Get editor from redmine::config.
+  std::string editor("vim");
+
+  std::string command = editor + " " + filename;
+  int result = std::system(command.c_str());
+  CHECK_MSG(result, "editor exited with failure!", return FAILURE);
+
+  std::string description;
+  {
+    std::ifstream file(filename);
+    CHECK(!file.is_open(),
+          fprintf(stderr, "could not open temporary file: %s\n",
+                  filename.c_str());
+          return FAILURE);
+    std::getline(file, subject);
+    std::string line;
+
+    std::getline(file, line);
+    CHECK(line !=
+              "----------------------------------------------------------------"
+              "----------------",
+          fprintf(stderr, "invalid separator in %s: 2\n", filename.c_str());
+          return FAILURE);
+
+    while (file) {
+      std::getline(file, line);
+      description += line + "\n";
+    }
+  }
+
+  // NOTE: Remove temoryary file.
+  util::rm(filename);
+
+  // NOTE: Ask for user input.
+  uint32_t tracker_id = get_answer_id("Tracker", trackers);
+  uint32_t status_id = get_answer_id("Status", issue_statuses);
+  uint32_t priority_id = get_answer_id("Priority", priorities);
+  uint32_t category_id = get_answer_id("Category", issue_categories);
+  uint32_t fixed_version_id = get_answer_id("Target Version", versions);
+  uint32_t assigned_to_id = get_answer_id("Assignee", users);
+  // TODO: watcher_user_ids
+  // TODO: parent_issue
+  // TODO: custom_fields
+  // TODO: is_private
+  // TODO: estimated_hours
+
+  replace_all(description, "\n", "\\n");
+
+  json::object issue;
+  issue.add("project_id", json::value(project->id));
+  issue.add("tracker_id", json::value(tracker_id));
+  issue.add("status_id", json::value(status_id));
+  issue.add("priority_id", json::value(priority_id));
+  issue.add("subject", json::value(subject));
+  issue.add("description", json::value(description));
+  if (category_id) {
+    issue.add("category_id", json::value(category_id));
+  }
+  if (fixed_version_id) {
+    issue.add("fixed_version_id", json::value(fixed_version_id));
+  }
+  issue.add("assigned_to_id", json::value(assigned_to_id));
+#if 0
+  issue.add("parent_issue_id", json::value());
+  issue.add("custom_fields", json::value());
+  issue.add("watcher_user_ids", json::value());
+  issue.add("is_private", json::value());
+  issue.add("estimated_hours", json::value());
 #endif
 
-  static const char *fields[] = {
-      "tracker_id",       "status_id",      "priority_id",     "category_id",
-      "fixed_version_id", "assigned_to_id", "parent_issue_id", "custom_fields",
-      "watcher_user_ids", "is_private",     "estimated_hours"};
+  std::string data =
+      json::write(json::value{json::object{"issue", issue}}, "  ");
 
-  static const char *editor_fields[] = {"subject", "description"};
+  printf("%s\n", data.c_str());
 
-  for (auto field : fields) {
-  }
+  std::string body;
+  CHECK_RETURN(
+      http::post("/issues.json", config, options, http::code::CREATED, data, body))
+
+  auto ResponseRoot = json::read(body, false);
+  CHECK_JSON_TYPE(ResponseRoot, json::TYPE_OBJECT);
+  printf("%s\n", json::write(ResponseRoot, "  ").c_str());
 
   return SUCCESS;
-}
-
-void replace_all(std::string &str, const std::string &old_str,
-                 const std::string &new_str) {
-  size_t pos = 0;
-  while ((pos = str.find(old_str, pos)) != std::string::npos) {
-    str.replace(pos, old_str.length(), new_str);
-    pos += new_str.length();
-  }
 }
 
 result issue_show(int argc, char **argv, options options) {
@@ -351,7 +472,7 @@ result query::issues(std::string &filter, config &config, options options,
 }
 
 result query::issue_statuses(config &config, options options,
-                               std::vector<issue_status> &statuses) {
+                             std::vector<issue_status> &statuses) {
   std::string body;
   CHECK_RETURN(http::get("/issue_statuses.json", config, options, body));
 
@@ -387,6 +508,49 @@ result query::issue_statuses(config &config, options options,
     }
 
     statuses.push_back(status);
+  }
+
+  return SUCCESS;
+}
+
+result query::issue_categories(const std::string &project,
+                               redmine::config &config, options options,
+                               std::vector<issue_category> &issue_categories) {
+  std::string body;
+  CHECK_RETURN(http::get("/projects/" + project + "/issue_categories.json",
+                         config, options, body));
+
+  auto Root = json::read(body, false);
+  CHECK_JSON_TYPE(Root, json::TYPE_OBJECT);
+  CHECK(has<DEBUG>(options), printf("%s\n", json::write(Root, "  ").c_str()));
+
+  auto IssueCategories = Root.object().get("issue_categories");
+  CHECK_JSON_PTR(IssueCategories, json::TYPE_ARRAY);
+
+  for (auto &IssueCategory : IssueCategories->array()) {
+    CHECK_JSON_TYPE(IssueCategory, json::TYPE_OBJECT);
+
+    redmine::issue_category issue_category;
+
+    auto Id = IssueCategory.object().get("id");
+    CHECK_JSON_PTR(Id, json::TYPE_NUMBER);
+    issue_category.id = Id->number<uint32_t>();
+
+    auto Name = IssueCategory.object().get("name");
+    CHECK_JSON_PTR(Name, json::TYPE_STRING);
+    issue_category.name = Name->string();
+
+    auto Project = IssueCategory.object().get("project");
+    CHECK_JSON_PTR(Project, json::TYPE_OBJECT);
+    CHECK_RETURN(issue_category.project.init(Project->object()));
+
+    auto AssignedTo = IssueCategory.object().get("assigned_to");
+    if (AssignedTo) {
+      CHECK_JSON_TYPE((*AssignedTo), json::TYPE_OBJECT);
+      CHECK_RETURN(issue_category.assigned_to.init(AssignedTo->object()));
+    }
+
+    issue_categories.push_back(issue_category);
   }
 
   return SUCCESS;
