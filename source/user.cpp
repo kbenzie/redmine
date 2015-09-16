@@ -3,6 +3,8 @@
 
 #include <json/json.hpp>
 
+#include <cstring>
+
 namespace redmine {
 user::user() {}
 
@@ -63,11 +65,11 @@ result user(int argc, char **argv, options options) {
     return FAILURE;
   }
 
-  if (!strcmp("list", argv[0])) {
+  if (!std::strcmp("list", argv[0])) {
     return user_list(argc - 1, argv + 1, options);
   }
 
-  if (!strcmp("show", argv[0])) {
+  if (!std::strcmp("show", argv[0])) {
     return user_show(argc - 1, argv + 1, options);
   }
 
