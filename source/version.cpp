@@ -15,6 +15,10 @@ version::version()
       project() {}
 
 result version::init(const json::object &object) {
+  auto Id = object.get("id");
+  CHECK_JSON_PTR(Id, json::TYPE_NUMBER);
+  id = Id->number<uint32_t>();
+
   auto Name = object.get("name");
   CHECK_JSON_PTR(Name, json::TYPE_STRING);
   name = Name->string();
