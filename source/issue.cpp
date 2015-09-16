@@ -398,7 +398,21 @@ result issue_new(int argc, char **argv, options options) {
 
   auto ResponseRoot = json::read(body, false);
   CHECK_JSON_TYPE(ResponseRoot, json::TYPE_OBJECT);
-  printf("%s\n", json::write(ResponseRoot, "  ").c_str());
+  CHECK(has<DEBUG>(options),
+        printf("%s\n", json::write(ResponseRoot, "  ").c_str()));
+
+  // NOTE: Display new issue id and path to website.
+  auto Issue = ResponseRoot.object().get("issue");
+  CHECK_JSON_PTR(Issue, json::TYPE_OBJECT);
+
+  auto Id = Issue->object().get("id");
+  CHECK_JSON_PTR(Id, json::TYPE_NUMBER);
+  uint32_t id = Id->number<uint32_t>();
+
+  printf(
+      "created issue %u\n"
+      "%s/issues/%u\n",
+      id, config.url.c_str(), id);
 
   return SUCCESS;
 }
