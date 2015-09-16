@@ -54,6 +54,7 @@ add_executable(redmine
   ${CMAKE_CURRENT_SOURCE_DIR}/include/issue.h
   ${CMAKE_CURRENT_SOURCE_DIR}/include/http.h
   ${CMAKE_CURRENT_SOURCE_DIR}/include/project.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/project_membership.hpp
   ${CMAKE_CURRENT_SOURCE_DIR}/include/redmine.h
   ${CMAKE_CURRENT_SOURCE_DIR}/include/user.h
   ${CMAKE_CURRENT_SOURCE_DIR}/include/tracker.hpp
@@ -64,6 +65,7 @@ add_executable(redmine
   ${CMAKE_CURRENT_SOURCE_DIR}/source/issue.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/source/http.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/source/project.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/project_membership.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/source/redmine.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/source/tracker.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/source/user.cpp
