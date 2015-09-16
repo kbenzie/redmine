@@ -15,7 +15,10 @@ result config(int argc, char **argv, options options) {
             "usage: redmine config <action> [args]\n"
             "actions:\n"
             "        key [new key]\n"
-            "        url [new url]\n");
+            "        url [new url]\n"
+            "        port <port>"
+            "        use_ssl <true|false>"
+            "        verify_ssl <true|false>");
     return FAILURE;
   }
 
