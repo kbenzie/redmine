@@ -60,7 +60,7 @@ result set_options(CURL *curl, const config &config, const options options) {
   CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write));
   CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_PORT, config.port));
   CURL_CHECK_RETURN(
-      curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, !config.verify_ssl));
+      curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, config.verify_ssl));
   if (has<DEBUG_HTTP>(options)) {
     CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_VERBOSE, true));
     CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_HEADER, true));
