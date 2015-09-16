@@ -82,7 +82,7 @@ result user_list(int argc, char **argv, options options) {
         return FAILURE);
 
   redmine::config config;
-  CHECK(config_load(config), fprintf(stderr, "invalid config file\n");
+  CHECK(config.load(), fprintf(stderr, "invalid config file\n");
         return INVALID_CONFIG);
 
   std::vector<redmine::user> users;
@@ -105,7 +105,7 @@ result user_show(int argc, char **argv, options options) {
   CHECK(1 < argc, fprintf(stderr, "invalid argument: %s\n", argv[1]));
 
   redmine::config config;
-  CHECK(config_load(config), fprintf(stderr, "invalid config file\n");
+  CHECK(config.load(), fprintf(stderr, "invalid config file\n");
         return INVALID_CONFIG);
 
   std::string body;

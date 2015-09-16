@@ -141,7 +141,7 @@ result issue_list(int argc, char **argv, options options) {
   CHECK(argc > 1, fprintf(stderr, "invalid argument: %s\n", argv[1]));
 
   redmine::config config;
-  CHECK(config_load(config), fprintf(stderr, "invalid config file\n");
+  CHECK(config.load(), fprintf(stderr, "invalid config file\n");
         return INVALID_CONFIG);
 
   std::vector<redmine::project> projects;
@@ -227,7 +227,7 @@ result issue_new(int argc, char **argv, options options) {
   CHECK_MSG(0 == argc, "missing project id or identifier", return FAILURE);
 
   redmine::config config;
-  CHECK(config_load(config), fprintf(stderr, "invalid config file\n");
+  CHECK(config.load(), fprintf(stderr, "invalid config file\n");
         return INVALID_CONFIG);
 
   std::vector<redmine::project> projects;
@@ -423,7 +423,7 @@ result issue_show(int argc, char **argv, options options) {
         return FAILURE);
 
   redmine::config config;
-  CHECK(config_load(config), fprintf(stderr, "invalid config file\n");
+  CHECK(config.load(), fprintf(stderr, "invalid config file\n");
         return INVALID_CONFIG);
 
   std::string id(argv[0]);

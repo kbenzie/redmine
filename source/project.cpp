@@ -113,7 +113,7 @@ result project_list(int argc, char **argv, options options) {
   // TODO: Support cached project list for command line completion.
 
   redmine::config config;
-  CHECK(config_load(config), fprintf(stderr, "invalid config file\n");
+  CHECK(config.load(), fprintf(stderr, "invalid config file\n");
         return INVALID_CONFIG);
 
   std::vector<redmine::project> projects;
@@ -148,7 +148,7 @@ result project_new(int argc, char **argv, options options) {
   };
 
   redmine::config config;
-  CHECK(config_load(config), fprintf(stderr, "invalid config file\n");
+  CHECK(config.load(), fprintf(stderr, "invalid config file\n");
         return INVALID_CONFIG);
 
   std::string filename = util::getcwd();
@@ -317,7 +317,7 @@ result project_show(int argc, char **argv, options options) {
         return FAILURE);
 
   redmine::config config;
-  CHECK(config_load(config), fprintf(stderr, "invalid config file\n");
+  CHECK(config.load(), fprintf(stderr, "invalid config file\n");
         return INVALID_CONFIG);
 
   // TODO: Lookup projects for name and get id
