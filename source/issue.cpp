@@ -2,8 +2,8 @@
 #include <http.h>
 #include <issue.h>
 #include <project.h>
+#include <project_membership.hpp>
 #include <tracker.hpp>
-#include <user.h>
 #include <util.h>
 #include <version.hpp>
 
@@ -202,12 +202,10 @@ uint32_t get_answer_id(const std::string &name, const std::vector<Info> &infos){
       printf("): ");
       std::string answer;
       std::getline(std::cin, answer);
+      printf("%s\n", answer.c_str());
       for (auto &info : infos) {
         if (answer == info.name) {
           id = info.id;
-#if 0
-          printf("%s\n", answer.c_str());
-#endif
           break;
         }
       }
@@ -271,8 +269,9 @@ result issue_new(int argc, char **argv, options options) {
   std::vector<redmine::version> versions;
   CHECK_RETURN(query::versions(project->identifier, config, options, versions));
 
-  std::vector<redmine::user> users;
-  CHECK_RETURN(query::users(config, options, users));
+  std::vector<redmine::project_membership> memberships;
+  CHECK_RETURN(query::project_memberships(project->identifier, config, options,
+                                          memberships));
 
   // TODO: Parent Issue.
   // TODO: Custom Fields.
@@ -335,7 +334,29 @@ result issue_new(int argc, char **argv, options options) {
   uint32_t priority_id = get_answer_id("Priority", priorities);
   uint32_t category_id = get_answer_id("Category", issue_categories);
   uint32_t fixed_version_id = get_answer_id("Target Version", versions);
-  uint32_t assigned_to_id = get_answer_id("Assignee", users);
+
+  uint32_t assigned_to_id = 0;
+  if (memberships.size()) {
+    while (!assigned_to_id) {
+      printf("Assignee (");
+      for (size_t i = 0; i < memberships.size(); ++i) {
+        printf("%s", memberships[i].user.name.c_str());
+        if (i < memberships.size() - 1) {
+          printf("|");
+        }
+      }
+      printf("): ");
+      std::string answer;
+      std::getline(std::cin, answer);
+      for (auto &membership : memberships) {
+        if (answer == membership.user.name) {
+          assigned_to_id = membership.user.id;
+          break;
+        }
+      }
+    }
+  }
+
   // TODO: watcher_user_ids
   // TODO: parent_issue
   // TODO: custom_fields
@@ -369,11 +390,11 @@ result issue_new(int argc, char **argv, options options) {
   std::string data =
       json::write(json::value{json::object{"issue", issue}}, "  ");
 
-  printf("%s\n", data.c_str());
+  CHECK(has<DEBUG>(options), printf("%s\n", data.c_str()));
 
   std::string body;
-  CHECK_RETURN(
-      http::post("/issues.json", config, options, http::code::CREATED, data, body))
+  CHECK_RETURN(http::post("/issues.json", config, options, http::code::CREATED,
+                          data, body))
 
   auto ResponseRoot = json::read(body, false);
   CHECK_JSON_TYPE(ResponseRoot, json::TYPE_OBJECT);
