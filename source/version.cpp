@@ -28,8 +28,10 @@ result version::init(const json::object &object) {
   status = Status->string();
 
   auto DueDate = object.get("due_date");
-  CHECK_JSON_PTR(DueDate, json::TYPE_STRING);
-  due_date = DueDate->string();
+  if (DueDate) {
+    CHECK_JSON_TYPE((*DueDate), json::TYPE_STRING);
+    due_date = DueDate->string();
+  }
 
   auto CreateOn = object.get("created_on");
   CHECK_JSON_PTR(CreateOn, json::TYPE_STRING);
