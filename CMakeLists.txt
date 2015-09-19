@@ -15,8 +15,10 @@ else()
   message(FATAL_ERROR "Platform ${CMAKE_SYSTEM_NAME} not supported.")
 endif()
 
-if(${CMAKE_BUILD_TYPE} MATCHES "Debug" OR ${CMAKE_BUILD_TYPE} MATCHES "DEBUG")
-  set(REDMINE_DEBUG 1)
+if(${CMAKE_BUILD_TYPE})
+  if(${CMAKE_BUILD_TYPE} MATCHES "Debug" OR ${CMAKE_BUILD_TYPE} MATCHES "DEBUG")
+    set(REDMINE_DEBUG 1)
+  endif()
 endif()
 
 configure_file(
