@@ -136,6 +136,10 @@ class value {
   const json::array &array() const;
   double &number();
   const double &number() const;
+  template <typename Number>
+  Number number();
+  template <typename Number>
+  Number number() const;
   std::string &string();
   const std::string &string() const;
   bool &boolean();
@@ -263,6 +267,14 @@ inline json::array &value::array() { return CAST(json::array); }
 inline const json::array &value::array() const { return CAST(json::array); }
 inline double &value::number() { return CAST(double); }
 inline const double &value::number() const { return CAST(double); }
+template <typename Number>
+Number value::number() {
+  return static_cast<Number>(CAST(double));
+}
+template <typename Number>
+Number value::number() const {
+  return static_cast<Number>(CAST(double));
+}
 inline std::string &value::string() { return CAST(std::string); }
 inline const std::string &value::string() const { return CAST(std::string); }
 inline bool &value::boolean() { return CAST(bool); }
