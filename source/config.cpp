@@ -74,8 +74,8 @@ result config::load(redmine::options options) {
 }
 
 namespace action {
-result config(int argc, char **argv, options options) {
-  if (0 == argc) {
+result config(redmine::args args, options options) {
+  if (0 == args.count()) {
     fprintf(stderr,
             "usage: redmine config <action> [args]\n"
             "actions:\n"
@@ -87,42 +87,42 @@ result config(int argc, char **argv, options options) {
     return FAILURE;
   }
 
-  if (!strcmp("key", argv[0])) {
-    return config_key(argc - 1, argv + 1, options);
+  if (!strcmp("key", args[0])) {
+    return config_key(++args, options);
   }
 
-  if (!strcmp("url", argv[0])) {
-    return config_url(argc - 1, argv + 1, options);
+  if (!strcmp("url", args[0])) {
+    return config_url(++args, options);
   }
 
-  if (!strcmp("port", argv[0])) {
-    return config_port(argc - 1, argv + 1, options);
+  if (!strcmp("port", args[0])) {
+    return config_port(++args, options);
   }
 
-  if (!strcmp("use-ssl", argv[0])) {
-    return config_use_ssl(argc - 1, argv + 1, options);
+  if (!strcmp("use-ssl", args[0])) {
+    return config_use_ssl(++args, options);
   }
 
-  if (!strcmp("verify-ssl", argv[0])) {
-    return config_verify_ssl(argc - 1, argv + 1, options);
+  if (!strcmp("verify-ssl", args[0])) {
+    return config_verify_ssl(++args, options);
   }
 
-  fprintf(stderr, "invalid argument: %s\n", argv[0]);
+  fprintf(stderr, "invalid argument: %s\n", args[0]);
   return INVALID_ARGUMENT;
 }
 
-result config_url(int argc, char **argv, options options) {
+result config_url(redmine::args args, options options) {
   redmine::config config;
-  if (0 == argc) {
+  if (0 == args.count()) {
     CHECK(config.load(options), fprintf(stderr, "could not load config file\n");
           return INVALID_CONFIG);
     printf("using url %s\n", config.url.c_str());
     return SUCCESS;
-  } else if (1 == argc) {
+  } else if (1 == args.count()) {
     // NOTE: We don't care if config load fails because we are writing a new url
     // to it.
     config.load(options);
-    config.url = argv[0];
+    config.url = args[0];
     if ('/' == config.url.back()) {
       config.url.pop_back();
     }
@@ -132,45 +132,45 @@ result config_url(int argc, char **argv, options options) {
     return SUCCESS;
   }
 
-  fprintf(stderr, "invalid argument: %s\n", argv[1]);
+  fprintf(stderr, "invalid argument: %s\n", args[1]);
   return INVALID_ARGUMENT;
 }
 
-result config_key(int argc, char **argv, options options) {
+result config_key(redmine::args args, options options) {
   redmine::config config;
-  if (0 == argc) {
+  if (0 == args.count()) {
     CHECK_RETURN(config.load(options));
     printf("using api key %s\n", config.key.c_str());
     return SUCCESS;
-  } else if (1 == argc) {
+  } else if (1 == args.count()) {
     // NOTE: We don't care if config load fails because we are writing a new key
     // to it.
     config.load(options);
-    config.key = argv[0];
+    config.key = args[0];
     CHECK(config.save(), fprintf(stderr, "failed to write config file\n");
           return FAILURE);
     printf("using api key %s\n", config.key.c_str());
     return SUCCESS;
   }
 
-  fprintf(stderr, "invalid argument: %s\n", argv[1]);
+  fprintf(stderr, "invalid argument: %s\n", args[1]);
   return INVALID_ARGUMENT;
 }
 
-result config_port(int argc, char **argv, options options) {
+result config_port(redmine::args args, options options) {
   redmine::config config;
-  if (0 == argc) {
+  if (0 == args.count()) {
     CHECK_RETURN(config.load(options));
     printf("using port %u\n", config.port);
     return SUCCESS;
-  } else if (1 == argc) {
+  } else if (1 == args.count()) {
     // NOTE: We don't care if the config load fails because we are writing a new
     // port to it.
     config.load(options);
     char *end = nullptr;
-    config.port = strtoul(argv[0], &end, 10);
-    CHECK(argv[0] + strlen(argv[0]) != end,
-          fprintf(stderr, "invalid argument: %s\n", argv[0]);
+    config.port = strtoul(args[0], &end, 10);
+    CHECK(args[0] + strlen(args[0]) != end,
+          fprintf(stderr, "invalid argument: %s\n", args[0]);
           return INVALID_ARGUMENT);
     CHECK(config.save(), fprintf(stderr, "failed to write config file\n");
           return FAILURE);
@@ -178,48 +178,49 @@ result config_port(int argc, char **argv, options options) {
     return SUCCESS;
   }
 
-  fprintf(stderr, "invalid argument: %s\n", argv[1]);
+  fprintf(stderr, "invalid argument: %s\n", args[1]);
   return INVALID_ARGUMENT;
 }
 
-result config_use_ssl(int argc, char **argv, options options) {
+result config_use_ssl(redmine::args args, options options) {
   redmine::config config;
-  if (0 == argc) {
+  if (0 == args.count()) {
     CHECK_RETURN(config.load(options));
-    printf("ssl %s\n", (config.use_ssl) ? "enabled" : "disabled");
+    printf("ssl is %s\n", (config.use_ssl) ? "enabled" : "disabled");
     return SUCCESS;
-  } else if (1 == argc) {
+  } else if (1 == args.count()) {
     config.load(options);
-    std::string use_ssl(argv[0]);
+    std::string use_ssl(args[0]);
     if ("true" == use_ssl || "false" == use_ssl) {
       config.use_ssl = ('t' == use_ssl[0]) ? true : false;
       config.save();
-      printf("ssl %s\n", (config.use_ssl) ? "enabled" : "disabled");
+      printf("ssl is now %s\n", (config.use_ssl) ? "enabled" : "disabled");
       return SUCCESS;
     }
   }
-  fprintf(stderr, "invalid argument: %s\n", argv[1]);
+  fprintf(stderr, "invalid argument: %s\n", args[1]);
   return FAILURE;
 }
 
-result config_verify_ssl(int argc, char **argv, options options) {
+result config_verify_ssl(redmine::args args, options options) {
   redmine::config config;
-  if (0 == argc) {
+  if (0 == args.count()) {
     CHECK_RETURN(config.load(options));
-    printf("ssl verification %s\n", (config.verify_ssl) ? "enabled" : "disabled");
+    printf("ssl is verification %s\n",
+           (config.verify_ssl) ? "enabled" : "disabled");
     return SUCCESS;
   } else {
     config.load(options);
-    std::string verify_ssl(argv[0]);
+    std::string verify_ssl(args[0]);
     if ("true" == verify_ssl || "false" == verify_ssl) {
       config.verify_ssl = ('t' == verify_ssl[0]) ? true : false;
       config.save();
-      printf("ssl verification %s\n",
+      printf("ssl verification is now %s\n",
              (config.use_ssl) ? "enabled" : "disabled");
       return SUCCESS;
     }
   }
-  fprintf(stderr, "invalid argument: %s\n", argv[1]);
+  fprintf(stderr, "invalid argument: %s\n", args[1]);
   return FAILURE;
 }
 }

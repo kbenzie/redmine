@@ -1,3 +1,4 @@
+#include <args.h>
 #include <redmine.h>
 #include <config.h>
 #include <issue.h>
@@ -9,26 +10,29 @@
 #include <cstring>
 
 int main(int argc, char **argv) {
+  redmine::args args(argc, argv);
+
   redmine::options options = redmine::NONE;
-  int argi = 1;
-  for (; argi < argc; ++argi) {
-    if (!strcmp("--verbose", argv[argi])) {
+  for (auto arg : args) {
+    args++;
+
+    if (!strcmp("--verbose", arg)) {
       options |= redmine::VERBOSE;
-      CHECK(argc - 1 == argi, fprintf(stderr, "action required\n");
+      CHECK(args.end() - 1 == &arg, fprintf(stderr, "action required\n");
             return redmine::ACTION_REQUIRED);
       continue;
     }
 
-    if (!strcmp("--debug", argv[argi])) {
+    if (!strcmp("--debug", arg)) {
       options |= redmine::DEBUG;
-      CHECK(argc - 1 == argi, fprintf(stderr, "action required\n");
+      CHECK(args.end() - 1 == &arg, fprintf(stderr, "action required\n");
             return redmine::ACTION_REQUIRED);
       continue;
     }
 
-    if (!strcmp("--debug-http", argv[argi])) {
+    if (!strcmp("--debug-http", arg)) {
       options |= redmine::DEBUG_HTTP;
-      CHECK(argc - 1 == argi, fprintf(stderr, "action required\n");
+      CHECK(args.end() - 1 == &arg, fprintf(stderr, "action required\n");
             return redmine::ACTION_REQUIRED);
       continue;
     }
@@ -73,21 +77,18 @@ int main(int argc, char **argv) {
     return redmine::SUCCESS;
   }
 
-  for (; argi < argc; ++argi) {
-    if (!strcmp("config", argv[argi])) {
-      ++argi;
-      return redmine::action::config(argc - argi, argv + argi, options);
+  for (auto arg : args) {
+    args++;
+    if (!strcmp("config", arg)) {
+      return redmine::action::config(args, options);
     }
 
-    if (!strcmp("project", argv[argi]) && user.can(redmine::USE_PROJECT)) {
-      ++argi;
-      return redmine::action::project(argc - argi, argv + argi, config,
-                                      options);
+    if (!strcmp("project", arg) && user.can(redmine::USE_PROJECT)) {
+      return redmine::action::project(args, config, options);
     }
 
-    if (!strcmp("issue", argv[argi]) && user.can(redmine::USE_ISSUE)) {
-      ++argi;
-      return redmine::action::issue(argc - argi, argv + argi, config, options);
+    if (!strcmp("issue", arg) && user.can(redmine::USE_ISSUE)) {
+      return redmine::action::issue(args, config, options);
     }
 
 #if 0
@@ -97,11 +98,11 @@ int main(int argc, char **argv) {
     }
 #endif
 
-    fprintf(stderr, "invalid action: %s\n", argv[argi]);
+    fprintf(stderr, "invalid action: %s\n", arg);
     return redmine::FAILURE;
   }
 
-  fprintf(stderr, "invalid argument: %s\n", argv[argi]);
+  fprintf(stderr, "invalid argument: %s\n", args[0]);
   return redmine::INVALID_ARGUMENT;
 }
 

@@ -106,8 +106,8 @@ result issue::init(const json::object &object) {
 }
 
 namespace action {
-result issue(int argc, char **argv, redmine::config &config, options options) {
-  if (0 == argc) {
+result issue(redmine::args args, redmine::config &config, options options) {
+  if (0 == args.count()) {
     fprintf(stderr,
             "usage: redmine issue <action> [args]\n"
             "actions:\n"
@@ -118,45 +118,45 @@ result issue(int argc, char **argv, redmine::config &config, options options) {
     return FAILURE;
   }
 
-  if (!strcmp("list", argv[0])) {
-    return issue_list(argc - 1, argv + 1, config, options);
+  if (!strcmp("list", args[0])) {
+    return issue_list(++args, config, options);
   }
 
-  if (!strcmp("new", argv[0])) {
-    return issue_new(argc - 1, argv + 1, config, options);
+  if (!strcmp("new", args[0])) {
+    return issue_new(++args, config, options);
   }
 
-  if (!strcmp("show", argv[0])) {
-    return issue_show(argc - 1, argv + 1, config, options);
+  if (!strcmp("show", args[0])) {
+    return issue_show(++args, config, options);
   }
 
-  if (!strcmp("update", argv[0])) {
-    return issue_update(argc - 1, argv + 1, config, options);
+  if (!strcmp("update", args[0])) {
+    return issue_update(++args, config, options);
   }
 
-  fprintf(stderr, "invalid argument: %s\n", argv[0]);
+  fprintf(stderr, "invalid argument: %s\n", args[0]);
   return INVALID_ARGUMENT;
 }
 
-result issue_list(int argc, char **argv, redmine::config &config,
+result issue_list(redmine::args args, redmine::config &config,
                   options options) {
-  CHECK(argc > 1, fprintf(stderr, "invalid argument: %s\n", argv[1]));
+  CHECK(args.count() > 1, fprintf(stderr, "invalid argument: %s\n", args[1]));
 
   std::vector<redmine::project> projects;
   CHECK_RETURN(query::projects(config, options, projects));
 
   std::string filter;
-  if (1 == argc) {
+  if (1 == args.count()) {
     redmine::project *project = nullptr;
     for (auto &Project : projects) {
-      if (Project == argv[0]) {
+      if (Project == args[0]) {
         project = &Project;
         break;
       }
     }
 
     CHECK(!project,
-          fprintf(stderr, "invalid project id or identifier: %s\n", argv[0]);
+          fprintf(stderr, "invalid project id or identifier: %s\n", args[0]);
           return FAILURE);
 
     filter = "?project_id=" + std::to_string(project->id);
@@ -222,31 +222,32 @@ void replace_all(std::string &str, const std::string &old_str,
   }
 }
 
-result issue_new(int argc, char **argv, redmine::config &config,
-                 options options) {
-  CHECK_MSG(0 == argc, "missing project id or identifier", return FAILURE);
+result issue_new(redmine::args args, redmine::config &config, options options) {
+  CHECK_MSG(0 == args.count(), "missing project id or identifier",
+            return FAILURE);
 
   std::vector<redmine::project> projects;
   CHECK_RETURN(query::projects(config, options, projects));
 
   redmine::project *project = nullptr;
   for (auto &Project : projects) {
-    if (Project == argv[0]) {
+    if (Project == args[0]) {
       project = &Project;
       break;
     }
   }
-  CHECK(!project, fprintf(stderr, "invalid project: %s\n", argv[0]);
+  CHECK(!project, fprintf(stderr, "invalid project: %s\n", args[0]);
         return FAILURE);
 
   std::string subject;
-  if (1 < argc) {
-    CHECK(std::strcmp("-m", argv[1]),
-          fprintf(stderr, "invliad option: %s\n", argv[1]);
+  if (1 < args.count()) {
+    CHECK(std::strcmp("-m", args[1]),
+          fprintf(stderr, "invliad option: %s\n", args[1]);
           return FAILURE);
-    CHECK(3 != argc, fprintf(stderr, "invalid argument: %s\n", argv[argc - 1]);
+    CHECK(3 != args.count(),
+          fprintf(stderr, "invalid argument: %s\n", args.back());
           return FAILURE);
-    subject = argv[2];
+    subject = args[2];
   }
 
   std::vector<redmine::reference> trackers;
@@ -415,13 +416,14 @@ result issue_new(int argc, char **argv, redmine::config &config,
   return SUCCESS;
 }
 
-result issue_show(int argc, char **argv, redmine::config &config,
+result issue_show(redmine::args args, redmine::config &config,
                   options options) {
-  CHECK(0 == argc, fprintf(stderr, "missing issue id\n"); return FAILURE);
-  CHECK(1 < argc, fprintf(stderr, "invalid argument: %s\n", argv[1]);
+  CHECK(0 == args.count(), fprintf(stderr, "missing issue id\n");
+        return FAILURE);
+  CHECK(1 < args.count(), fprintf(stderr, "invalid argument: %s\n", args[1]);
         return FAILURE);
 
-  std::string id(argv[0]);
+  std::string id(args[0]);
 
   std::string body;
   CHECK_RETURN(
@@ -465,7 +467,7 @@ result issue_show(int argc, char **argv, redmine::config &config,
   return SUCCESS;
 }
 
-result issue_update(int argc, char **argv, redmine::config &config,
+result issue_update(redmine::args args, redmine::config &config,
                     options options) {
   fprintf(stderr, "unsupported: issue edit\n");
   return UNSUPPORTED;

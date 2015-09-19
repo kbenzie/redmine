@@ -53,11 +53,9 @@ struct current_user {
 };
 
 namespace action {
-result user(int argc, char **argv, redmine::config &config, options options);
-result user_list(int argc, char **argv, redmine::config &config,
-                 options options);
-result user_show(int argc, char **argv, redmine::config &config,
-                 options options);
+result user(redmine::args args, redmine::config &config, options options);
+result user_list(redmine::args args, redmine::config &config, options options);
+result user_show(redmine::args args, redmine::config &config, options options);
 }
 
 namespace query {

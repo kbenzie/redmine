@@ -1,6 +1,7 @@
 #ifndef PROJECT_HPP
 #define PROJECT_HPP
 
+#include <args.h>
 #include <config.h>
 #include <redmine.h>
 
@@ -51,23 +52,23 @@ struct project {
 };
 
 namespace action {
-result project(int argc, char **argv, redmine::config &config, options options);
+result project(redmine::args args, redmine::config &config, options options);
 
-result project_list(int argc, char **argv, redmine::config &config,
-                    options options);
+result project_list(redmine::args args, redmine::config &config,
+                    redmine::options options);
 
-result project_new(int argc, char **argv, redmine::config &config,
-                   options options);
+result project_new(redmine::args args, redmine::config &config,
+                   redmine::options options);
 
-result project_show(int argc, char **argv, redmine::config &config,
-                    options options);
+result project_show(redmine::args args, redmine::config &config,
+                    redmine::options options);
 }
 
 project *find(std::vector<project> &projects, const char *pattern);
 
 namespace query {
-result projects(config &config, options options,
-                std::vector<project> &projects);
+result projects(redmine::config &config, redmine::options options,
+                std::vector<redmine::project> &projects);
 }
 }
 

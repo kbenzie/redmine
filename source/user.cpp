@@ -293,8 +293,8 @@ bool redmine::current_user::can(redmine::permisson permisson) {
 }
 
 namespace action {
-result user(int argc, char **argv, redmine::config &config, options options) {
-  if (0 == argc) {
+result user(redmine::args args, redmine::config &config, options options) {
+  if (0 == args.count()) {
     fprintf(stderr,
             "usage: redmine issue <action> [args]\n"
             "actions:\n"
@@ -303,21 +303,20 @@ result user(int argc, char **argv, redmine::config &config, options options) {
     return FAILURE;
   }
 
-  if (!std::strcmp("list", argv[0])) {
-    return user_list(argc - 1, argv + 1, config, options);
+  if (!std::strcmp("list", args[0])) {
+    return user_list(++args, config, options);
   }
 
-  if (!std::strcmp("show", argv[0])) {
-    return user_show(argc - 1, argv + 1, config, options);
+  if (!std::strcmp("show", args[0])) {
+    return user_show(++args, config, options);
   }
 
-  fprintf(stderr, "invalid argument: %s\n", argv[0]);
+  fprintf(stderr, "invalid argument: %s\n", args[0]);
   return INVALID_ARGUMENT;
 }
 
-result user_list(int argc, char **argv, redmine::config &config,
-                 options options) {
-  CHECK(argc, fprintf(stderr, "invalid argument: %s\n", argv[0]);
+result user_list(redmine::args args, redmine::config &config, options options) {
+  CHECK(args.count(), fprintf(stderr, "invalid argument: %s\n", args[0]);
         return FAILURE);
 
   std::vector<redmine::user> users;
@@ -335,13 +334,12 @@ result user_list(int argc, char **argv, redmine::config &config,
   return SUCCESS;
 }
 
-result user_show(int argc, char **argv, redmine::config &config,
-                 options options) {
-  CHECK(0 == argc, fprintf(stderr, "missing id\n"));
-  CHECK(1 < argc, fprintf(stderr, "invalid argument: %s\n", argv[1]));
+result user_show(redmine::args args, redmine::config &config, options options) {
+  CHECK(0 == args.count(), fprintf(stderr, "missing id\n"));
+  CHECK(1 < args.count(), fprintf(stderr, "invalid argument: %s\n", args[1]));
 
   std::string body;
-  CHECK_RETURN(http::get("/users/" + std::string(argv[0]) + ".json", config,
+  CHECK_RETURN(http::get("/users/" + std::string(args[0]) + ".json", config,
                          options, body));
 
   auto Root = json::read(body, false);

@@ -1,6 +1,7 @@
 #ifndef ISSUE_H
 #define ISSUE_H
 
+#include <args.h>
 #include <config.h>
 #include <redmine.h>
 
@@ -63,18 +64,15 @@ struct issue_category {
 };
 
 namespace action {
-result issue(int argc, char **argv, redmine::config &config, options options);
+result issue(redmine::args args, redmine::config &config, options options);
 
-result issue_list(int argc, char **argv, redmine::config &config,
-                  options options);
+result issue_list(redmine::args args, redmine::config &config, options options);
 
-result issue_new(int argc, char **argv, redmine::config &config,
-                 options options);
+result issue_new(redmine::args args, redmine::config &config, options options);
 
-result issue_show(int argc, char **argv, redmine::config &config,
-                  options options);
+result issue_show(redmine::args args, redmine::config &config, options options);
 
-result issue_update(int argc, char **argv, redmine::config &config,
+result issue_update(redmine::args args, redmine::config &config,
                     options options);
 }
 

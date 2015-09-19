@@ -79,9 +79,9 @@ bool project::operator==(const char *str) const {
 }
 
 namespace action {
-result project(int argc, char **argv, redmine::config &config,
+result project(redmine::args args, redmine::config &config,
                options options) {
-  if (0 == argc) {
+  if (0 == args.count()) {
     fprintf(stderr,
             "usage: redmine project <action> [args]\n"
             "actions:\n"
@@ -91,25 +91,25 @@ result project(int argc, char **argv, redmine::config &config,
     return FAILURE;
   }
 
-  if (!strcmp("list", argv[0])) {
-    return project_list(argc - 1, argv + 1, config, options);
+  if (!strcmp("list", args[0])) {
+    return project_list(++args, config, options);
   }
 
-  if (!strcmp("new", argv[0])) {
-    return project_new(argc - 1, argv + 1, config, options);
+  if (!strcmp("new", args[0])) {
+    return project_new(++args, config, options);
   }
 
-  if (!strcmp("show", argv[0])) {
-    return project_show(argc - 1, argv + 1, config, options);
+  if (!strcmp("show", args[0])) {
+    return project_show(++args, config, options);
   }
 
-  fprintf(stderr, "invalid argument: %s\n", argv[0]);
+  fprintf(stderr, "invalid argument: %s\n", args[0]);
   return INVALID_ARGUMENT;
 }
 
-result project_list(int argc, char **argv, redmine::config &config,
+result project_list(redmine::args args, redmine::config &config,
                     options options) {
-  CHECK(0 != argc, fprintf(stderr, "invalid argument: %s\n", argv[0]);
+  CHECK(0 != args.count(), fprintf(stderr, "invalid argument: %s\n", args[0]);
         return INVALID_ARGUMENT);
 
   std::vector<redmine::project> projects;
@@ -131,15 +131,15 @@ result project_list(int argc, char **argv, redmine::config &config,
   return SUCCESS;
 }
 
-result project_new(int argc, char **argv, redmine::config &config,
+result project_new(redmine::args args, redmine::config &config,
                    options options) {
-  CHECK(2 > argc,
+  CHECK(2 > args.count(),
         fprintf(stderr, "usage: redmine project new <name> <identifier>\n");
         return FAILURE);
-  if (2 < argc) {
+  if (2 < args.count()) {
     fprintf(stderr, "invalid arguments:");
-    for (int argi = 0; argi < argc; ++argi) {
-      fprintf(stderr, " %s\n", argv[argi]);
+    for (auto arg : args) {
+      fprintf(stderr, " %s\n", arg);
     }
     return FAILURE;
   };
@@ -154,8 +154,8 @@ result project_new(int argc, char **argv, redmine::config &config,
           fprintf(stderr, "could not create temporary file: %s\n",
                   filename.c_str());
           return FAILURE);
-    file << "name: " << argv[0] << "\n";
-    file << "identifier: " << argv[1] << "\n";
+    file << "name: " << args[0] << "\n";
+    file << "identifier: " << args[1] << "\n";
     file << "description: \n";
     file << "homepage: \n";
     file << "is_public: true\n";
@@ -304,14 +304,15 @@ result project_new(int argc, char **argv, redmine::config &config,
   return SUCCESS;
 }
 
-result project_show(int argc, char **argv, redmine::config &config,
+result project_show(redmine::args args, redmine::config &config,
                     options options) {
-  CHECK(0 == argc, fprintf(stderr, "missing id or name\n"); return FAILURE);
-  CHECK(1 < argc, fprintf(stderr, "invalid argument: %s\n", argv[1]);
+  CHECK(0 == args.count(), fprintf(stderr, "missing id or name\n");
+        return FAILURE);
+  CHECK(1 < args.count(), fprintf(stderr, "invalid argument: %s\n", args[1]);
         return FAILURE);
 
   // TODO: Lookup projects for name and get id
-  std::string id(argv[0]);
+  std::string id(args[0]);
 
   std::string body;
   CHECK_RETURN(http::get(std::string("/projects/") + id + ".json", config,

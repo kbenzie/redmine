@@ -1,6 +1,7 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
+#include <args.h>
 #include <redmine.h>
 
 #include <json/json.hpp>
@@ -34,12 +35,12 @@ struct config {
 };
 
 namespace action {
-result config(int argc, char **argv, options options);
-result config_url(int argc, char **argv, options options);
-result config_key(int argc, char **argv, options options);
-result config_port(int argc, char **argv, options options);
-result config_use_ssl(int argc, char **argv, options options);
-result config_verify_ssl(int argc, char **argv, options options);
+result config(redmine::args args, options options);
+result config_url(redmine::args args, options options);
+result config_key(redmine::args args, options options);
+result config_port(redmine::args args, options options);
+result config_use_ssl(redmine::args args, options options);
+result config_verify_ssl(redmine::args args, options options);
 }
 }
 
