@@ -1,5 +1,5 @@
 #include <http.h>
-#include <tracker.hpp>
+#include <tracker.h>
 
 namespace redmine {
 result query::trackers(config &config, options options,

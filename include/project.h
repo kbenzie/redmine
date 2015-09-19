@@ -51,13 +51,16 @@ struct project {
 };
 
 namespace action {
-result project(int argc, char **argv, options options);
+result project(int argc, char **argv, redmine::config &config, options options);
 
-result project_list(int argc, char **argv, options options);
+result project_list(int argc, char **argv, redmine::config &config,
+                    options options);
 
-result project_new(int argc, char **argv, options options);
+result project_new(int argc, char **argv, redmine::config &config,
+                   options options);
 
-result project_show(int argc, char **argv, options options);
+result project_show(int argc, char **argv, redmine::config &config,
+                    options options);
 }
 
 project *find(std::vector<project> &projects, const char *pattern);

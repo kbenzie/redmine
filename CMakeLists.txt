@@ -52,23 +52,25 @@ include_directories(
 
 add_executable(redmine
   ${CMAKE_CURRENT_SOURCE_DIR}/include/config.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/enumeration.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/enumeration.h
   ${CMAKE_CURRENT_SOURCE_DIR}/include/issue.h
   ${CMAKE_CURRENT_SOURCE_DIR}/include/http.h
   ${CMAKE_CURRENT_SOURCE_DIR}/include/project.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/project_membership.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/membership.h
   ${CMAKE_CURRENT_SOURCE_DIR}/include/redmine.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/role.h
   ${CMAKE_CURRENT_SOURCE_DIR}/include/user.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/tracker.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/tracker.h
   ${CMAKE_CURRENT_SOURCE_DIR}/include/util.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/version.hpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/version.h
   ${CMAKE_CURRENT_SOURCE_DIR}/source/config.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/source/enumeration.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/source/issue.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/source/http.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/source/project.cpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/source/project_membership.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/membership.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/source/redmine.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/role.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/source/tracker.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/source/user.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/source/util.cpp

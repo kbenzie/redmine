@@ -63,20 +63,24 @@ struct issue_category {
 };
 
 namespace action {
-result issue(int argc, char **argv, options options);
+result issue(int argc, char **argv, redmine::config &config, options options);
 
-result issue_list(int argc, char **argv, options options);
+result issue_list(int argc, char **argv, redmine::config &config,
+                  options options);
 
-result issue_new(int argc, char **argv, options options);
+result issue_new(int argc, char **argv, redmine::config &config,
+                 options options);
 
-result issue_show(int argc, char **argv, options options);
+result issue_show(int argc, char **argv, redmine::config &config,
+                  options options);
 
-result issue_edit(int argc, char **argv, options options);
+result issue_update(int argc, char **argv, redmine::config &config,
+                    options options);
 }
 
 namespace query {
 result issues(std::string &filter, config &config, options options,
-                std::vector<issue> &issues);
+              std::vector<issue> &issues);
 
 result issue_statuses(config &config, options options,
                       std::vector<issue_status> &issue_statuses);

@@ -1,5 +1,5 @@
-#ifndef REDMINE_TRACKER_HPP
-#define REDMINE_TRACKER_HPP
+#ifndef REDMINE_TRACKER_H
+#define REDMINE_TRACKER_H
 
 #include <config.h>
 

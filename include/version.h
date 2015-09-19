@@ -1,7 +1,8 @@
-#ifndef REDMINE_VERSION_HPP
-#define REDMINE_VERSION_HPP
+#ifndef REDMINE_VERSION_H
+#define REDMINE_VERSION_H
 
 #include <redmine.h>
+#include <config.h>
 
 namespace redmine {
 struct version {

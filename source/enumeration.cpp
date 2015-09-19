@@ -1,4 +1,4 @@
-#include <enumeration.hpp>
+#include <enumeration.h>
 #include <http.h>
 
 #include <json/json.hpp>

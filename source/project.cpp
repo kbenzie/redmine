@@ -79,42 +79,38 @@ bool project::operator==(const char *str) const {
 }
 
 namespace action {
-result project(int argc, char **argv, options options) {
+result project(int argc, char **argv, redmine::config &config,
+               options options) {
   if (0 == argc) {
     fprintf(stderr,
             "usage: redmine project <action> [args]\n"
             "actions:\n"
             "        list\n"
-            "        new <name> <identifier>\n"
-            "        show <show>\n");
+            "        new <name> [<identifier>]\n"
+            "        show <project>\n");
     return FAILURE;
   }
 
   if (!strcmp("list", argv[0])) {
-    return project_list(argc - 1, argv + 1, options);
+    return project_list(argc - 1, argv + 1, config, options);
   }
 
   if (!strcmp("new", argv[0])) {
-    return project_new(argc - 1, argv + 1, options);
+    return project_new(argc - 1, argv + 1, config, options);
   }
 
   if (!strcmp("show", argv[0])) {
-    return project_show(argc - 1, argv + 1, options);
+    return project_show(argc - 1, argv + 1, config, options);
   }
 
   fprintf(stderr, "invalid argument: %s\n", argv[0]);
   return INVALID_ARGUMENT;
 }
 
-result project_list(int argc, char **argv, options options) {
+result project_list(int argc, char **argv, redmine::config &config,
+                    options options) {
   CHECK(0 != argc, fprintf(stderr, "invalid argument: %s\n", argv[0]);
         return INVALID_ARGUMENT);
-
-  // TODO: Support cached project list for command line completion.
-
-  redmine::config config;
-  CHECK(config.load(), fprintf(stderr, "invalid config file\n");
-        return INVALID_CONFIG);
 
   std::vector<redmine::project> projects;
   CHECK_RETURN(query::projects(config, options, projects));
@@ -135,7 +131,8 @@ result project_list(int argc, char **argv, options options) {
   return SUCCESS;
 }
 
-result project_new(int argc, char **argv, options options) {
+result project_new(int argc, char **argv, redmine::config &config,
+                   options options) {
   CHECK(2 > argc,
         fprintf(stderr, "usage: redmine project new <name> <identifier>\n");
         return FAILURE);
@@ -147,12 +144,8 @@ result project_new(int argc, char **argv, options options) {
     return FAILURE;
   };
 
-  redmine::config config;
-  CHECK(config.load(), fprintf(stderr, "invalid config file\n");
-        return INVALID_CONFIG);
-
   std::string filename = util::getcwd();
-  filename += "/REDMINE_NEW_PROJECT";
+  filename += "/project.redmine";
   CHECK(has<DEBUG>(options), printf("%s\n", filename.c_str()));
   {
     // NOTE: Populate the REDMINE_PROJECT_NEW temporary file
@@ -311,14 +304,11 @@ result project_new(int argc, char **argv, options options) {
   return SUCCESS;
 }
 
-result project_show(int argc, char **argv, options options) {
+result project_show(int argc, char **argv, redmine::config &config,
+                    options options) {
   CHECK(0 == argc, fprintf(stderr, "missing id or name\n"); return FAILURE);
   CHECK(1 < argc, fprintf(stderr, "invalid argument: %s\n", argv[1]);
         return FAILURE);
-
-  redmine::config config;
-  CHECK(config.load(), fprintf(stderr, "invalid config file\n");
-        return INVALID_CONFIG);
 
   // TODO: Lookup projects for name and get id
   std::string id(argv[0]);

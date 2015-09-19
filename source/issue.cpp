@@ -1,11 +1,12 @@
-#include <enumeration.hpp>
+#include <enumeration.h>
 #include <http.h>
 #include <issue.h>
 #include <project.h>
-#include <project_membership.hpp>
-#include <tracker.hpp>
+#include <membership.h>
+#include <role.h>
+#include <tracker.h>
 #include <util.h>
-#include <version.hpp>
+#include <version.h>
 
 #include <json/json.hpp>
 
@@ -105,7 +106,7 @@ result issue::init(const json::object &object) {
 }
 
 namespace action {
-result issue(int argc, char **argv, options options) {
+result issue(int argc, char **argv, redmine::config &config, options options) {
   if (0 == argc) {
     fprintf(stderr,
             "usage: redmine issue <action> [args]\n"
@@ -113,36 +114,33 @@ result issue(int argc, char **argv, options options) {
             "        list [project]\n"
             "        new <project> [-m <subject>]\n"
             "        show <id>\n"
-            "        edit <id>\n");
+            "        update <id>\n");
     return FAILURE;
   }
 
   if (!strcmp("list", argv[0])) {
-    return issue_list(argc - 1, argv + 1, options);
+    return issue_list(argc - 1, argv + 1, config, options);
   }
 
   if (!strcmp("new", argv[0])) {
-    return issue_new(argc - 1, argv + 1, options);
+    return issue_new(argc - 1, argv + 1, config, options);
   }
 
   if (!strcmp("show", argv[0])) {
-    return issue_show(argc - 1, argv + 1, options);
+    return issue_show(argc - 1, argv + 1, config, options);
   }
 
-  if (!strcmp("edit", argv[0])) {
-    return issue_edit(argc - 1, argv + 1, options);
+  if (!strcmp("update", argv[0])) {
+    return issue_update(argc - 1, argv + 1, config, options);
   }
 
   fprintf(stderr, "invalid argument: %s\n", argv[0]);
   return INVALID_ARGUMENT;
 }
 
-result issue_list(int argc, char **argv, options options) {
+result issue_list(int argc, char **argv, redmine::config &config,
+                  options options) {
   CHECK(argc > 1, fprintf(stderr, "invalid argument: %s\n", argv[1]));
-
-  redmine::config config;
-  CHECK(config.load(), fprintf(stderr, "invalid config file\n");
-        return INVALID_CONFIG);
 
   std::vector<redmine::project> projects;
   CHECK_RETURN(query::projects(config, options, projects));
@@ -188,7 +186,8 @@ result issue_list(int argc, char **argv, options options) {
 }
 
 template <typename Info>
-uint32_t get_answer_id(const std::string &name, const std::vector<Info> &infos){
+uint32_t get_answer_id(const std::string &name,
+                       const std::vector<Info> &infos) {
   uint32_t id = 0;
   if (infos.size()) {
     while (!id) {
@@ -223,12 +222,9 @@ void replace_all(std::string &str, const std::string &old_str,
   }
 }
 
-result issue_new(int argc, char **argv, options options) {
+result issue_new(int argc, char **argv, redmine::config &config,
+                 options options) {
   CHECK_MSG(0 == argc, "missing project id or identifier", return FAILURE);
-
-  redmine::config config;
-  CHECK(config.load(), fprintf(stderr, "invalid config file\n");
-        return INVALID_CONFIG);
 
   std::vector<redmine::project> projects;
   CHECK_RETURN(query::projects(config, options, projects));
@@ -269,14 +265,16 @@ result issue_new(int argc, char **argv, options options) {
   std::vector<redmine::version> versions;
   CHECK_RETURN(query::versions(project->identifier, config, options, versions));
 
-  std::vector<redmine::project_membership> memberships;
-  CHECK_RETURN(query::project_memberships(project->identifier, config, options,
-                                          memberships));
+  std::vector<redmine::membership> memberships;
+  CHECK_RETURN(
+      query::memberships(project->identifier, config, options, memberships));
 
   // TODO: Parent Issue.
   // TODO: Custom Fields.
   // TODO: Is Private.
   // TODO: Estimated Hours.
+
+  // TODO: Get permissions for this user & project.
 
   // NOTE: Open editor optionally populated with subject.
   std::string filename = util::getcwd();
@@ -417,14 +415,11 @@ result issue_new(int argc, char **argv, options options) {
   return SUCCESS;
 }
 
-result issue_show(int argc, char **argv, options options) {
+result issue_show(int argc, char **argv, redmine::config &config,
+                  options options) {
   CHECK(0 == argc, fprintf(stderr, "missing issue id\n"); return FAILURE);
   CHECK(1 < argc, fprintf(stderr, "invalid argument: %s\n", argv[1]);
         return FAILURE);
-
-  redmine::config config;
-  CHECK(config.load(), fprintf(stderr, "invalid config file\n");
-        return INVALID_CONFIG);
 
   std::string id(argv[0]);
 
@@ -470,15 +465,11 @@ result issue_show(int argc, char **argv, options options) {
   return SUCCESS;
 }
 
-result issue_edit(int argc, char **argv, options options) {
+result issue_update(int argc, char **argv, redmine::config &config,
+                    options options) {
   fprintf(stderr, "unsupported: issue edit\n");
   return UNSUPPORTED;
 }
-}
-
-result issue_serialize(const issue &issue, json::object &out) {
-  fprintf(stderr, "issue_serialize not implemented!\n");
-  return UNSUPPORTED;
 }
 
 result query::issues(std::string &filter, config &config, options options,

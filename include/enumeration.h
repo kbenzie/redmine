@@ -1,5 +1,5 @@
-#ifndef REDMINE_ENUMERATIONS_HPP
-#define REDMINE_ENUMERATIONS_HPP
+#ifndef REDMINE_ENUMERATIONS_H
+#define REDMINE_ENUMERATIONS_H
 
 #include <redmine.h>
 #include <config.h>

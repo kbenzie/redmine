@@ -33,7 +33,7 @@ result config::save() {
   return SUCCESS;
 }
 
-result config::load() {
+result config::load(redmine::options options) {
   std::string path(config_path());
   std::ifstream file(path);
   CHECK(!file.is_open(), fprintf(stderr, "could not open: %s\n", path.c_str());
@@ -41,7 +41,10 @@ result config::load() {
   std::string str((std::istreambuf_iterator<char>(file)),
                   std::istreambuf_iterator<char>());
   auto Root = json::read(str);
-  CHECK(json::TYPE_OBJECT != Root.type(), return INVALID_CONFIG);
+  CHECK_JSON_TYPE(Root, json::TYPE_OBJECT);
+  CHECK(has<DEBUG>(options), printf("%s\n", json::write(Root, "  ").c_str()));
+
+  // TODO: Properly handle missing config file with interactive creation.
 
   auto Url = Root.object().get("url");
   CHECK_JSON_PTR(Url, json::TYPE_STRING);
@@ -111,14 +114,14 @@ result config(int argc, char **argv, options options) {
 result config_url(int argc, char **argv, options options) {
   redmine::config config;
   if (0 == argc) {
-    CHECK(config.load(), fprintf(stderr, "could not load config file\n");
+    CHECK(config.load(options), fprintf(stderr, "could not load config file\n");
           return INVALID_CONFIG);
     printf("using url %s\n", config.url.c_str());
     return SUCCESS;
   } else if (1 == argc) {
     // NOTE: We don't care if config load fails because we are writing a new url
     // to it.
-    config.load();
+    config.load(options);
     config.url = argv[0];
     if ('/' == config.url.back()) {
       config.url.pop_back();
@@ -136,13 +139,13 @@ result config_url(int argc, char **argv, options options) {
 result config_key(int argc, char **argv, options options) {
   redmine::config config;
   if (0 == argc) {
-    CHECK_RETURN(config.load());
+    CHECK_RETURN(config.load(options));
     printf("using api key %s\n", config.key.c_str());
     return SUCCESS;
   } else if (1 == argc) {
     // NOTE: We don't care if config load fails because we are writing a new key
     // to it.
-    config.load();
+    config.load(options);
     config.key = argv[0];
     CHECK(config.save(), fprintf(stderr, "failed to write config file\n");
           return FAILURE);
@@ -157,13 +160,13 @@ result config_key(int argc, char **argv, options options) {
 result config_port(int argc, char **argv, options options) {
   redmine::config config;
   if (0 == argc) {
-    CHECK_RETURN(config.load());
+    CHECK_RETURN(config.load(options));
     printf("using port %u\n", config.port);
     return SUCCESS;
   } else if (1 == argc) {
     // NOTE: We don't care if the config load fails because we are writing a new
     // port to it.
-    config.load();
+    config.load(options);
     char *end = nullptr;
     config.port = strtoul(argv[0], &end, 10);
     CHECK(argv[0] + strlen(argv[0]) != end,
@@ -182,11 +185,11 @@ result config_port(int argc, char **argv, options options) {
 result config_use_ssl(int argc, char **argv, options options) {
   redmine::config config;
   if (0 == argc) {
-    CHECK_RETURN(config.load());
+    CHECK_RETURN(config.load(options));
     printf("ssl %s\n", (config.use_ssl) ? "enabled" : "disabled");
     return SUCCESS;
   } else if (1 == argc) {
-    config.load();
+    config.load(options);
     std::string use_ssl(argv[0]);
     if ("true" == use_ssl || "false" == use_ssl) {
       config.use_ssl = ('t' == use_ssl[0]) ? true : false;
@@ -202,11 +205,11 @@ result config_use_ssl(int argc, char **argv, options options) {
 result config_verify_ssl(int argc, char **argv, options options) {
   redmine::config config;
   if (0 == argc) {
-    CHECK_RETURN(config.load());
+    CHECK_RETURN(config.load(options));
     printf("ssl verification %s\n", (config.verify_ssl) ? "enabled" : "disabled");
     return SUCCESS;
   } else {
-    config.load();
+    config.load(options);
     std::string verify_ssl(argv[0]);
     if ("true" == verify_ssl || "false" == verify_ssl) {
       config.verify_ssl = ('t' == verify_ssl[0]) ? true : false;

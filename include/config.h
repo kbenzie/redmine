@@ -14,8 +14,10 @@ struct config {
 
   /// @brief Load redmine config file and initilise config object.
   ///
+  /// @param options Comand line options.
+  ///
   /// @return Either SUCCESS or FAILURE.
-  result load();
+  result load(redmine::options options);
 
   /// @brief Save this config object to the config file.
   ///

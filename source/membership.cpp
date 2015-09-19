@@ -1,10 +1,10 @@
 #include <http.h>
-#include <project_membership.hpp>
+#include <membership.h>
 
 namespace redmine {
-project_membership::project_membership() : id(), project(), user(), roles() {}
+membership::membership() : id(), project(), user(), roles() {}
 
-result project_membership::init(const json::object &object) {
+result membership::init(const json::object &object) {
   auto Id = object.get("id");
   CHECK_JSON_PTR(Id, json::TYPE_NUMBER);
   id = Id->number<uint32_t>();
@@ -32,9 +32,9 @@ result project_membership::init(const json::object &object) {
 }
 
 namespace query {
-result project_memberships(
+result memberships(
     const std::string &project, config &config, options options,
-    std::vector<project_membership> &project_memberships) {
+    std::vector<membership> &memberships) {
   std::string body;
   CHECK_RETURN(http::get("/projects/" + project + "/memberships.json", config,
                          options, body));
@@ -49,10 +49,10 @@ result project_memberships(
   for (auto &Membership : Memberships->array()) {
     CHECK_JSON_TYPE(Membership, json::TYPE_OBJECT);
 
-    redmine::project_membership project_membership;
-    CHECK_RETURN(project_membership.init(Membership.object()));
+    redmine::membership membership;
+    CHECK_RETURN(membership.init(Membership.object()));
 
-    project_memberships.push_back(project_membership);
+    memberships.push_back(membership);
   }
 
   return SUCCESS;
