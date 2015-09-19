@@ -20,6 +20,7 @@
 
 #include <json/json.hpp>
 
+#include <cstring>
 #include <iomanip>
 #include <sstream>
 
@@ -212,30 +213,103 @@ double read_number(const char *str, position_t &pos, diagnostic_t &diag) {
 std::string read_string(const char *str, position_t &pos, diagnostic_t &diag) {
   pos++;
 
-  const char *start = str + pos.index;
+  std::string ret;
   while (true) {
     switch (str[pos.index]) {
-      case '"': {
-        auto string = std::string(start, str + pos.index);
+      case '"': {  // NOTE: End of string
         pos++;
-        return string;
+        return ret;
       }
-      case '\\': {
-        // TODO: Handle escape codes
+      case '\\': {  // NOTE: Control character
+        pos++;
+        switch (str[pos.index]) {
+          case '"': {  // NOTE: Quotation mark
+            ret.push_back('\"');
+            pos++;
+          } break;
+          case '\\': {  // NOTE: Reverse solidus
+            ret.push_back('\\');
+            pos++;
+          } break;
+          case '/': {  // NOTE: Solidus
+            ret.push_back('/');
+            pos++;
+          } break;
+          case 'b': {  // NOTE: Backspace
+            ret.push_back('\b');
+            pos++;
+          } break;
+          case 'f': {  // NOTE: Formfeed
+            ret.push_back('\f');
+            pos++;
+          } break;
+          case 'n': {  // NOTE: Newline
+            ret.push_back('\n');
+            pos++;
+          } break;
+          case 'r': {  // NOTE: Carriage return
+            ret.push_back('\r');
+            pos++;
+          } break;
+          case 't': {  // NOTE: Horizonal tab
+            ret.push_back('\t');
+            pos++;
+          } break;
+          case 'u': {  // NOTE: 4 hexadecimal digits
+            pos++;
+            char hex[6] = {'0',
+                           'x',
+                           str[pos.index + 0],
+                           str[pos.index + 1],
+                           str[pos.index + 2],
+                           str[pos.index + 3]};
+            char *end = nullptr;
+            uint32_t code = std::strtoul(hex, &end, 16);
+            if (hex + 6 != end) {
+              pos += end - hex - 2;
+              diag.error = "Did not find 4 hexadecimal digits.";
+              return {};
+            }
+            if (0xf800 & code) {
+              // NOTE: Write three byte UTF-8 code point
+              ret.push_back(0xe0 | ((code >> 12) & 0xf));
+              ret.push_back(0x80 | ((code >> 6) & 0x3f));
+              ret.push_back(0x80 | (code & 0x3f));
+            } else if (0xf80 & code) {
+              // NOTE: Write two byte UTF-8 code point
+              ret.push_back(0xc0 | ((code >> 6) & 0x3f));
+              ret.push_back(0x80 | (code & 0x3f));
+            } else if (0x7f & code) {
+              // NOTE: Write single byte UTF-8 code point
+              ret.push_back(0x40 | (code & 0x7f));
+            } else {
+              diag.error = "Found invalid UTF-8 control character.";
+              return {};
+            }
+            pos += 4;
+          } break;
+          default: {
+            diag.error = "Found invalid control character following '\'.";
+          } break;
+        }
       } break;
       case '\0': {
         diag.error = "No closing '\"' string terminator before end of stream.";
         return {};
       }
-      case '\n': {
-        pos.line++;
-        pos.column = 1;
+      case '/':
+      case '\b':
+      case '\f':
+      case '\n':
+      case '\r': {  // NOTE: Invalid raw control character
+        diag.error = "Found invalid raw control character.";
+        return {};
       } break;
-      default: {
-        // NOTE: Process next character
+      default: {  // NOTE: Valid normal character
+        ret.push_back(str[pos.index]);
+        ++pos;
       } break;
     }
-    ++pos;
   }
 
   diag.error = "String reading is not yet implemented.";
@@ -331,6 +405,9 @@ void push(const indent_t &indent, std::stringstream &stream) {
 void write_value(const json::value &value, indent_t &indent,
                  std::stringstream &stream);
 
+void write_string(const std::string &string, indent_t &indent,
+                  std::stringstream &stream);
+
 void write_object(const json::object &object, indent_t &indent,
                   std::stringstream &stream) {
   stream << "{";
@@ -342,7 +419,8 @@ void write_object(const json::object &object, indent_t &indent,
     }
     stream << "\n";
     push(indent, stream);
-    stream << "\"" << pair.first << "\": ";
+    write_string(pair.first, indent, stream);
+    stream << ": ";
     write_value(pair.second, indent, stream);
     first = false;
   }
@@ -372,6 +450,43 @@ void write_array(const json::array &array, indent_t &indent,
   stream << "]";
 }
 
+void write_string(const std::string &string, indent_t &indent,
+                  std::stringstream &stream) {
+  stream << "\"";
+  for (auto c : string) {
+    switch (c) {
+      case '\"':
+        stream << "\\\"";
+        break;
+      case '\\':
+        stream << "\\\\";
+        break;
+      case '/':
+        stream << "\\/";
+        break;
+      case '\b':
+        stream << "\\b";
+        break;
+      case '\f':
+        stream << "\\f";
+        break;
+      case '\n':
+        stream << "\\n";
+        break;
+      case '\r':
+        stream << "\\r";
+        break;
+      case '\t':
+        stream << "\\t";
+        break;
+      default:
+        stream << c;
+        break;
+    }
+  }
+  stream << "\"";
+}
+
 void write_value(const json::value &value, indent_t &indent,
                  std::stringstream &stream) {
   switch (value.type()) {
@@ -385,7 +500,7 @@ void write_value(const json::value &value, indent_t &indent,
       stream << std::setprecision(16) << value.number();
       break;
     case json::TYPE_STRING:
-      stream << "\"" << value.string() << "\"";
+      write_string(value.string(), indent, stream);
       break;
     case json::TYPE_BOOL:
       stream << (value.boolean() ? "true" : "false");

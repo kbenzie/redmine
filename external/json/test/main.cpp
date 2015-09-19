@@ -165,8 +165,15 @@ int main(int argc, char **argv) {
       {"name", json::value("Terri Salas")},
     }),
   };
-
   printf("%s\n", json::write(json::value(friends), "  ").c_str());
+
+  json::array control_characters{json::value{"\""}, json::value{"\\"},
+                                 json::value{"/"},  json::value{"\f"},
+                                 json::value{"\n"}, json::value{"\r"},
+                                 json::value{"\t"}, json::value{"\u0117"}};
+  std::string control_characters_string = json::write(control_characters, "  ");
+  printf("%s\n", control_characters_string.c_str());
+  json::value control_characters_value = json::read(control_characters_string);
 
   return 0;
 }
