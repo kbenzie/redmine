@@ -10,7 +10,7 @@ result query::trackers(config &config, options options,
   auto root = json::read(body, false);
   CHECK_JSON_TYPE(root, json::TYPE_OBJECT);
 
-  CHECK(has<DEBUG>(options), printf("%s\n", json::write(root, "  ").c_str()));
+  CHECK(HAS_OPTION(DEBUG), printf("%s\n", json::write(root, "  ").c_str()));
 
   auto Trackers = root.object().get("trackers");
   CHECK_JSON_PTR(Trackers, json::TYPE_ARRAY);

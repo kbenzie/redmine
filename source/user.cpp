@@ -73,7 +73,7 @@ result current_user::get(redmine::config &config, redmine::options options) {
 
   auto Root = json::read(body, false);
   CHECK_JSON_TYPE(Root, json::TYPE_OBJECT);
-  CHECK(has<DEBUG>(options), printf("%s\n", json::write(Root, "  ").c_str()));
+  CHECK(HAS_OPTION(DEBUG), printf("%s\n", json::write(Root, "  ").c_str()));
 
   auto User = Root.object().get("user");
   CHECK_JSON_PTR(User, json::TYPE_OBJECT);
@@ -344,7 +344,7 @@ result user_show(redmine::args args, redmine::config &config, options options) {
 
   auto Root = json::read(body, false);
   CHECK_JSON_TYPE(Root, json::TYPE_OBJECT);
-  CHECK(has<DEBUG>(options), printf("%s\n", json::write(Root, "  ").c_str()));
+  CHECK(HAS_OPTION(DEBUG), printf("%s\n", json::write(Root, "  ").c_str()));
 
   auto User = Root.object().get("user");
   CHECK_JSON_PTR(User, json::TYPE_OBJECT);
@@ -374,7 +374,7 @@ result query::users(config &config, options options, std::vector<user> &out) {
   auto Root = json::read(body, false);
   CHECK_JSON_TYPE(Root, json::TYPE_OBJECT);
 
-  CHECK(has<DEBUG>(options), printf("%s\n", json::write(Root, "  ").c_str()));
+  CHECK(HAS_OPTION(DEBUG), printf("%s\n", json::write(Root, "  ").c_str()));
 
   auto Users = Root.object().get("users");
   CHECK_JSON_PTR(Users, json::TYPE_ARRAY);

@@ -60,7 +60,7 @@ result versions(const std::string &project, config &config, options options,
 
   auto Root = json::read(body, false);
   CHECK_JSON_TYPE(Root, json::TYPE_OBJECT);
-  CHECK(has<DEBUG>(options), printf("%s\n", json::write(Root, "  ").c_str()));
+  CHECK(HAS_OPTION(DEBUG), printf("%s\n", json::write(Root, "  ").c_str()));
 
   auto Versions = Root.object().get("versions");
   CHECK_JSON_PTR(Versions, json::TYPE_ARRAY);

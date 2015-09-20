@@ -13,7 +13,7 @@ static result query_enumerations(const std::string &enum_name, config &config,
 
   auto Root = json::read(body, false);
   CHECK_JSON_TYPE(Root, json::TYPE_OBJECT);
-  CHECK(has<DEBUG>(options), printf("%s\n", json::write(Root, "  ").c_str()));
+  CHECK(HAS_OPTION(DEBUG), printf("%s\n", json::write(Root, "  ").c_str()));
 
   auto Enums = Root.object().get(enum_name);
   CHECK_JSON_PTR(Enums, json::TYPE_ARRAY);

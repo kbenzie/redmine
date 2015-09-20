@@ -41,7 +41,7 @@ result memberships(
 
   auto Root = json::read(body, false);
   CHECK_JSON_TYPE(Root, json::TYPE_OBJECT);
-  CHECK(has<DEBUG>(options), printf("%s\n", json::write(Root, "  ").c_str()));
+  CHECK(HAS_OPTION(DEBUG), printf("%s\n", json::write(Root, "  ").c_str()));
 
   auto Memberships = Root.object().get("memberships");
   CHECK_JSON_PTR(Memberships, json::TYPE_ARRAY);

@@ -79,8 +79,7 @@ bool project::operator==(const char *str) const {
 }
 
 namespace action {
-result project(redmine::args args, redmine::config &config,
-               options options) {
+result project(redmine::args args, redmine::config &config, options options) {
   if (0 == args.count()) {
     fprintf(stderr,
             "usage: redmine project <action> [args]\n"
@@ -146,7 +145,7 @@ result project_new(redmine::args args, redmine::config &config,
 
   std::string filename = util::getcwd();
   filename += "/project.redmine";
-  CHECK(has<DEBUG>(options), printf("%s\n", filename.c_str()));
+  CHECK(HAS_OPTION(DEBUG), printf("%s\n", filename.c_str()));
   {
     // NOTE: Populate the REDMINE_PROJECT_NEW temporary file
     std::ofstream file(filename);
@@ -249,7 +248,7 @@ result project_new(redmine::args args, redmine::config &config,
 
   std::string data = json::write(json::object("project", project));
 
-  CHECK(has<DEBUG>(options), printf("%s\n", data.c_str()));
+  CHECK(HAS_OPTION(DEBUG), printf("%s\n", data.c_str()));
   std::string body;
   redmine::result error = http::post("/projects.json", config, options,
                                      http::code::CREATED, data, body);
@@ -319,7 +318,7 @@ result project_show(redmine::args args, redmine::config &config,
                          options, body));
 
   json::value root = json::read(body, false);
-  CHECK(has<DEBUG>(options), printf("%s\n", json::write(root, "  ").c_str()));
+  CHECK(HAS_OPTION(DEBUG), printf("%s\n", json::write(root, "  ").c_str()));
 
   auto &Project = root.object().get("project")->object();
   redmine::project project;
@@ -351,7 +350,7 @@ result query::projects(config &config, options options,
   auto root = json::read(body, false);
   CHECK_JSON_TYPE(root, json::TYPE_OBJECT);
 
-  CHECK(has<DEBUG>(options), printf("%s\n", json::write(root, "  ").c_str()));
+  CHECK(HAS_OPTION(DEBUG), printf("%s\n", json::write(root, "  ").c_str()));
 
   auto Projects = root.object().get("projects");
   CHECK_JSON_PTR(Projects, json::TYPE_ARRAY);

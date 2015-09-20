@@ -61,7 +61,7 @@ result set_options(CURL *curl, const config &config, const options options) {
   CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_PORT, config.port));
   CURL_CHECK_RETURN(
       curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, config.verify_ssl));
-  if (has<DEBUG_HTTP>(options)) {
+  if (HAS_OPTION(DEBUG_HTTP)) {
     CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_VERBOSE, true));
     CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_HEADER, true));
   }
@@ -84,7 +84,7 @@ struct curl_slist *create_header(const config &config, size_t length = 0) {
 
 result http::get(const std::string &path, const config &config, options options,
                  std::string &body) {
-  CHECK(has<DEBUG>(options), printf("%s\n", path.c_str()));
+  CHECK(HAS_OPTION(DEBUG), printf("%s\n", path.c_str()));
   curl_raii curl;
   CHECK(!curl.valid(), fprintf(stderr, "curl init failed\n"); return FAILURE);
   CHECK_RETURN(set_options(curl, config, options));
@@ -100,7 +100,7 @@ result http::get(const std::string &path, const config &config, options options,
   curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &status);
   CHECK(http::code::OK != status, print_http_error(status); return FAILURE);
 
-  CHECK(has<DEBUG>(options), printf("body: %s\n", body.c_str()));
+  CHECK(HAS_OPTION(DEBUG), printf("body: %s\n", body.c_str()));
 
   return SUCCESS;
 }
@@ -122,30 +122,11 @@ result http::post(const std::string &path, const config &config,
   status status;
   curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &status);
 
-  CHECK(has<DEBUG>(options), printf("body: %s\n", body.c_str()));
+  CHECK(HAS_OPTION(DEBUG), printf("body: %s\n", body.c_str()));
   CHECK(expected != status,
-        if (has<DEBUG>(options)) { print_http_error(status); } return FAILURE);
+        if (HAS_OPTION(DEBUG)) { print_http_error(status); } return FAILURE);
 
   return SUCCESS;
-  /*
-     $data = array();
-  // had to create the string this way to make sure it got valid json format
-  $data['issue'] = array("project_id" => 5, "subject" => "test", "priority_id"
-  => 2);
-  $data_string = json_encode($data);
-
-  $ch = curl_init('https://host/redmine/projects/projectname/issues?key=keyid');
-  curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
-  curl_setopt($ch, CURLOPT_POSTFIELDS, $data_string);
-  curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-  //I am posting to https which has some certificate issues, I needed to set the
-  following to false to ignore the issue
-  curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-  curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-  'Content-Type: application/json',
-  'Content-Length: ' . strlen($data_string))
-  );
-  */
 }
 
 result print_curl_error(CURLcode error, const char *file, const int line) {

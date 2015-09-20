@@ -54,6 +54,7 @@ add_executable(redmine
   ${CMAKE_CURRENT_SOURCE_DIR}/include/args.h
   ${CMAKE_CURRENT_SOURCE_DIR}/include/config.h
   ${CMAKE_CURRENT_SOURCE_DIR}/include/enumeration.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/error.h
   ${CMAKE_CURRENT_SOURCE_DIR}/include/issue.h
   ${CMAKE_CURRENT_SOURCE_DIR}/include/http.h
   ${CMAKE_CURRENT_SOURCE_DIR}/include/project.h

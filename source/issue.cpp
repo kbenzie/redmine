@@ -389,7 +389,7 @@ result issue_new(redmine::args args, redmine::config &config, options options) {
   std::string data =
       json::write(json::value{json::object{"issue", issue}}, "  ");
 
-  CHECK(has<DEBUG>(options), printf("%s\n", data.c_str()));
+  CHECK(HAS_OPTION(DEBUG), printf("%s\n", data.c_str()));
 
   std::string body;
   CHECK_RETURN(http::post("/issues.json", config, options, http::code::CREATED,
@@ -397,7 +397,7 @@ result issue_new(redmine::args args, redmine::config &config, options options) {
 
   auto ResponseRoot = json::read(body, false);
   CHECK_JSON_TYPE(ResponseRoot, json::TYPE_OBJECT);
-  CHECK(has<DEBUG>(options),
+  CHECK(HAS_OPTION(DEBUG),
         printf("%s\n", json::write(ResponseRoot, "  ").c_str()));
 
   // NOTE: Display new issue id and path to website.
@@ -432,7 +432,7 @@ result issue_show(redmine::args args, redmine::config &config,
   json::value Root = json::read(body, false);
   CHECK_JSON_TYPE(Root, json::TYPE_OBJECT);
 
-  CHECK(has<DEBUG>(options), printf("%s\n", json::write(Root, "  ").c_str()));
+  CHECK(HAS_OPTION(DEBUG), printf("%s\n", json::write(Root, "  ").c_str()));
 
   auto Issue = Root.object().get("issue");
   CHECK_JSON_PTR(Issue, json::TYPE_OBJECT);
@@ -482,7 +482,7 @@ result query::issues(std::string &filter, config &config, options options,
   auto Root = json::read(body, false);
   CHECK_JSON_TYPE(Root, json::TYPE_OBJECT);
 
-  CHECK(has<DEBUG>(options), printf("%s\n", json::write(Root, "  ").c_str()));
+  CHECK(HAS_OPTION(DEBUG), printf("%s\n", json::write(Root, "  ").c_str()));
 
   auto Issues = Root.object().get("issues");
   CHECK_JSON_PTR(Issues, json::TYPE_ARRAY);
@@ -506,7 +506,7 @@ result query::issue_statuses(config &config, options options,
 
   auto root = json::read(body, false);
   CHECK_JSON_TYPE(root, json::TYPE_OBJECT);
-  CHECK(has<DEBUG>(options), printf("%s\n", json::write(root, "  ").c_str()));
+  CHECK(HAS_OPTION(DEBUG), printf("%s\n", json::write(root, "  ").c_str()));
 
   auto Statuses = root.object().get("issue_statuses");
   CHECK_JSON_PTR(Statuses, json::TYPE_ARRAY);
@@ -550,7 +550,7 @@ result query::issue_categories(const std::string &project,
 
   auto Root = json::read(body, false);
   CHECK_JSON_TYPE(Root, json::TYPE_OBJECT);
-  CHECK(has<DEBUG>(options), printf("%s\n", json::write(Root, "  ").c_str()));
+  CHECK(HAS_OPTION(DEBUG), printf("%s\n", json::write(Root, "  ").c_str()));
 
   auto IssueCategories = Root.object().get("issue_categories");
   CHECK_JSON_PTR(IssueCategories, json::TYPE_ARRAY);

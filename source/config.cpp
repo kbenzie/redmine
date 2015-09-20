@@ -42,7 +42,7 @@ result config::load(redmine::options options) {
                   std::istreambuf_iterator<char>());
   auto Root = json::read(str);
   CHECK_JSON_TYPE(Root, json::TYPE_OBJECT);
-  CHECK(has<DEBUG>(options), printf("%s\n", json::write(Root, "  ").c_str()));
+  CHECK(HAS_OPTION(DEBUG), printf("%s\n", json::write(Root, "  ").c_str()));
 
   // TODO: Properly handle missing config file with interactive creation.
 
