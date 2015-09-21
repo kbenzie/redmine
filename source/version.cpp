@@ -52,15 +52,15 @@ result version::init(const json::object &object) {
 }
 
 namespace query {
-result versions(const std::string &project, config &config, options options,
-                std::vector<version> &versions) {
+result versions(const std::string &project, redmine::config &config,
+                redmine::options &options, std::vector<version> &versions) {
   std::string body;
   CHECK_RETURN(http::get("/projects/" + project + "/versions.json", config,
                          options, body));
 
   auto Root = json::read(body, false);
   CHECK_JSON_TYPE(Root, json::TYPE_OBJECT);
-  CHECK(HAS_OPTION(DEBUG), printf("%s\n", json::write(Root, "  ").c_str()));
+  CHECK(options.debug, printf("%s\n", json::write(Root, "  ").c_str()));
 
   auto Versions = Root.object().get("versions");
   CHECK_JSON_PTR(Versions, json::TYPE_ARRAY);
@@ -76,5 +76,5 @@ result versions(const std::string &project, config &config, options options,
 
   return SUCCESS;
 }
-}
-}
+}  // query
+}  // redmine

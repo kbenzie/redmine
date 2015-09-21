@@ -66,14 +66,14 @@ current_user::current_user()
       project_permissions(),
       permissions() {}
 
-result current_user::get(redmine::config &config, redmine::options options) {
+result current_user::get(redmine::config &config, redmine::options &options) {
   std::string body;
   CHECK_RETURN(http::get("/users/current.json?include=memberships,groups",
-                         config, redmine::NONE, body));
+                         config, options, body));
 
   auto Root = json::read(body, false);
   CHECK_JSON_TYPE(Root, json::TYPE_OBJECT);
-  CHECK(HAS_OPTION(DEBUG), printf("%s\n", json::write(Root, "  ").c_str()));
+  CHECK(options.debug, printf("%s\n", json::write(Root, "  ").c_str()));
 
   auto User = Root.object().get("user");
   CHECK_JSON_PTR(User, json::TYPE_OBJECT);
@@ -293,7 +293,8 @@ bool redmine::current_user::can(redmine::permisson permisson) {
 }
 
 namespace action {
-result user(redmine::args args, redmine::config &config, options options) {
+result user(redmine::args args, redmine::config &config,
+            redmine::options &options) {
   if (0 == args.count()) {
     fprintf(stderr,
             "usage: redmine issue <action> [args]\n"
@@ -315,7 +316,8 @@ result user(redmine::args args, redmine::config &config, options options) {
   return INVALID_ARGUMENT;
 }
 
-result user_list(redmine::args args, redmine::config &config, options options) {
+result user_list(redmine::args args, redmine::config &config,
+                 redmine::options &options) {
   CHECK(args.count(), fprintf(stderr, "invalid argument: %s\n", args[0]);
         return FAILURE);
 
@@ -334,7 +336,8 @@ result user_list(redmine::args args, redmine::config &config, options options) {
   return SUCCESS;
 }
 
-result user_show(redmine::args args, redmine::config &config, options options) {
+result user_show(redmine::args args, redmine::config &config,
+                 redmine::options &options) {
   CHECK(0 == args.count(), fprintf(stderr, "missing id\n"));
   CHECK(1 < args.count(), fprintf(stderr, "invalid argument: %s\n", args[1]));
 
@@ -344,7 +347,7 @@ result user_show(redmine::args args, redmine::config &config, options options) {
 
   auto Root = json::read(body, false);
   CHECK_JSON_TYPE(Root, json::TYPE_OBJECT);
-  CHECK(HAS_OPTION(DEBUG), printf("%s\n", json::write(Root, "  ").c_str()));
+  CHECK(options.debug, printf("%s\n", json::write(Root, "  ").c_str()));
 
   auto User = Root.object().get("user");
   CHECK_JSON_PTR(User, json::TYPE_OBJECT);
@@ -365,16 +368,17 @@ result user_show(redmine::args args, redmine::config &config, options options) {
 
   return SUCCESS;
 }
-}
+}  // action
 
-result query::users(config &config, options options, std::vector<user> &out) {
+result query::users(redmine::config &config, redmine::options &options,
+                    std::vector<user> &out) {
   std::string body;
   CHECK_RETURN(http::get("/users.json", config, options, body));
 
   auto Root = json::read(body, false);
   CHECK_JSON_TYPE(Root, json::TYPE_OBJECT);
 
-  CHECK(HAS_OPTION(DEBUG), printf("%s\n", json::write(Root, "  ").c_str()));
+  CHECK(options.debug, printf("%s\n", json::write(Root, "  ").c_str()));
 
   auto Users = Root.object().get("users");
   CHECK_JSON_PTR(Users, json::TYPE_ARRAY);
@@ -390,4 +394,4 @@ result query::users(config &config, options options, std::vector<user> &out) {
 
   return SUCCESS;
 }
-}
+}  // redmine

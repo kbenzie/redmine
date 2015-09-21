@@ -2,7 +2,7 @@
 #include <tracker.h>
 
 namespace redmine {
-result query::trackers(config &config, options options,
+result query::trackers(redmine::config &config, redmine::options &options,
                        std::vector<reference> &trackers) {
   std::string body;
   CHECK_RETURN(http::get("/trackers.json", config, options, body));
@@ -10,7 +10,7 @@ result query::trackers(config &config, options options,
   auto root = json::read(body, false);
   CHECK_JSON_TYPE(root, json::TYPE_OBJECT);
 
-  CHECK(HAS_OPTION(DEBUG), printf("%s\n", json::write(root, "  ").c_str()));
+  CHECK(options.debug, printf("%s\n", json::write(root, "  ").c_str()));
 
   auto Trackers = root.object().get("trackers");
   CHECK_JSON_PTR(Trackers, json::TYPE_ARRAY);

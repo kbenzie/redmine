@@ -33,7 +33,7 @@ result config::save() {
   return SUCCESS;
 }
 
-result config::load(redmine::options options) {
+result config::load(redmine::options &options) {
   std::string path(config_path());
   std::ifstream file(path);
   CHECK(!file.is_open(), fprintf(stderr, "could not open: %s\n", path.c_str());
@@ -42,7 +42,7 @@ result config::load(redmine::options options) {
                   std::istreambuf_iterator<char>());
   auto Root = json::read(str);
   CHECK_JSON_TYPE(Root, json::TYPE_OBJECT);
-  CHECK(HAS_OPTION(DEBUG), printf("%s\n", json::write(Root, "  ").c_str()));
+  CHECK(options.debug, printf("%s\n", json::write(Root, "  ").c_str()));
 
   // TODO: Properly handle missing config file with interactive creation.
 
@@ -74,7 +74,7 @@ result config::load(redmine::options options) {
 }
 
 namespace action {
-result config(redmine::args args, options options) {
+result config(redmine::args args, redmine::options &options) {
   if (0 == args.count()) {
     fprintf(stderr,
             "usage: redmine config <action> [args]\n"
@@ -111,7 +111,7 @@ result config(redmine::args args, options options) {
   return INVALID_ARGUMENT;
 }
 
-result config_url(redmine::args args, options options) {
+result config_url(redmine::args args, redmine::options &options) {
   redmine::config config;
   if (0 == args.count()) {
     CHECK(config.load(options), fprintf(stderr, "could not load config file\n");
@@ -136,7 +136,7 @@ result config_url(redmine::args args, options options) {
   return INVALID_ARGUMENT;
 }
 
-result config_key(redmine::args args, options options) {
+result config_key(redmine::args args, redmine::options &options) {
   redmine::config config;
   if (0 == args.count()) {
     CHECK_RETURN(config.load(options));
@@ -157,7 +157,7 @@ result config_key(redmine::args args, options options) {
   return INVALID_ARGUMENT;
 }
 
-result config_port(redmine::args args, options options) {
+result config_port(redmine::args args, redmine::options &options) {
   redmine::config config;
   if (0 == args.count()) {
     CHECK_RETURN(config.load(options));
@@ -182,7 +182,7 @@ result config_port(redmine::args args, options options) {
   return INVALID_ARGUMENT;
 }
 
-result config_use_ssl(redmine::args args, options options) {
+result config_use_ssl(redmine::args args, redmine::options &options) {
   redmine::config config;
   if (0 == args.count()) {
     CHECK_RETURN(config.load(options));
@@ -202,7 +202,7 @@ result config_use_ssl(redmine::args args, options options) {
   return FAILURE;
 }
 
-result config_verify_ssl(redmine::args args, options options) {
+result config_verify_ssl(redmine::args args, redmine::options &options) {
   redmine::config config;
   if (0 == args.count()) {
     CHECK_RETURN(config.load(options));
@@ -223,19 +223,5 @@ result config_verify_ssl(redmine::args args, options options) {
   fprintf(stderr, "invalid argument: %s\n", args[1]);
   return FAILURE;
 }
-}
-
-result config_validate(config &config) {
-  redmine::result error = SUCCESS;
-  if (!config.key.size()) {
-    fprintf(stderr, "key is empty, set using: redmine config key <key>\n");
-    error = INVALID_CONFIG;
-  }
-  if (!config.key.size()) {
-    fprintf(stderr, "url is empty, set using: redmine config url <url>\n");
-    error = INVALID_CONFIG;
-  }
-  // TODO: Validate port
-  return error;
-}
-}
+}  // action
+}  // redmine

@@ -52,22 +52,23 @@ struct project {
 };
 
 namespace action {
-result project(redmine::args args, redmine::config &config, options options);
+result project(redmine::args args, redmine::config &config,
+               redmine::options &options);
 
 result project_list(redmine::args args, redmine::config &config,
-                    redmine::options options);
+                    redmine::options &options);
 
 result project_new(redmine::args args, redmine::config &config,
-                   redmine::options options);
+                   redmine::options &options);
 
 result project_show(redmine::args args, redmine::config &config,
-                    redmine::options options);
+                    redmine::options &options);
 }
 
 project *find(std::vector<project> &projects, const char *pattern);
 
 namespace query {
-result projects(redmine::config &config, redmine::options options,
+result projects(redmine::config &config, redmine::options &options,
                 std::vector<redmine::project> &projects);
 }
 }

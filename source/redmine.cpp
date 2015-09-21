@@ -12,26 +12,26 @@
 int main(int argc, char **argv) {
   redmine::args args(argc, argv);
 
-  redmine::options options = redmine::NONE;
+  redmine::options options;
   for (auto arg : args) {
     args++;
 
     if (!strcmp("--verbose", arg)) {
-      options |= redmine::VERBOSE;
+      options.verbose = true;
       CHECK(args.end() - 1 == &arg, fprintf(stderr, "action required\n");
             return redmine::ACTION_REQUIRED);
       continue;
     }
 
     if (!strcmp("--debug", arg)) {
-      options |= redmine::DEBUG;
+      options.debug = true;
       CHECK(args.end() - 1 == &arg, fprintf(stderr, "action required\n");
             return redmine::ACTION_REQUIRED);
       continue;
     }
 
     if (!strcmp("--debug-http", arg)) {
-      options |= redmine::DEBUG_HTTP;
+      options.debug_http = true;
       CHECK(args.end() - 1 == &arg, fprintf(stderr, "action required\n");
             return redmine::ACTION_REQUIRED);
       continue;

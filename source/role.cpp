@@ -81,13 +81,13 @@ permissions::permissions()
       view_gantt(false) {}
 
 result permissions::get(const uint32_t role, const redmine::config &config,
-                        redmine::options options) {
+                        redmine::options &options) {
   std::string body;
   CHECK_RETURN(http::get("/roles/" + std::to_string(role) + ".json", config,
                          options, body));
   auto Root = json::read(body, false);
   CHECK_JSON_TYPE(Root, json::TYPE_OBJECT);
-  CHECK(HAS_OPTION(DEBUG), printf("%s\n", json::write(Root, "  ").c_str()));
+  CHECK(options.debug, printf("%s\n", json::write(Root, "  ").c_str()));
 
   auto Role = Root.object().get("role");
   CHECK_JSON_PTR(Role, json::TYPE_OBJECT);
@@ -343,7 +343,7 @@ result roles(const redmine::config &config, redmine::options options,
 
   auto Root = json::read(body, false);
   CHECK_JSON_TYPE(Root, json::TYPE_OBJECT);
-  CHECK(HAS_OPTION(DEBUG), printf("%s\n", json::write(Root, "  ").c_str()));
+  CHECK(options.debug, printf("%s\n", json::write(Root, "  ").c_str()));
 
   auto Roles = Root.object().get("roles");
   CHECK_JSON_PTR(Roles, json::TYPE_ARRAY);

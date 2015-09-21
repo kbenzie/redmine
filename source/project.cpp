@@ -79,7 +79,8 @@ bool project::operator==(const char *str) const {
 }
 
 namespace action {
-result project(redmine::args args, redmine::config &config, options options) {
+result project(redmine::args args, redmine::config &config,
+               redmine::options &options) {
   if (0 == args.count()) {
     fprintf(stderr,
             "usage: redmine project <action> [args]\n"
@@ -107,7 +108,7 @@ result project(redmine::args args, redmine::config &config, options options) {
 }
 
 result project_list(redmine::args args, redmine::config &config,
-                    options options) {
+                    redmine::options &options) {
   CHECK(0 != args.count(), fprintf(stderr, "invalid argument: %s\n", args[0]);
         return INVALID_ARGUMENT);
 
@@ -131,7 +132,7 @@ result project_list(redmine::args args, redmine::config &config,
 }
 
 result project_new(redmine::args args, redmine::config &config,
-                   options options) {
+                   redmine::options &options) {
   CHECK(2 > args.count(),
         fprintf(stderr, "usage: redmine project new <name> <identifier>\n");
         return FAILURE);
@@ -145,7 +146,7 @@ result project_new(redmine::args args, redmine::config &config,
 
   std::string filename = util::getcwd();
   filename += "/project.redmine";
-  CHECK(HAS_OPTION(DEBUG), printf("%s\n", filename.c_str()));
+  CHECK(options.debug, printf("%s\n", filename.c_str()));
   {
     // NOTE: Populate the REDMINE_PROJECT_NEW temporary file
     std::ofstream file(filename);
@@ -248,7 +249,7 @@ result project_new(redmine::args args, redmine::config &config,
 
   std::string data = json::write(json::object("project", project));
 
-  CHECK(HAS_OPTION(DEBUG), printf("%s\n", data.c_str()));
+  CHECK(options.debug, printf("%s\n", data.c_str()));
   std::string body;
   redmine::result error = http::post("/projects.json", config, options,
                                      http::code::CREATED, data, body);
@@ -304,7 +305,7 @@ result project_new(redmine::args args, redmine::config &config,
 }
 
 result project_show(redmine::args args, redmine::config &config,
-                    options options) {
+                    redmine::options &options) {
   CHECK(0 == args.count(), fprintf(stderr, "missing id or name\n");
         return FAILURE);
   CHECK(1 < args.count(), fprintf(stderr, "invalid argument: %s\n", args[1]);
@@ -318,7 +319,7 @@ result project_show(redmine::args args, redmine::config &config,
                          options, body));
 
   json::value root = json::read(body, false);
-  CHECK(HAS_OPTION(DEBUG), printf("%s\n", json::write(root, "  ").c_str()));
+  CHECK(options.debug, printf("%s\n", json::write(root, "  ").c_str()));
 
   auto &Project = root.object().get("project")->object();
   redmine::project project;
@@ -340,9 +341,9 @@ result project_show(redmine::args args, redmine::config &config,
 
   return SUCCESS;
 }
-}
+}  // action
 
-result query::projects(config &config, options options,
+result query::projects(redmine::config &config, redmine::options &options,
                        std::vector<project> &projects) {
   std::string body;
   CHECK_RETURN(http::get("/projects.json", config, options, body));
@@ -350,7 +351,7 @@ result query::projects(config &config, options options,
   auto root = json::read(body, false);
   CHECK_JSON_TYPE(root, json::TYPE_OBJECT);
 
-  CHECK(HAS_OPTION(DEBUG), printf("%s\n", json::write(root, "  ").c_str()));
+  CHECK(options.debug, printf("%s\n", json::write(root, "  ").c_str()));
 
   auto Projects = root.object().get("projects");
   CHECK_JSON_PTR(Projects, json::TYPE_ARRAY);
@@ -366,4 +367,4 @@ result query::projects(config &config, options options,
 
   return SUCCESS;
 }
-}
+}  // redmine

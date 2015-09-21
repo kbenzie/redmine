@@ -84,7 +84,7 @@ struct permissions {
   permissions();
 
   result get(const uint32_t role, const redmine::config &config,
-             redmine::options options);
+             redmine::options &options);
 
   permissions &operator|=(const permissions &other);
 
@@ -189,7 +189,7 @@ struct permissions {
 };
 
 namespace query {
-result roles(const redmine::config &config, redmine::options options,
+result roles(const redmine::config &config, redmine::options &options,
              std::vector<redmine::reference> &roles);
 }
 }

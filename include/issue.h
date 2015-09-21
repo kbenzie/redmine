@@ -64,27 +64,27 @@ struct issue_category {
 };
 
 namespace action {
-result issue(redmine::args args, redmine::config &config, options options);
-
-result issue_list(redmine::args args, redmine::config &config, options options);
-
-result issue_new(redmine::args args, redmine::config &config, options options);
-
-result issue_show(redmine::args args, redmine::config &config, options options);
-
+result issue(redmine::args args, redmine::config &config,
+             redmine::options &options);
+result issue_list(redmine::args args, redmine::config &config,
+                  redmine::options &options);
+result issue_new(redmine::args args, redmine::config &config,
+                 redmine::options &options);
+result issue_show(redmine::args args, redmine::config &config,
+                  redmine::options &options);
 result issue_update(redmine::args args, redmine::config &config,
-                    options options);
+                    redmine::options options);
 }
 
 namespace query {
-result issues(std::string &filter, config &config, options options,
-              std::vector<issue> &issues);
+result issues(std::string &filter, redmine::config &config,
+              redmine::options options, std::vector<issue> &issues);
 
-result issue_statuses(config &config, options options,
+result issue_statuses(redmine::config &config, redmine::options &options,
                       std::vector<issue_status> &issue_statuses);
 
-result issue_categories(const std::string &project, config &config,
-                        options options,
+result issue_categories(const std::string &project, redmine::config &config,
+                        redmine::options &options,
                         std::vector<issue_category> &issue_categories);
 }
 }

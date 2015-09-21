@@ -61,7 +61,7 @@ result set_options(CURL *curl, const config &config, const options options) {
   CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_PORT, config.port));
   CURL_CHECK_RETURN(
       curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, config.verify_ssl));
-  if (HAS_OPTION(DEBUG_HTTP)) {
+  if (options.debug_http) {
     CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_VERBOSE, true));
     CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_HEADER, true));
   }
@@ -82,9 +82,9 @@ struct curl_slist *create_header(const config &config, size_t length = 0) {
   return header;
 }
 
-result http::get(const std::string &path, const config &config, options options,
-                 std::string &body) {
-  CHECK(HAS_OPTION(DEBUG), printf("%s\n", path.c_str()));
+result http::get(const std::string &path, const config &config,
+                 const redmine::options &options, std::string &body) {
+  CHECK(options.debug, printf("%s\n", path.c_str()));
   curl_raii curl;
   CHECK(!curl.valid(), fprintf(stderr, "curl init failed\n"); return FAILURE);
   CHECK_RETURN(set_options(curl, config, options));
@@ -100,13 +100,13 @@ result http::get(const std::string &path, const config &config, options options,
   curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &status);
   CHECK(http::code::OK != status, print_http_error(status); return FAILURE);
 
-  CHECK(HAS_OPTION(DEBUG), printf("body: %s\n", body.c_str()));
+  CHECK(options.debug, printf("body: %s\n", body.c_str()));
 
   return SUCCESS;
 }
 
 result http::post(const std::string &path, const config &config,
-                  options options, const http::status expected,
+                  const redmine::options &options, const http::status expected,
                   const std::string &str, std::string &body) {
   curl_raii curl;
   CHECK(!curl.valid(), fprintf(stderr, "curl init failed\n"); return FAILURE);
@@ -122,9 +122,9 @@ result http::post(const std::string &path, const config &config,
   status status;
   curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &status);
 
-  CHECK(HAS_OPTION(DEBUG), printf("body: %s\n", body.c_str()));
+  CHECK(options.debug, printf("body: %s\n", body.c_str()));
   CHECK(expected != status,
-        if (HAS_OPTION(DEBUG)) { print_http_error(status); } return FAILURE);
+        if (options.debug) { print_http_error(status); } return FAILURE);
 
   return SUCCESS;
 }

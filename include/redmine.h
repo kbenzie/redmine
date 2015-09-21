@@ -22,20 +22,28 @@ enum result {
   INVALID_CONFIG,
 };
 
-/// @brief Enumeration of all possible options.
-enum option {
-  NONE,
-  VERBOSE,
-  DEBUG,
-  DEBUG_HTTP,
+/// @brief Object encapsulating all command line options.
+struct options {
+  /// @brief Default constructor.
+  options() : verbose(), debug(), debug_http() {}
+
+  /// @brief Option to enable verbose output.
+  bool verbose;
+  /// @brief Option to enable debug output.
+  bool debug;
+  /// @brief Option to enable http debug option.
+  ///
+  /// Enabling the http debug option is not advised unless ther are issues with
+  /// the http connection because the servers response header will be inserted
+  /// into the body of the packet invalidating json data.
+  bool debug_http;
 };
 
-/// @brief Common pattern used to reference a redmine projcet, issue, and other
-/// items.
+/// @brief Common pattern used to reference a redmine item.
 struct reference {
   /// @brief Initialise from a json::object.
   ///
-  /// @param object Object to initialise json::object from.
+  /// @param object Object to initialise redmine::reference from.
   ///
   /// @return Returns either redmine::SUCCESS or redmine::FAILURE.
   result init(const json::object &object);
@@ -45,16 +53,6 @@ struct reference {
   /// @brief Human readable name of the referenced item.
   std::string name;
 };
-
-/// @brief An options_t is a bitfield of option_t values.
-typedef uint32_t options;
-
-/// @brief Check if an option is enabled.
-///
-/// @tparam option Desired option to check for.
-///
-/// @return true if enabled, false otherwise.
-#define HAS_OPTION(OPTION) (OPTION == (OPTION & options))
-}
+}  // redmine
 
 #endif

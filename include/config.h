@@ -18,7 +18,7 @@ struct config {
   /// @param options Comand line options.
   ///
   /// @return Either SUCCESS or FAILURE.
-  result load(redmine::options options);
+  result load(redmine::options &options);
 
   /// @brief Save this config object to the config file.
   ///
@@ -35,13 +35,13 @@ struct config {
 };
 
 namespace action {
-result config(redmine::args args, options options);
-result config_url(redmine::args args, options options);
-result config_key(redmine::args args, options options);
-result config_port(redmine::args args, options options);
-result config_use_ssl(redmine::args args, options options);
-result config_verify_ssl(redmine::args args, options options);
+result config(redmine::args args, redmine::options &options);
+result config_url(redmine::args args, redmine::options &options);
+result config_key(redmine::args args, redmine::options &options);
+result config_port(redmine::args args, redmine::options &options);
+result config_use_ssl(redmine::args args, redmine::options &options);
+result config_verify_ssl(redmine::args args, redmine::options &options);
 }
-}
+}  // redmine
 
 #endif

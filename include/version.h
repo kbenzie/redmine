@@ -21,8 +21,8 @@ struct version {
 };
 
 namespace query {
-result versions(const std::string &project, config &config, options options,
-                std::vector<version> &versions);
+result versions(const std::string &project, redmine::config &config,
+                redmine::options &options, std::vector<version> &versions);
 }
 }
 

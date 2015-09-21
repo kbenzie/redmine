@@ -19,7 +19,7 @@ namespace query {
 /// @param issue_statuses Returned list of issue statuses.
 ///
 /// @return Returns SUCCESS or FAILURE.
-result issue_priorities(config &config, options options,
+result issue_priorities(redmine::config &config, redmine::options &options,
                         std::vector<enumeration> &issue_statuses);
 
 /// @brief Query the list of redmine time entry activities.
@@ -29,7 +29,7 @@ result issue_priorities(config &config, options options,
 /// @param time_entry_activities Returned list of time entry activities.
 ///
 /// @return Returns SUCCESS or FAILURE.
-result time_entry_activities(config &config, options options,
+result time_entry_activities(redmine::config &config, redmine::options &options,
                              std::vector<enumeration> &time_entry_activities);
 }
 }

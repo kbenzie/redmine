@@ -32,7 +32,7 @@ struct user {
 struct current_user {
   current_user();
 
-  result get(redmine::config &config, redmine::options options);
+  result get(redmine::config &config, redmine::options &options);
 
   bool can(redmine::permisson permisson);
 
@@ -53,13 +53,17 @@ struct current_user {
 };
 
 namespace action {
-result user(redmine::args args, redmine::config &config, options options);
-result user_list(redmine::args args, redmine::config &config, options options);
-result user_show(redmine::args args, redmine::config &config, options options);
+result user(redmine::args args, redmine::config &config,
+            redmine::options &options);
+result user_list(redmine::args args, redmine::config &config,
+                 redmine::options &options);
+result user_show(redmine::args args, redmine::config &config,
+                 redmine::options &options);
 }
 
 namespace query {
-result users(config &config, options options, std::vector<user> &out);
+result users(redmine::config &config, redmine::options &options,
+             std::vector<user> &out);
 }
 }
 

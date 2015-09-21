@@ -591,8 +591,8 @@ struct session {
   ~session();
 };
 
-result get(const std::string &path, const config &config, const options options,
-           std::string &body);
+result get(const std::string &path, const redmine::config &config,
+           const redmine::options &options, std::string &body);
 
 /// @brief Perform a POST request.
 ///
@@ -603,9 +603,9 @@ result get(const std::string &path, const config &config, const options options,
 /// @param[out] body Response data body.
 ///
 /// @return Return SUCCESS or FAILURE
-result post(const std::string &path, const config &config, options options,
-            const http::status expected, const std::string &data,
-            std::string &body);
+result post(const std::string &path, const redmine::config &config,
+            const redmine::options &options, const http::status expected,
+            const std::string &data, std::string &body);
 }
 }
 

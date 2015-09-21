@@ -17,9 +17,10 @@ struct membership {
 };
 
 namespace query {
-result memberships(const std::string &project, config &config, options options,
+result memberships(const std::string &project, redmine::config &config,
+                   redmine::options &options,
                    std::vector<membership> &memberships);
-}
-}
+}  // query
+}  // redmine
 
 #endif

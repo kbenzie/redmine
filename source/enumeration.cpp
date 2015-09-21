@@ -5,7 +5,7 @@
 
 namespace redmine {
 static result query_enumerations(const std::string &enum_name, config &config,
-                                 options options,
+                                 redmine::options &options,
                                  std::vector<redmine::enumeration> &enums) {
   std::string body;
   CHECK_RETURN(
@@ -13,7 +13,7 @@ static result query_enumerations(const std::string &enum_name, config &config,
 
   auto Root = json::read(body, false);
   CHECK_JSON_TYPE(Root, json::TYPE_OBJECT);
-  CHECK(HAS_OPTION(DEBUG), printf("%s\n", json::write(Root, "  ").c_str()));
+  CHECK(options.debug, printf("%s\n", json::write(Root, "  ").c_str()));
 
   auto Enums = Root.object().get(enum_name);
   CHECK_JSON_PTR(Enums, json::TYPE_ARRAY);
@@ -42,15 +42,16 @@ static result query_enumerations(const std::string &enum_name, config &config,
   return SUCCESS;
 }
 
-result query::issue_priorities(config &config, options options,
+result query::issue_priorities(redmine::config &config,
+                               redmine::options &options,
                                std::vector<enumeration> &priorities) {
   return query_enumerations("issue_priorities", config, options, priorities);
 }
 
 result query::time_entry_activities(
-    config &config, options options,
+    redmine::config &config, redmine::options &options,
     std::vector<enumeration> &time_entry_activities) {
   return query_enumerations("time_entry_activities", config, options,
                             time_entry_activities);
 }
-}
+}  // redmine

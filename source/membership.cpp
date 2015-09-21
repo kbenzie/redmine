@@ -32,16 +32,16 @@ result membership::init(const json::object &object) {
 }
 
 namespace query {
-result memberships(
-    const std::string &project, config &config, options options,
-    std::vector<membership> &memberships) {
+result memberships(const std::string &project, config &config,
+                   redmine::options &options,
+                   std::vector<membership> &memberships) {
   std::string body;
   CHECK_RETURN(http::get("/projects/" + project + "/memberships.json", config,
                          options, body));
 
   auto Root = json::read(body, false);
   CHECK_JSON_TYPE(Root, json::TYPE_OBJECT);
-  CHECK(HAS_OPTION(DEBUG), printf("%s\n", json::write(Root, "  ").c_str()));
+  CHECK(options.debug, printf("%s\n", json::write(Root, "  ").c_str()));
 
   auto Memberships = Root.object().get("memberships");
   CHECK_JSON_PTR(Memberships, json::TYPE_ARRAY);
@@ -57,5 +57,5 @@ result memberships(
 
   return SUCCESS;
 }
-}
-}
+}  // query
+}  // redmine

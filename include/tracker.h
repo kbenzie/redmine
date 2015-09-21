@@ -5,7 +5,7 @@
 
 namespace redmine {
 namespace query {
-result trackers(config &config, options options,
+result trackers(redmine::config &config, redmine::options &options,
                 std::vector<reference> &trackers);
 }
 }
