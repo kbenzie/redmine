@@ -591,22 +591,45 @@ struct session {
   ~session();
 };
 
+/// @brief Perform an HTTP GET request.
+///
+/// @param path The path of the UTR to the request to.
+/// @param config The users redmine configuration.
+/// @param options Enabled options.
+/// @param body Response data body.
+///
+/// @return Return redmine::SUCCESS or redmine::FAILURE.
 result get(const std::string &path, const redmine::config &config,
            const redmine::options &options, std::string &body);
 
 /// @brief Perform a POST request.
 ///
-/// @param[in] path The path of the URL to send the request to.
-/// @param[in] config The users redmine configuration.
-/// @param[in] expected The espected HTTP status code.
-/// @param[in] options Enabled options.
-/// @param[out] body Response data body.
+/// @param path The path of the URL to send the request to.
+/// @param config The users redmine configuration.
+/// @param options Enabled options.
+/// @param expected The expected HTTP status code.
+/// @param data The data to be uploaded.
+/// @param body Response data body.
 ///
-/// @return Return SUCCESS or FAILURE
+/// @return Return redmine::SUCCESS or redmine::FAILURE
 result post(const std::string &path, const redmine::config &config,
             const redmine::options &options, const http::status expected,
             const std::string &data, std::string &body);
+
+/// @brief Perform a PUT request.
+///
+/// @param path The path of the URL to send the request to.
+/// @param config The users redmine configuration.
+/// @param options Enabled options.
+/// @param expected The expected HTTP status code.
+/// @param data The data to be uploaded.
+/// @param body Response data body.
+///
+/// @return Return redmine::SUCCESS or redmine::FAILURE.
+result put(const std::string &path, const redmine::config &config,
+           const redmine::options &options, const http::status expected,
+           const std::string &data, std::string &body);
 }
-}
+}  // redmine
 
 #endif

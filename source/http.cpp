@@ -34,17 +34,24 @@ struct curl_raii {
   CURL *handle;
 };
 
-struct read_data {
-  read_data(const std::string &str) : str(str), bytes(0) {}
+struct read_state {
+  read_state(const std::string &str) : str(str), index(0) {}
 
   const std::string &str;
-  size_t bytes;
+  size_t index;
 };
 
-size_t read(char *buffer, size_t size, size_t count, void *stream) {
-  read_data *data = static_cast<read_data *>(stream);
-  ASSERT(false, "Implement http read callback!");
-  return 0;
+size_t read(char *ptr, size_t size, size_t count, void *data) {
+  read_state *state = static_cast<read_state *>(data);
+  curl_off_t read = size * count;
+  if (read > (state->str.size() - state->index)) {
+    read = state->str.size() - state->index;
+  }
+  if (read) {
+    std::memcpy(ptr, &state->str[state->index], read);
+    state->index += read;
+  }
+  return read;
 }
 
 size_t write(void *ptr, size_t size, size_t count, void *data) {
@@ -57,7 +64,6 @@ size_t write(void *ptr, size_t size, size_t count, void *data) {
 
 result set_options(CURL *curl, const config &config, const options options) {
   CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_USE_SSL, CURLUSESSL_ALL));
-  CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write));
   CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_PORT, config.port));
   CURL_CHECK_RETURN(
       curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, config.verify_ssl));
@@ -91,6 +97,7 @@ result http::get(const std::string &path, const config &config,
   CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_URL,
                                      std::string(config.url + path).c_str()));
   CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_HTTPGET, 1));
+  CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write));
   CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_WRITEDATA, &body));
   auto header = create_header(config);
   CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_HTTPHEADER, header));
@@ -114,12 +121,37 @@ result http::post(const std::string &path, const config &config,
   CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_POSTFIELDS, str.c_str()));
   CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_URL,
                                      std::string(config.url + path).c_str()));
+  CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write));
   CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_WRITEDATA, &body));
   auto header = create_header(config, str.size());
   CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_HTTPHEADER, header));
 
   CURL_CHECK_RETURN(curl_easy_perform(curl));
   status status;
+  curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &status);
+
+  CHECK(options.debug, printf("body: %s\n", body.c_str()));
+  CHECK(expected != status,
+        if (options.debug) { print_http_error(status); } return FAILURE);
+
+  return SUCCESS;
+}
+
+result http::put(const std::string &path, const redmine::config &config,
+                 const redmine::options &options, const http::status expected,
+                 const std::string &data, std::string &body) {
+  curl_raii curl;
+  CHECK(!curl.valid(), fprintf(stderr, "curl init failed\n"); return FAILURE);
+  CHECK_RETURN(set_options(curl, config, options));
+  CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_UPLOAD, true));
+  CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_PUT, true));
+  CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_READFUNCTION, read));
+  CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_READDATA, &data));
+  CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_INFILESIZE_LARGE,
+                                     (curl_off_t)data.size()));
+
+  CURL_CHECK_RETURN(curl_easy_perform(curl));
+  http::status status;
   curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &status);
 
   CHECK(options.debug, printf("body: %s\n", body.c_str()));
@@ -321,4 +353,4 @@ result print_http_error(const http::status error) {
   }
 #undef CASE
 }
-}
+}  // redmine
