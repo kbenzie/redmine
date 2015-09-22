@@ -73,7 +73,7 @@ result issue_new(redmine::args args, redmine::config &config,
 result issue_show(redmine::args args, redmine::config &config,
                   redmine::options &options);
 result issue_update(redmine::args args, redmine::config &config,
-                    redmine::options options);
+                    redmine::options &options);
 }
 
 namespace query {

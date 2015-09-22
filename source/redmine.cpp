@@ -11,10 +11,12 @@
 
 int main(int argc, char **argv) {
   redmine::args args(argc, argv);
+  args++;
 
   redmine::options options;
-  for (auto arg : args) {
-    args++;
+  int index = 0;
+  for (; index < args.count(); ++index) {
+    const char *arg = args[index];
 
     if (!strcmp("--verbose", arg)) {
       options.verbose = true;
@@ -39,6 +41,7 @@ int main(int argc, char **argv) {
 
     break;
   }
+  args += index;
 
   redmine::http::session http;
   CHECK_RETURN(http.init());

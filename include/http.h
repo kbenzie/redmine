@@ -600,7 +600,7 @@ struct session {
 ///
 /// @return Return redmine::SUCCESS or redmine::FAILURE.
 result get(const std::string &path, const redmine::config &config,
-           const redmine::options &options, std::string &body);
+           redmine::options &options, std::string &body);
 
 /// @brief Perform a POST request.
 ///
@@ -613,7 +613,7 @@ result get(const std::string &path, const redmine::config &config,
 ///
 /// @return Return redmine::SUCCESS or redmine::FAILURE
 result post(const std::string &path, const redmine::config &config,
-            const redmine::options &options, const http::status expected,
+            redmine::options &options, const http::status expected,
             const std::string &data, std::string &body);
 
 /// @brief Perform a PUT request.
@@ -623,12 +623,11 @@ result post(const std::string &path, const redmine::config &config,
 /// @param options Enabled options.
 /// @param expected The expected HTTP status code.
 /// @param data The data to be uploaded.
-/// @param body Response data body.
 ///
 /// @return Return redmine::SUCCESS or redmine::FAILURE.
 result put(const std::string &path, const redmine::config &config,
-           const redmine::options &options, const http::status expected,
-           const std::string &data, std::string &body);
+           redmine::options &options, const http::status expected,
+           const std::string &data);
 }
 }  // redmine
 

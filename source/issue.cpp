@@ -116,7 +116,7 @@ result issue(redmine::args args, redmine::config &config,
             "        new <project> [-m <subject>]\n"
             "        show <id>\n"
             "        update <id>\n");
-    return FAILURE;
+    return SUCCESS;
   }
 
   if (!strcmp("list", args[0])) {
@@ -136,7 +136,7 @@ result issue(redmine::args args, redmine::config &config,
   }
 
   fprintf(stderr, "invalid argument: %s\n", args[0]);
-  return INVALID_ARGUMENT;
+  return FAILURE;
 }
 
 result issue_list(redmine::args args, redmine::config &config,
@@ -470,18 +470,62 @@ result issue_show(redmine::args args, redmine::config &config,
 }
 
 result issue_update(redmine::args args, redmine::config &config,
-                    options options) {
-  fprintf(stderr, "unsupported: issue edit\n");
-  return UNSUPPORTED;
+                    redmine::options &options) {
+  CHECK(0 == args.count(), fprintf(stderr, "missing issue <id>\n");
+        return FAILURE);
+  CHECK(1 != args.count(), fprintf(stderr, "invalid argument: %s\n", args[1]);
+        return FAILURE);
+
+  // TODO: Populate file?
+  std::string filename("issue.redmine");
+
+  // TODO: Use config defined editor.
+  std::string editor("vim");
+
+  std::string command = editor + " " + filename;
+  CHECK(std::system(command.c_str()),
+        fprintf(stderr, "editor exited with failure\n");
+        return FAILURE);
+
+  // NOTE: Read notes from temporary file.
+  std::string notes;
+  {
+    std::ifstream file(filename);
+    CHECK(!file.is_open(),
+          fprintf(stderr, "could not open temporary file: %s\n",
+                  filename.c_str());
+          return FAILURE);
+    notes.assign((std::istreambuf_iterator<char>(file)),
+                 std::istreambuf_iterator<char>());
+  }
+
+  // TODO: Remove temoryary file.
+  util::rm(filename);
+
+  std::string id(args[0]);
+
+  json::object issue{"issue", json::object{"notes", json::value(notes)}};
+  std::string json = json::write(issue, "  ");
+  CHECK(options.debug, printf("%s\n", json.c_str()));
+
+  CHECK_RETURN(http::put("/issues/" + id + ".json", config, options,
+                         http::code::OK, json));
+
+  printf(
+      "updated issue %s\n"
+      "%s/issues/%s\n",
+      id.c_str(), config.url.c_str(), id.c_str());
+
+  return SUCCESS;
 }
-}
+}  // action
 
 result query::issues(std::string &filter, config &config, options options,
                      std::vector<issue> &issues) {
   std::string body;
   CHECK_RETURN(http::get("/issues.json" + filter, config, options, body));
 
-  auto Root = json::read(body, false);
+  auto Root = json::read(body, true);
   CHECK_JSON_TYPE(Root, json::TYPE_OBJECT);
 
   CHECK(options.debug, printf("%s\n", json::write(Root, "  ").c_str()));

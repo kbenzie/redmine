@@ -62,18 +62,6 @@ size_t write(void *ptr, size_t size, size_t count, void *data) {
   return bytes;
 }
 
-result set_options(CURL *curl, const config &config, const options options) {
-  CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_USE_SSL, CURLUSESSL_ALL));
-  CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_PORT, config.port));
-  CURL_CHECK_RETURN(
-      curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, config.verify_ssl));
-  if (options.debug_http) {
-    CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_VERBOSE, true));
-    CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_HEADER, true));
-  }
-  return SUCCESS;
-}
-
 struct curl_slist *create_header(const config &config, size_t length = 0) {
   struct curl_slist *header = nullptr;
   std::string api_key_header("X-Redmine-API-Key: ");
@@ -88,19 +76,33 @@ struct curl_slist *create_header(const config &config, size_t length = 0) {
   return header;
 }
 
+result set_options(CURL *curl, const std::string &path,
+                   const redmine::config &config, redmine::options &options) {
+  std::string url = config.url + path;
+  CHECK(options.debug, printf("%s\n", url.c_str()));
+  CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_URL, url.c_str()));
+  auto header = create_header(config);
+  CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_HTTPHEADER, header));
+  CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_USE_SSL, CURLUSESSL_ALL));
+  CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_PORT, config.port));
+  CURL_CHECK_RETURN(
+      curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, config.verify_ssl));
+  if (options.debug_http) {
+    CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_VERBOSE, true));
+    CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_HEADER, true));
+  }
+  return SUCCESS;
+}
+
 result http::get(const std::string &path, const config &config,
-                 const redmine::options &options, std::string &body) {
+                 redmine::options &options, std::string &body) {
   CHECK(options.debug, printf("%s\n", path.c_str()));
   curl_raii curl;
   CHECK(!curl.valid(), fprintf(stderr, "curl init failed\n"); return FAILURE);
-  CHECK_RETURN(set_options(curl, config, options));
-  CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_URL,
-                                     std::string(config.url + path).c_str()));
+  CHECK_RETURN(set_options(curl, path, config, options));
   CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_HTTPGET, 1));
   CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write));
   CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_WRITEDATA, &body));
-  auto header = create_header(config);
-  CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_HTTPHEADER, header));
 
   CURL_CHECK_RETURN(curl_easy_perform(curl));
   http::status status;
@@ -113,50 +115,43 @@ result http::get(const std::string &path, const config &config,
 }
 
 result http::post(const std::string &path, const config &config,
-                  const redmine::options &options, const http::status expected,
+                  redmine::options &options, const http::status expected,
                   const std::string &str, std::string &body) {
+  CHECK(options.debug, printf("%s\n", path.c_str()));
   curl_raii curl;
   CHECK(!curl.valid(), fprintf(stderr, "curl init failed\n"); return FAILURE);
-  CHECK_RETURN(set_options(curl, config, options));
+  CHECK_RETURN(set_options(curl, path, config, options));
   CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_POSTFIELDS, str.c_str()));
-  CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_URL,
-                                     std::string(config.url + path).c_str()));
   CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write));
   CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_WRITEDATA, &body));
-  auto header = create_header(config, str.size());
-  CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_HTTPHEADER, header));
 
   CURL_CHECK_RETURN(curl_easy_perform(curl));
   status status;
   curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &status);
 
   CHECK(options.debug, printf("body: %s\n", body.c_str()));
-  CHECK(expected != status,
-        if (options.debug) { print_http_error(status); } return FAILURE);
+  CHECK(expected != status, print_http_error(status); return FAILURE);
 
   return SUCCESS;
 }
 
 result http::put(const std::string &path, const redmine::config &config,
-                 const redmine::options &options, const http::status expected,
-                 const std::string &data, std::string &body) {
+                 redmine::options &options, const http::status expected,
+                 const std::string &data) {
   curl_raii curl;
   CHECK(!curl.valid(), fprintf(stderr, "curl init failed\n"); return FAILURE);
-  CHECK_RETURN(set_options(curl, config, options));
+  CHECK_RETURN(set_options(curl, path, config, options));
   CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_UPLOAD, true));
   CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_PUT, true));
   CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_READFUNCTION, read));
-  CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_READDATA, &data));
-  CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_INFILESIZE_LARGE,
-                                     (curl_off_t)data.size()));
+  read_state state(data);
+  CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_READDATA, &state));
 
   CURL_CHECK_RETURN(curl_easy_perform(curl));
   http::status status;
   curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &status);
 
-  CHECK(options.debug, printf("body: %s\n", body.c_str()));
-  CHECK(expected != status,
-        if (options.debug) { print_http_error(status); } return FAILURE);
+  CHECK(expected != status, print_http_error(status); return FAILURE);
 
   return SUCCESS;
 }
