@@ -297,7 +297,10 @@ std::string read_string(const char *str, position_t &pos, diagnostic_t &diag) {
         diag.error = "No closing '\"' string terminator before end of stream.";
         return {};
       }
-      case '/':
+      case '/': {
+          ret.push_back('/');
+          pos++;
+      } break;
       case '\b':
       case '\f':
       case '\n':
@@ -307,7 +310,7 @@ std::string read_string(const char *str, position_t &pos, diagnostic_t &diag) {
       } break;
       default: {  // NOTE: Valid normal character
         ret.push_back(str[pos.index]);
-        ++pos;
+        pos++;
       } break;
     }
   }
