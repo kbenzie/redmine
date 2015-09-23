@@ -72,10 +72,8 @@ int main(int argc, char **argv) {
     printf(
         "options:\n"
         "        --verbose - verbose output\n"
-        "        --debug - enable debug output\n");
-#if REDMINE_DEBUG
-    printf("        --debug-http - enable http debug output\n");
-#endif
+        "        --debug - enable debug output\n"
+        "        --debug-http - enable http debug output\n");
 
     return redmine::SUCCESS;
   }

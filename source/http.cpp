@@ -83,13 +83,14 @@ result set_options(CURL *curl, const std::string &path,
   CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_URL, url.c_str()));
   auto header = create_header(config);
   CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_HTTPHEADER, header));
-  CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_USE_SSL, CURLUSESSL_ALL));
+  if (config.use_ssl) {
+    CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_USE_SSL, CURLUSESSL_ALL));
+    CURL_CHECK_RETURN(
+        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, config.verify_ssl));
+  }
   CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_PORT, config.port));
-  CURL_CHECK_RETURN(
-      curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, config.verify_ssl));
   if (options.debug_http) {
     CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_VERBOSE, true));
-    CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_HEADER, true));
   }
   return SUCCESS;
 }
@@ -141,7 +142,6 @@ result http::put(const std::string &path, const redmine::config &config,
   curl_raii curl;
   CHECK(!curl.valid(), fprintf(stderr, "curl init failed\n"); return FAILURE);
   CHECK_RETURN(set_options(curl, path, config, options));
-  CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_UPLOAD, true));
   CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_PUT, true));
   CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_READFUNCTION, read));
   read_state state(data);

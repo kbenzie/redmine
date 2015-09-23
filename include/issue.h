@@ -19,8 +19,28 @@ struct issue {
   ///
   /// @param object Object to initilise redmine::issue from.
   ///
-  /// @return Returns either redmine::SUCCESS or redmine::FAILURE.
+  /// @return Return either redmine::SUCCESS or redmine::FAILURE.
   result init(const json::object &object);
+
+  /// @brief Query and initilise issue from id.
+  ///
+  /// @param id Issue id to get.
+  /// @param config User configuation.
+  /// @param options Command line options.
+  ///
+  /// @return Return either redmine::SUCCESS or redmine::FAILURE.
+  result get(const uint32_t id, const redmine::config &config,
+             redmine::options &options);
+
+  /// @brief Query and initilise issue from id.
+  ///
+  /// @param id String issue id to get.
+  /// @param config User configuation.
+  /// @param options Command line options.
+  ///
+  /// @return Return either redmine::SUCCESS or redmine::FAILURE.
+  result get(const std::string &id, const redmine::config &config,
+             redmine::options &options);
 
   /// @brief Construct a json::object from this redmine::issue.
   ///
@@ -45,6 +65,20 @@ struct issue {
   reference author;
   reference assigned_to;
   reference category;
+
+  struct journal {
+    std::string created_on;
+    struct detail {
+      std::string name;
+      std::string new_value;
+      std::string old_value;
+      std::string property;
+    };
+    uint32_t id;
+    std::string notes;
+    reference user;
+  };
+  std::vector<journal> journals;
 
   // TODO: Custom fields?
 };

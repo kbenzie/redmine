@@ -17,7 +17,23 @@
 #include <iostream>
 
 namespace redmine {
-issue::issue() {}
+issue::issue()
+    : id(0),
+      subject(),
+      description(),
+      start_date(),
+      due_date(),
+      created_on(),
+      updated_on(),
+      done_ratio(0),
+      estimated_hours(0),
+      project(),
+      tracker(),
+      status(),
+      priority(),
+      author(),
+      assigned_to(),
+      category() {}
 
 result issue::init(const json::object &object) {
   auto Id = object.get("id");
@@ -105,6 +121,32 @@ result issue::init(const json::object &object) {
   return SUCCESS;
 }
 
+redmine::result redmine::issue::get(const uint32_t ID,
+                                    const redmine::config &config,
+                                    redmine::options &options) {
+  return get(std::to_string(ID), config, options);
+}
+
+redmine::result redmine::issue::get(const std::string &ID,
+                                    const redmine::config &config,
+                                    redmine::options &options) {
+  std::string body;
+  CHECK_RETURN(http::get("/issues/" + ID + ".json?include=journals", config,
+                         options, body));
+
+  json::value Root = json::read(body, false);
+  CHECK_JSON_TYPE(Root, json::TYPE_OBJECT);
+
+  CHECK(options.debug, printf("%s\n", json::write(Root, "  ").c_str()));
+
+  auto Issue = Root.object().get("issue");
+  CHECK_JSON_PTR(Issue, json::TYPE_OBJECT);
+
+  CHECK_RETURN(init(Issue->object()));
+
+  return SUCCESS;
+}
+
 namespace action {
 result issue(redmine::args args, redmine::config &config,
              redmine::options &options) {
@@ -187,8 +229,8 @@ result issue_list(redmine::args args, redmine::config &config,
 }
 
 template <typename Info>
-uint32_t get_answer_id(const std::string &name,
-                       const std::vector<Info> &infos) {
+uint32_t get_answer_id(const std::string &name, const std::vector<Info> &infos,
+                       const bool allow_none) {
   uint32_t id = 0;
   if (infos.size()) {
     while (!id) {
@@ -202,7 +244,11 @@ uint32_t get_answer_id(const std::string &name,
       printf("): ");
       std::string answer;
       std::getline(std::cin, answer);
-      printf("%s\n", answer.c_str());
+      if (allow_none) {
+        if (answer.empty()) {
+          return 0;
+        }
+      }
       for (auto &info : infos) {
         if (answer == info.name) {
           id = info.id;
@@ -214,13 +260,33 @@ uint32_t get_answer_id(const std::string &name,
   return id;
 }
 
-void replace_all(std::string &str, const std::string &old_str,
-                 const std::string &new_str) {
-  size_t pos = 0;
-  while ((pos = str.find(old_str, pos)) != std::string::npos) {
-    str.replace(pos, old_str.length(), new_str);
-    pos += new_str.length();
+uint32_t get_assignee_id(const std::vector<redmine::membership> &memberships,
+                         const bool allow_none) {
+  uint32_t assignee_id = 0;
+  if (memberships.size()) {
+    while (!assignee_id) {
+      printf("Assignee (");
+      for (size_t i = 0; i < memberships.size(); ++i) {
+        printf("%s", memberships[i].user.name.c_str());
+        if (i < memberships.size() - 1) {
+          printf("|");
+        }
+      }
+      printf("): ");
+      std::string answer;
+      std::getline(std::cin, answer);
+      if (allow_none && answer.empty()) {
+        return 0;
+      }
+      for (auto &membership : memberships) {
+        if (answer == membership.user.name) {
+          assignee_id = membership.user.id;
+          break;
+        }
+      }
+    }
   }
+  return assignee_id;
 }
 
 result issue_new(redmine::args args, redmine::config &config,
@@ -330,41 +396,19 @@ result issue_new(redmine::args args, redmine::config &config,
   util::rm(filename);
 
   // NOTE: Ask for user input.
-  uint32_t tracker_id = get_answer_id("Tracker", trackers);
-  uint32_t status_id = get_answer_id("Status", issue_statuses);
-  uint32_t priority_id = get_answer_id("Priority", priorities);
-  uint32_t category_id = get_answer_id("Category", issue_categories);
-  uint32_t fixed_version_id = get_answer_id("Target Version", versions);
+  uint32_t tracker_id = get_answer_id("Tracker", trackers, false);
+  uint32_t status_id = get_answer_id("Status", issue_statuses, false);
+  uint32_t priority_id = get_answer_id("Priority", priorities, false);
+  uint32_t category_id = get_answer_id("Category", issue_categories, false);
+  uint32_t fixed_version_id = get_answer_id("Target Version", versions, false);
 
-  uint32_t assigned_to_id = 0;
-  if (memberships.size()) {
-    while (!assigned_to_id) {
-      printf("Assignee (");
-      for (size_t i = 0; i < memberships.size(); ++i) {
-        printf("%s", memberships[i].user.name.c_str());
-        if (i < memberships.size() - 1) {
-          printf("|");
-        }
-      }
-      printf("): ");
-      std::string answer;
-      std::getline(std::cin, answer);
-      for (auto &membership : memberships) {
-        if (answer == membership.user.name) {
-          assigned_to_id = membership.user.id;
-          break;
-        }
-      }
-    }
-  }
+  uint32_t assigned_to_id = get_assignee_id(memberships, false);
 
   // TODO: watcher_user_ids
   // TODO: parent_issue
   // TODO: custom_fields
   // TODO: is_private
   // TODO: estimated_hours
-
-  replace_all(description, "\n", "\\n");
 
   json::object issue;
   issue.add("project_id", json::value(project->id));
@@ -399,8 +443,7 @@ result issue_new(redmine::args args, redmine::config &config,
 
   auto ResponseRoot = json::read(body, false);
   CHECK_JSON_TYPE(ResponseRoot, json::TYPE_OBJECT);
-  CHECK(options.debug,
-        printf("%s\n", json::write(ResponseRoot, "  ").c_str()));
+  CHECK(options.debug, printf("%s\n", json::write(ResponseRoot, "  ").c_str()));
 
   // NOTE: Display new issue id and path to website.
   auto Issue = ResponseRoot.object().get("issue");
@@ -425,25 +468,12 @@ result issue_show(redmine::args args, redmine::config &config,
   CHECK(1 < args.count(), fprintf(stderr, "invalid argument: %s\n", args[1]);
         return FAILURE);
 
-  std::string id(args[0]);
-
-  std::string body;
-  CHECK_RETURN(
-      http::get(std::string("/issues/") + id + ".json", config, options, body));
-
-  json::value Root = json::read(body, false);
-  CHECK_JSON_TYPE(Root, json::TYPE_OBJECT);
-
-  CHECK(options.debug, printf("%s\n", json::write(Root, "  ").c_str()));
-
-  auto Issue = Root.object().get("issue");
-  CHECK_JSON_PTR(Issue, json::TYPE_OBJECT);
-
   redmine::issue issue;
-  CHECK_RETURN(issue.init(Issue->object()));
+  CHECK_RETURN(issue.get(args[0], config, options));
 
+  // TODO: Improve layout of issue details.
   printf("%u: %s\n", issue.id, issue.subject.c_str());
-  printf("%s %s ", issue.status.name.c_str(), issue.tracker.name.c_str());
+  printf("%s | %s ", issue.tracker.name.c_str(), issue.status.name.c_str());
   printf("(%u %%) | ", issue.done_ratio);
   printf("%s | ", issue.priority.name.c_str());
   printf("%s (%u)\n", issue.project.name.c_str(), issue.project.id);
@@ -463,8 +493,19 @@ result issue_show(redmine::args args, redmine::config &config,
            issue.category.name.c_str());
   }
   std::string description = issue.description;
-  replace_all(description, "\\r\\n", "\n");
-  printf("----------------\n%s\n", description.c_str());
+  printf("----------------\n%s", description.c_str());
+  if ('\n' != description.back()) {
+    printf("\n");
+  }
+
+  // TODO: journals
+  // TODO: watchers
+  // TODO: children
+  // TODO: attachments
+  // TODO: relations
+  // TODO: changesets
+  // TODO: journals
+  // TODO: watchers
 
   return SUCCESS;
 }
@@ -475,6 +516,20 @@ result issue_update(redmine::args args, redmine::config &config,
         return FAILURE);
   CHECK(1 != args.count(), fprintf(stderr, "invalid argument: %s\n", args[1]);
         return FAILURE);
+
+  // NOTE: Get the issue and check its valid.
+  std::string id(args[0]);
+  redmine::issue issue;
+  CHECK_RETURN(issue.get(id, config, options));
+
+  std::vector<redmine::issue_status> statuses;
+  CHECK_RETURN(query::issue_statuses(config, options, statuses));
+
+  std::vector<redmine::membership> memberships;
+  CHECK_RETURN(query::memberships(std::to_string(issue.project.id), config,
+                                  options, memberships));
+
+  // TODO: Get adjustable properties.
 
   // TODO: Populate file?
   std::string filename("issue.redmine");
@@ -502,19 +557,58 @@ result issue_update(redmine::args args, redmine::config &config,
   // TODO: Remove temoryary file.
   util::rm(filename);
 
-  std::string id(args[0]);
+  // TODO: Determine if notes only contain white space then empty the string.
 
-  json::object issue{"issue", json::object{"notes", json::value(notes)}};
-  std::string json = json::write(issue, "  ");
+  // TODO: Interactive mode option?
+
+  uint32_t status_id = get_answer_id("Status", statuses, true);
+
+  // NOTE: Use 101 to signify user is not updaing the done ration.
+  uint32_t done_ratio = 101;
+  while (true) {
+    printf("Done %u%%: ", issue.done_ratio);
+    std::string answer;
+    std::getline(std::cin, answer);
+    if (answer.empty()) {
+      break;
+    }
+    char *end = nullptr;
+    uint32_t done = std::strtoul(answer.c_str(), &end, 10);
+    if (answer.data() + answer.size() == end) {
+      if (0 != done % 5) {
+        continue;
+      }
+      done_ratio = done;
+      break;
+    }
+  }
+
+  uint32_t assigned_to_id = get_assignee_id(memberships, true);
+
+  json::object Issue;
+  if (!notes.empty()) {
+    Issue.add("notes", json::value(notes));
+  }
+  if (101 != done_ratio) {
+    Issue.add("done_ratio", json::value(done_ratio));
+  }
+  if (status_id) {
+    Issue.add("status_id", json::value(status_id));
+  }
+  if (assigned_to_id) {
+    Issue.add("assigned_to_id", json::value(assigned_to_id));
+  }
+
+  std::string json = json::write(json::object("issue", Issue), "  ");
   CHECK(options.debug, printf("%s\n", json.c_str()));
 
   CHECK_RETURN(http::put("/issues/" + id + ".json", config, options,
                          http::code::OK, json));
 
   printf(
-      "updated issue %s\n"
-      "%s/issues/%s\n",
-      id.c_str(), config.url.c_str(), id.c_str());
+      "updated issue %u\n"
+      "%s/issues/%u\n",
+      issue.id, config.url.c_str(), issue.id);
 
   return SUCCESS;
 }
