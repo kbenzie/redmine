@@ -3,6 +3,8 @@
 
 #include <curl/curl.h>
 
+#include <cstring>
+
 namespace redmine {
 result print_curl_error(CURLcode error, const char *file, const int line);
 #define CURL_CHECK_RETURN(EXPRESSION)                                    \
@@ -44,7 +46,7 @@ struct read_state {
 size_t read(char *ptr, size_t size, size_t count, void *data) {
   read_state *state = static_cast<read_state *>(data);
   curl_off_t read = size * count;
-  if (read > (state->str.size() - state->index)) {
+  if (read > (curl_off_t)(state->str.size() - state->index)) {
     read = state->str.size() - state->index;
   }
   if (read) {
