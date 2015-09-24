@@ -113,17 +113,17 @@ class value {
   value(json::object object);
   value(json::pair pair);
   value(json::array array);
-  explicit value(int8_t number);
-  explicit value(int16_t number);
-  explicit value(int32_t number);
-  explicit value(int64_t number);
-  explicit value(uint8_t number);
-  explicit value(uint16_t number);
-  explicit value(uint32_t number);
-  explicit value(uint64_t number);
-  explicit value(float number);
-  explicit value(double number);
-  explicit value(const char *string);
+  value(int8_t number);
+  value(int16_t number);
+  value(int32_t number);
+  value(int64_t number);
+  value(uint8_t number);
+  value(uint16_t number);
+  value(uint32_t number);
+  value(uint64_t number);
+  value(float number);
+  value(double number);
+  value(const char *string);
   value(std::string string);
   explicit value(bool boolean);
 
