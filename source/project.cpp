@@ -121,7 +121,7 @@ result project_list(redmine::args args, redmine::config &config,
       "-----|-----------------------------------|------------------------------"
       "--------\n");
   for (auto &project : projects) {
-    int32_t numSpaces = 34 - project.identifier.size();
+    int32_t numSpaces = static_cast<int32_t>(34 - project.identifier.size());
     std::vector<char> spaces((0 > numSpaces) ? 0 : numSpaces, ' ');
     spaces.back() = '\0';
     printf("%4u | %s%s | %s\n", project.id, project.identifier.c_str(),

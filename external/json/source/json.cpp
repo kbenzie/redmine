@@ -61,7 +61,7 @@ struct position_t {
 struct diagnostic_t {
   diagnostic_t() : error(nullptr) {}
 
-  operator bool() { return error; }
+  operator bool() { return error != nullptr; }
 
   const char *error;
 };

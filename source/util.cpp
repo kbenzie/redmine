@@ -29,7 +29,7 @@ result rm(const std::string &filename) {
 #elif defined(REDMINE_PLATFORM_WINDOWS)
     CHECK(!DeleteFile(filename.c_str()),
           fprintf(stderr, "could not delete file: %s\n", filename.c_str());
-          return FAILURE));
+          return FAILURE);
 #endif
   return SUCCESS;
 }

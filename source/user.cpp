@@ -289,6 +289,8 @@ bool redmine::current_user::can(redmine::permisson permisson) {
       return permissions.view_calendar;
     case VIEW_GANTT:
       return permissions.view_gantt;
+    default:
+      return false;
   }
 }
 

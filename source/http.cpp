@@ -29,7 +29,7 @@ struct curl_raii {
     }
   }
 
-  bool valid() { return handle; }
+  bool valid() { return handle != nullptr; }
 
   operator CURL *() { return handle; }
 

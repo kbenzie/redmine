@@ -236,7 +236,8 @@ inline value::value(int16_t number)
 inline value::value(int32_t number)
     : mType(TYPE_NUMBER), mStore(std::make_shared<store<double>>(number)) {}
 inline value::value(int64_t number)
-    : mType(TYPE_NUMBER), mStore(std::make_shared<store<double>>(number)) {}
+    : mType(TYPE_NUMBER),
+      mStore(std::make_shared<store<double>>(static_cast<double>(number))) {}
 inline value::value(uint8_t number)
     : mType(TYPE_NUMBER), mStore(std::make_shared<store<double>>(number)) {}
 inline value::value(uint16_t number)
@@ -244,7 +245,8 @@ inline value::value(uint16_t number)
 inline value::value(uint32_t number)
     : mType(TYPE_NUMBER), mStore(std::make_shared<store<double>>(number)) {}
 inline value::value(uint64_t number)
-    : mType(TYPE_NUMBER), mStore(std::make_shared<store<double>>(number)) {}
+    : mType(TYPE_NUMBER),
+      mStore(std::make_shared<store<double>>(static_cast<double>(number))) {}
 inline value::value(float number)
     : mType(TYPE_NUMBER), mStore(std::make_shared<store<double>>(number)) {}
 inline value::value(double number)
