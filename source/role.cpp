@@ -6,17 +6,6 @@ namespace redmine {
 permissions::permissions()
     : id(0),
       name(),
-      use_project(false),
-      use_issue(false),
-      use_time_tracking(false),
-      use_news(false),
-      use_document(false),
-      use_file(false),
-      use_wiki(false),
-      use_repository(false),
-      use_forum(false),
-      use_calendar(false),
-      use_gantt(false),
       add_project(false),
       edit_project(false),
       close_project(false),
@@ -195,58 +184,6 @@ result permissions::get(const uint32_t role, const redmine::config &config,
     // Gantt
     PERMISSION(view_gantt);
 #undef PERMISSION
-
-    if (add_project || edit_project || close_project ||
-        select_project_modules || manage_members || manage_versions ||
-        add_subprojects) {
-      use_project = true;
-    }
-
-    if (manage_categories || view_issues || add_issues || edit_issues ||
-        manage_issue_relations || manage_subtasks || set_issues_private ||
-        set_own_issues_private || add_issue_notes || edit_issue_notes ||
-        edit_own_issue_notes || view_private_notes || set_notes_private ||
-        move_issues || delete_issues || manage_public_queries || save_queries ||
-        view_issue_watchers || add_issue_watchers || delete_issue_watchers) {
-      use_issue = true;
-    }
-
-    if (log_time || view_time_entries || edit_time_entries ||
-        edit_own_time_entries || manage_project_activities) {
-      use_time_tracking = true;
-    }
-
-    if (manage_news || comment_news) {
-      use_news = true;
-    }
-
-    if (add_documents || edit_documents || delete_documents || view_documents) {
-      use_document = true;
-    }
-
-    if (manage_files || view_files) {
-      use_file = true;
-    }
-
-    if (manage_wiki || rename_wiki_pages || delete_wiki_pages ||
-        view_wiki_pages || export_wiki_pages || view_wiki_edits ||
-        edit_wiki_pages || delete_wiki_pages_attachments ||
-        protect_wiki_pages) {
-      use_wiki = true;
-    }
-
-    if (manage_repository || browse_repository || view_changesets ||
-        commit_access || manage_related_issues) {
-      use_repository = true;
-    }
-
-    if (manage_boards || add_messages || edit_messages || edit_own_messages ||
-        delete_messages || delete_own_messages) {
-      use_forum = true;
-    }
-
-    use_calendar = view_calendar;
-    use_gantt = view_gantt;
   }
 
   return SUCCESS;
@@ -258,17 +195,6 @@ redmine::permissions &redmine::permissions::operator|=(
   if (other.PERMISSION) {          \
     PERMISSION = other.PERMISSION; \
   }
-  OR_ASSIGN(use_project)
-  OR_ASSIGN(use_issue)
-  OR_ASSIGN(use_time_tracking)
-  OR_ASSIGN(use_news)
-  OR_ASSIGN(use_document)
-  OR_ASSIGN(use_file)
-  OR_ASSIGN(use_wiki)
-  OR_ASSIGN(use_repository)
-  OR_ASSIGN(use_forum)
-  OR_ASSIGN(use_calendar)
-  OR_ASSIGN(use_gantt)
   OR_ASSIGN(add_project)
   OR_ASSIGN(edit_project)
   OR_ASSIGN(close_project)

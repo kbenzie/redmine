@@ -62,6 +62,7 @@ current_user::current_user()
       mail(),
       created_on(),
       last_login_on(),
+      status(),
       memberships(),
       project_permissions(),
       permissions() {}
@@ -101,6 +102,12 @@ result current_user::get(redmine::config &config, redmine::options &options) {
   auto LastLoginOn = User->object().get("last_login_on");
   CHECK_JSON_PTR(LastLoginOn, json::TYPE_STRING);
   last_login_on = LastLoginOn->string();
+
+  auto Status = User->object().get("status");
+  if (Status) {
+    CHECK_JSON_TYPE((*Status), json::TYPE_NUMBER);
+    status = Status->number<uint32_t>();
+  }
 
   auto Memberships = User->object().get("memberships");
   CHECK_JSON_PTR(Memberships, json::TYPE_ARRAY);
@@ -143,28 +150,6 @@ result current_user::get(redmine::config &config, redmine::options &options) {
 
 bool redmine::current_user::can(redmine::permisson permisson) {
   switch (permisson) {
-    case USE_PROJECT:
-      return permissions.use_project;
-    case USE_ISSUE:
-      return permissions.use_issue;
-    case USE_TIME_TRACKING:
-      return permissions.use_time_tracking;
-    case USE_NEWS:
-      return permissions.use_news;
-    case USE_DOCUMENT:
-      return permissions.use_document;
-    case USE_FILE:
-      return permissions.use_file;
-    case USE_WIKI:
-      return permissions.use_wiki;
-    case USE_REPOSITORY:
-      return permissions.use_repository;
-    case USE_FORUM:
-      return permissions.use_forum;
-    case USE_CALENDAR:
-      return permissions.use_calendar;
-    case USE_GANTT:
-      return permissions.use_gantt;
     case ADD_PROJECT:
       return permissions.add_project;
     case EDIT_PROJECT:

@@ -43,6 +43,7 @@ struct current_user {
   std::string mail;
   std::string created_on;
   std::string last_login_on;
+  uint32_t status;  // NOTE: Only the admin can see this.
   struct membership {
     reference project;
     std::vector<reference> roles;

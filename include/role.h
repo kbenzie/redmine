@@ -5,17 +5,6 @@
 
 namespace redmine {
 enum permisson {
-  USE_PROJECT,
-  USE_ISSUE,
-  USE_TIME_TRACKING,
-  USE_NEWS,
-  USE_DOCUMENT,
-  USE_FILE,
-  USE_WIKI,
-  USE_REPOSITORY,
-  USE_FORUM,
-  USE_CALENDAR,
-  USE_GANTT,
   ADD_PROJECT,
   EDIT_PROJECT,
   CLOSE_PROJECT,
@@ -90,18 +79,6 @@ struct permissions {
 
   uint32_t id;
   std::string name;
-
-  bool use_project;
-  bool use_issue;
-  bool use_time_tracking;
-  bool use_news;
-  bool use_document;
-  bool use_file;
-  bool use_wiki;
-  bool use_repository;
-  bool use_forum;
-  bool use_calendar;
-  bool use_gantt;
 
   // Project
   bool add_project;

@@ -10,7 +10,7 @@
 namespace redmine {
 std::string config_path() {
   std::string path(std::getenv("HOME"));
-#if defined(REDMINE_PLATFORM_LINUX) || (REDMINE_PLATFORM_MAC)
+#if defined(REDMINE_PLATFORM_LINUX) || defined(REDMINE_PLATFORM_MAC)
   path += "/.redmine.json";
 #elif defined(REDMINE_PLATFORM_WINDOWS)
   path += "\\AppData\\Local\\redmine.json";

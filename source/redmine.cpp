@@ -52,23 +52,24 @@ int main(int argc, char **argv) {
   redmine::current_user user;
   CHECK_RETURN(user.get(config, options));
 
-  // TODO: (Dis)enable actions based on current user permissions.
+  const bool use_issue =
+      user.can(redmine::ADD_ISSUES) || user.can(redmine::VIEW_ISSUES) ||
+      user.can(redmine::EDIT_ISSUES) || user.can(redmine::ADD_ISSUE_NOTES) ||
+      user.can(redmine::ADD_ISSUE_WATCHERS);
+  const bool use_user = 0 != user.status;
+
   if (1 == argc) {
     printf(
         "usage: redmine [options] <action> [args]\n"
         "actions:\n");
     printf("        config\n");
-    if (user.can(redmine::USE_PROJECT)) {
-      printf("        project\n");
-    }
-    if (user.can(redmine::USE_ISSUE)) {
+    printf("        project\n");
+    if (use_issue) {
       printf("        issue\n");
     }
-#if 0
-    if (user.permissions.user) {
+    if (use_user) {
       printf("        user\n");
     }
-#endif
     printf(
         "options:\n"
         "        --verbose - verbose output\n"
@@ -84,20 +85,17 @@ int main(int argc, char **argv) {
       return redmine::action::config(args, options);
     }
 
-    if (!strcmp("project", arg) && user.can(redmine::USE_PROJECT)) {
+    if (!strcmp("project", arg)) {
       return redmine::action::project(args, config, options);
     }
 
-    if (!strcmp("issue", arg) && user.can(redmine::USE_ISSUE)) {
+    if (use_issue && !strcmp("issue", arg)) {
       return redmine::action::issue(args, config, options);
     }
 
-#if 0
-    if (!strcmp("user", argv[argi])) {
-      ++argi;
-      return redmine::action::user(argc - argi, argv + argi, config, options);
+    if (use_user && !strcmp("user", arg)) {
+      return redmine::action::user(args, config, options);
     }
-#endif
 
     fprintf(stderr, "invalid action: %s\n", arg);
     return redmine::FAILURE;
