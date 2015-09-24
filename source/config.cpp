@@ -24,11 +24,11 @@ result config::save() {
   std::ofstream file(config_path());
   CHECK_MSG(!file.is_open(), "could not write config file\n", return FAILURE);
   json::object config;
-  config.add({"url", json::value(url)});
-  config.add({"key", json::value(key)});
-  config.add({"port", json::value(port)});
-  config.add({"use_ssl", json::value(use_ssl)});
-  config.add({"verify_ssl", json::value(verify_ssl)});
+  config.add("url", url);
+  config.add("key", key);
+  config.add("port", port);
+  config.add("use_ssl", use_ssl);
+  config.add("verify_ssl", verify_ssl);
   file << json::write(config, "  ");
   return SUCCESS;
 }

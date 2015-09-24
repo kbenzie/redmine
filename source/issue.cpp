@@ -229,8 +229,9 @@ result issue_list(redmine::args args, redmine::config &config,
 }
 
 template <typename Info>
-uint32_t get_answer_id(const std::string &name, const std::vector<Info> &infos,
-                       const bool allow_none) {
+static uint32_t get_answer_id(const std::string &name,
+                              const std::vector<Info> &infos,
+                              const bool allow_none) {
   uint32_t id = 0;
   if (infos.size()) {
     while (!id) {
@@ -260,12 +261,13 @@ uint32_t get_answer_id(const std::string &name, const std::vector<Info> &infos,
   return id;
 }
 
-uint32_t get_assignee_id(const std::vector<redmine::membership> &memberships,
-                         const bool allow_none) {
+static uint32_t get_user_id(const char *name,
+                            const std::vector<redmine::membership> &memberships,
+                            const bool allow_none) {
   uint32_t assignee_id = 0;
   if (memberships.size()) {
     while (!assignee_id) {
-      printf("Assignee (");
+      printf("%s (", name);
       for (size_t i = 0; i < memberships.size(); ++i) {
         printf("%s", memberships[i].user.name.c_str());
         if (i < memberships.size() - 1) {
@@ -401,8 +403,12 @@ result issue_new(redmine::args args, redmine::config &config,
   uint32_t priority_id = get_answer_id("Priority", priorities, false);
   uint32_t category_id = get_answer_id("Category", issue_categories, false);
   uint32_t fixed_version_id = get_answer_id("Target Version", versions, false);
-
-  uint32_t assigned_to_id = get_assignee_id(memberships, false);
+  uint32_t assigned_to_id = get_user_id("Assignee", memberships, false);
+  json::array watcher_user_ids;
+  while (uint32_t watcher_id = get_user_id("Watcher", memberships, true)) {
+    printf("watcher_id: %u\n", watcher_id);
+    watcher_user_ids.append(watcher_id);
+  }
 
   // TODO: watcher_user_ids
   // TODO: parent_issue
@@ -411,29 +417,32 @@ result issue_new(redmine::args args, redmine::config &config,
   // TODO: estimated_hours
 
   json::object issue;
-  issue.add("project_id", json::value(project->id));
-  issue.add("tracker_id", json::value(tracker_id));
-  issue.add("status_id", json::value(status_id));
-  issue.add("priority_id", json::value(priority_id));
-  issue.add("subject", json::value(subject));
-  issue.add("description", json::value(description));
+  issue.add("project_id", project->id);
+  issue.add("tracker_id", tracker_id);
+  issue.add("status_id", status_id);
+  issue.add("priority_id", priority_id);
+  issue.add("subject", subject);
+  issue.add("description", description);
   if (category_id) {
-    issue.add("category_id", json::value(category_id));
+    issue.add("category_id", category_id);
   }
   if (fixed_version_id) {
-    issue.add("fixed_version_id", json::value(fixed_version_id));
+    issue.add("fixed_version_id", fixed_version_id);
   }
-  issue.add("assigned_to_id", json::value(assigned_to_id));
+  issue.add("assigned_to_id", assigned_to_id);
 #if 0
   issue.add("parent_issue_id", json::value());
   issue.add("custom_fields", json::value());
-  issue.add("watcher_user_ids", json::value());
+#endif
+  if (watcher_user_ids.size()) {
+    issue.add("watcher_user_ids", watcher_user_ids);
+  }
+#if 0
   issue.add("is_private", json::value());
   issue.add("estimated_hours", json::value());
 #endif
 
-  std::string data =
-      json::write(json::value{json::object{"issue", issue}}, "  ");
+  std::string data = json::write(json::object{"issue", issue}, "  ");
 
   CHECK(options.debug, printf("%s\n", data.c_str()));
 
@@ -583,20 +592,20 @@ result issue_update(redmine::args args, redmine::config &config,
     }
   }
 
-  uint32_t assigned_to_id = get_assignee_id(memberships, true);
+  uint32_t assigned_to_id = get_user_id("Assignee", memberships, true);
 
   json::object Issue;
   if (!notes.empty()) {
-    Issue.add("notes", json::value(notes));
+    Issue.add("notes", notes);
   }
   if (101 != done_ratio) {
-    Issue.add("done_ratio", json::value(done_ratio));
+    Issue.add("done_ratio", done_ratio);
   }
   if (status_id) {
-    Issue.add("status_id", json::value(status_id));
+    Issue.add("status_id", status_id);
   }
   if (assigned_to_id) {
-    Issue.add("assigned_to_id", json::value(assigned_to_id));
+    Issue.add("assigned_to_id", assigned_to_id);
   }
 
   std::string json = json::write(json::object("issue", Issue), "  ");
