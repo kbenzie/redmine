@@ -403,14 +403,13 @@ result issue_new(redmine::args args, redmine::config &config,
   uint32_t priority_id = get_answer_id("Priority", priorities, false);
   uint32_t category_id = get_answer_id("Category", issue_categories, false);
   uint32_t fixed_version_id = get_answer_id("Target Version", versions, false);
-  uint32_t assigned_to_id = get_user_id("Assignee", memberships, false);
+  uint32_t assigned_to_id = get_user_id("Assignee", memberships, true);
   json::array watcher_user_ids;
   while (uint32_t watcher_id = get_user_id("Watcher", memberships, true)) {
     printf("watcher_id: %u\n", watcher_id);
     watcher_user_ids.append(watcher_id);
   }
 
-  // TODO: watcher_user_ids
   // TODO: parent_issue
   // TODO: custom_fields
   // TODO: is_private
@@ -429,17 +428,19 @@ result issue_new(redmine::args args, redmine::config &config,
   if (fixed_version_id) {
     issue.add("fixed_version_id", fixed_version_id);
   }
-  issue.add("assigned_to_id", assigned_to_id);
+  if (assigned_to_id) {
+    issue.add("assigned_to_id", assigned_to_id);
+  }
 #if 0
-  issue.add("parent_issue_id", json::value());
+  issue.add("parent_issue_id", parent_issue_id);
   issue.add("custom_fields", json::value());
 #endif
   if (watcher_user_ids.size()) {
     issue.add("watcher_user_ids", watcher_user_ids);
   }
 #if 0
-  issue.add("is_private", json::value());
-  issue.add("estimated_hours", json::value());
+  issue.add("is_private", is_private);
+  issue.add("estimated_hours", estimated_hours);
 #endif
 
   std::string data = json::write(json::object{"issue", issue}, "  ");
