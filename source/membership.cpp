@@ -43,7 +43,28 @@ result memberships(const std::string &project, config &config,
   CHECK_JSON_TYPE(Root, json::TYPE_OBJECT);
   CHECK(options.debug, printf("%s\n", json::write(Root, "  ").c_str()));
 
-  auto Memberships = Root.object().get("memberships");
+  auto Limit = Root.object().get("limit");
+  CHECK_JSON_PTR(Limit, json::TYPE_NUMBER);
+  uint32_t limit = Limit->number<uint32_t>();
+
+  auto TotalCount = Root.object().get("total_count");
+  CHECK_JSON_PTR(TotalCount, json::TYPE_NUMBER);
+  uint32_t total_count = TotalCount->number<uint32_t>();
+
+  json::value *Memberships = nullptr;
+  if (limit < total_count) {
+    CHECK_RETURN(http::get("/projects/" + project +
+                               "/memberships.json?offset=0&limit=" +
+                               std::to_string(total_count),
+                           config, options, body));
+    auto RootFull = json::read(body, false);
+    CHECK_JSON_TYPE(RootFull, json::TYPE_OBJECT);
+    CHECK(options.debug,
+          printf("second %s\n", json::write(RootFull, "  ").c_str()));
+    Memberships = RootFull.object().get("memberships");
+  } else {
+    Memberships = Root.object().get("memberships");
+  }
   CHECK_JSON_PTR(Memberships, json::TYPE_ARRAY);
 
   for (auto &Membership : Memberships->array()) {
