@@ -63,6 +63,8 @@ class object {
 
   // Accessors
   void add(std::string key, json::value value);
+  template <typename Type>
+  void add(std::string key, Type value);
   void add(json::pair pair);
 
   json::value *get(std::string key);
@@ -90,6 +92,8 @@ class array {
 
   // Accessors
   void append(json::value value);
+  template <typename Type>
+  void append(Type value);
   iterator begin();
   const_iterator begin() const;
   iterator end();
@@ -113,16 +117,16 @@ class value {
   value(json::object object);
   value(json::pair pair);
   value(json::array array);
-  value(int8_t number);
-  value(int16_t number);
-  value(int32_t number);
-  value(int64_t number);
-  value(uint8_t number);
-  value(uint16_t number);
-  value(uint32_t number);
-  value(uint64_t number);
-  value(float number);
-  value(double number);
+  explicit value(int8_t number);
+  explicit value(int16_t number);
+  explicit value(int32_t number);
+  explicit value(int64_t number);
+  explicit value(uint8_t number);
+  explicit value(uint16_t number);
+  explicit value(uint32_t number);
+  explicit value(uint64_t number);
+  explicit value(float number);
+  explicit value(double number);
   value(const char *string);
   value(std::string string);
   explicit value(bool boolean);
@@ -177,6 +181,10 @@ inline object::object(std::initializer_list<json::pair> pairs) {
 inline void object::add(std::string key, json::value value) {
   mEntries[key] = value;
 }
+template <typename Type>
+inline void object::add(std::string key, Type value) {
+  mEntries[key] = json::value(value);
+}
 inline void object::add(json::pair pair) { mEntries.insert(pair); }
 inline json::value *object::get(std::string key) {
   auto iter = mEntries.find(key);
@@ -204,6 +212,10 @@ inline array::array(Args... args)
     : mEntries(args...) {}
 
 inline void array::append(json::value value) { mEntries.push_back(value); }
+template <typename Type>
+inline void array::append(Type value) {
+  mEntries.push_back(json::value(value));
+}
 inline array::iterator array::begin() { return mEntries.begin(); }
 inline array::const_iterator array::begin() const { return mEntries.begin(); }
 inline array::iterator array::end() { return mEntries.end(); }
