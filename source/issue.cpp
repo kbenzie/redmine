@@ -126,8 +126,10 @@ redmine::result redmine::issue::init(const json::object &object) {
   CHECK_RETURN(getRef(Author->object(), author));
 
   auto AssignedTo = object.get("assigned_to");
-  CHECK_JSON_PTR(AssignedTo, json::TYPE_OBJECT);
-  CHECK_RETURN(getRef(AssignedTo->object(), assigned_to));
+  if (AssignedTo) {
+    CHECK_JSON_TYPE((*AssignedTo), json::TYPE_OBJECT);
+    CHECK_RETURN(getRef(AssignedTo->object(), assigned_to));
+  }
 
   auto Category = object.get("category");
   if (Category) {
