@@ -520,7 +520,10 @@ redmine::result redmine::action::issue_show(redmine::cl::args &args,
   if (!config.browser.empty()) {
     std::string command =
         config.browser + " " + config.current->url + "/issues/" + args[0];
-    std::system(command.c_str());
+    int error = std::system(command.c_str());
+    CHECK(error, fprintf(stderr, "failued to open browser %s\n",
+                         config.browser.c_str());
+          return FAILURE)
     return SUCCESS;
   }
 
