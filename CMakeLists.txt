@@ -53,7 +53,7 @@ include_directories(
   ${CMAKE_CURRENT_BINARY_DIR}/external/curl/include/curl)
 
 add_executable(redmine
-  ${CMAKE_CURRENT_SOURCE_DIR}/include/args.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/include/command_line.h
   ${CMAKE_CURRENT_SOURCE_DIR}/include/config.h
   ${CMAKE_CURRENT_SOURCE_DIR}/include/enumeration.h
   ${CMAKE_CURRENT_SOURCE_DIR}/include/error.h
@@ -67,7 +67,7 @@ add_executable(redmine
   ${CMAKE_CURRENT_SOURCE_DIR}/include/tracker.h
   ${CMAKE_CURRENT_SOURCE_DIR}/include/util.h
   ${CMAKE_CURRENT_SOURCE_DIR}/include/version.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/source/args.cpp
+  ${CMAKE_CURRENT_SOURCE_DIR}/source/command_line.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/source/config.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/source/enumeration.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/source/issue.cpp

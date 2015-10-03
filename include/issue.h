@@ -1,9 +1,10 @@
 #ifndef ISSUE_H
 #define ISSUE_H
 
-#include <args.h>
+#include <command_line.h>
 #include <config.h>
 #include <redmine.h>
+#include <user.h>
 
 #include <json/json.hpp>
 
@@ -98,21 +99,21 @@ struct issue_category {
 };
 
 namespace action {
-result issue(redmine::args args, redmine::config &config,
-             redmine::options &options);
-result issue_list(redmine::args args, redmine::config &config,
+result issue(redmine::cl::args &args, redmine::config &config,
+             redmine::current_user &user, redmine::options &options);
+result issue_list(redmine::cl::args &args, redmine::config &config,
                   redmine::options &options);
-result issue_new(redmine::args args, redmine::config &config,
-                 redmine::options &options);
-result issue_show(redmine::args args, redmine::config &config,
+result issue_new(redmine::cl::args &args, redmine::config &config,
+                 redmine::current_user &user, redmine::options &options);
+result issue_show(redmine::cl::args &args, redmine::config &config,
                   redmine::options &options);
-result issue_update(redmine::args args, redmine::config &config,
-                    redmine::options &options);
-}
+result issue_update(redmine::cl::args &args, redmine::config &config,
+                    redmine::current_user &user, redmine::options &options);
+}  // action
 
 namespace query {
 result issues(std::string &filter, redmine::config &config,
-              redmine::options options, std::vector<issue> &issues);
+              redmine::options &options, std::vector<issue> &issues);
 
 result issue_statuses(redmine::config &config, redmine::options &options,
                       std::vector<issue_status> &issue_statuses);
@@ -120,7 +121,7 @@ result issue_statuses(redmine::config &config, redmine::options &options,
 result issue_categories(const std::string &project, redmine::config &config,
                         redmine::options &options,
                         std::vector<issue_category> &issue_categories);
-}
-}
+}  // query
+}  // redmine
 
 #endif

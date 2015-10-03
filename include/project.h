@@ -1,7 +1,6 @@
 #ifndef PROJECT_HPP
 #define PROJECT_HPP
 
-#include <args.h>
 #include <config.h>
 #include <redmine.h>
 
@@ -52,16 +51,16 @@ struct project {
 };
 
 namespace action {
-result project(redmine::args args, redmine::config &config,
+result project(redmine::cl::args &args, redmine::config &config,
                redmine::options &options);
 
-result project_list(redmine::args args, redmine::config &config,
+result project_list(redmine::cl::args &args, redmine::config &config,
                     redmine::options &options);
 
-result project_new(redmine::args args, redmine::config &config,
+result project_new(redmine::cl::args &args, redmine::config &config,
                    redmine::options &options);
 
-result project_show(redmine::args args, redmine::config &config,
+result project_show(redmine::cl::args &args, redmine::config &config,
                     redmine::options &options);
 }
 

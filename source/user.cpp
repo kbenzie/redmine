@@ -33,7 +33,7 @@ result user::init(const json::object &object) {
 
   auto ApiKey = object.get("api_key");
   if (ApiKey) {
-    CHECK_JSON_TYPE((*ApiKey), json::TYPE_STRING);
+    CHECK_JSON_TYPE(*ApiKey, json::TYPE_STRING);
     api_key = ApiKey->string();
   }
 
@@ -105,7 +105,7 @@ result current_user::get(redmine::config &config, redmine::options &options) {
 
   auto Status = User->object().get("status");
   if (Status) {
-    CHECK_JSON_TYPE((*Status), json::TYPE_NUMBER);
+    CHECK_JSON_TYPE(*Status, json::TYPE_NUMBER);
     status = Status->number<uint32_t>();
   }
 
@@ -280,7 +280,7 @@ bool redmine::current_user::can(redmine::permisson permisson) {
 }
 
 namespace action {
-result user(redmine::args args, redmine::config &config,
+result user(redmine::cl::args &args, redmine::config &config,
             redmine::options &options) {
   if (0 == args.count()) {
     fprintf(stderr,
@@ -303,7 +303,7 @@ result user(redmine::args args, redmine::config &config,
   return INVALID_ARGUMENT;
 }
 
-result user_list(redmine::args args, redmine::config &config,
+result user_list(redmine::cl::args &args, redmine::config &config,
                  redmine::options &options) {
   CHECK(args.count(), fprintf(stderr, "invalid argument: %s\n", args[0]);
         return FAILURE);
@@ -323,7 +323,7 @@ result user_list(redmine::args args, redmine::config &config,
   return SUCCESS;
 }
 
-result user_show(redmine::args args, redmine::config &config,
+result user_show(redmine::cl::args &args, redmine::config &config,
                  redmine::options &options) {
   CHECK(0 == args.count(), fprintf(stderr, "missing id\n"));
   CHECK(1 < args.count(), fprintf(stderr, "invalid argument: %s\n", args[1]));

@@ -1,12 +1,13 @@
-#ifndef REDMINE_ARGS_H
-#define REDMINE_ARGS_H
+#ifndef REDMINE_COMMAND_LINE_H
+#define REDMINE_COMMAND_LINE_H
 
 namespace redmine {
+namespace cl {
 /// @brief Command line argument wrapper.
 ///
-/// The redmine::args object wraps the command line arguments passed to a C++
-/// ::main function. No copies of the values in @a argv are made and access to
-/// all argument values remain unmodified.
+/// The redmine::cl::args object wraps the command line arguments passed to a
+/// C++ ::main function. No copies of the values in @a argv are made and access
+/// to all argument values remain unmodified.
 class args {
  public:
   /// @brief Construct from command line arguments.
@@ -82,6 +83,7 @@ class args {
   /// @brief Argument value array.
   char **argv;
 };
-}
+}  // cl
+}  // redmine
 
-#endif
+#endif  // REDMINE_COMMAND_LINE_H

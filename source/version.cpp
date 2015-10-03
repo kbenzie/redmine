@@ -33,7 +33,7 @@ result version::init(const json::object &object) {
 
   auto DueDate = object.get("due_date");
   if (DueDate) {
-    CHECK_JSON_TYPE((*DueDate), json::TYPE_STRING);
+    CHECK_JSON_TYPE(*DueDate, json::TYPE_STRING);
     due_date = DueDate->string();
   }
 
@@ -55,8 +55,9 @@ namespace query {
 result versions(const std::string &project, redmine::config &config,
                 redmine::options &options, std::vector<version> &versions) {
   std::string body;
-  CHECK_RETURN(http::get("/projects/" + project + "/versions.json", config,
-                         options, body));
+  CHECK_RETURN(http::get(
+      "/projects/" + project + "/versions.json?offset=0&limit=1000000", config,
+      options, body));
 
   auto Root = json::read(body, false);
   CHECK_JSON_TYPE(Root, json::TYPE_OBJECT);

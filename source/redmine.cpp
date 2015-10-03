@@ -1,4 +1,4 @@
-#include <args.h>
+#include <command_line.h>
 #include <redmine.h>
 #include <config.h>
 #include <issue.h>
@@ -10,7 +10,7 @@
 #include <cstring>
 
 int main(int argc, char **argv) {
-  redmine::args args(argc, argv);
+  redmine::cl::args args(argc, argv);
   args++;
 
   redmine::options options;
@@ -58,7 +58,7 @@ int main(int argc, char **argv) {
       user.can(redmine::ADD_ISSUE_WATCHERS);
   const bool use_user = 0 != user.status;
 
-  if (1 == argc) {
+  if (0 == args.count()) {
     printf(
         "usage: redmine [options] <action> [args]\n"
         "actions:\n");
@@ -90,7 +90,7 @@ int main(int argc, char **argv) {
     }
 
     if (use_issue && !strcmp("issue", arg)) {
-      return redmine::action::issue(args, config, options);
+      return redmine::action::issue(args, config, user, options);
     }
 
     if (use_user && !strcmp("user", arg)) {

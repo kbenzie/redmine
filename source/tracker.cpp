@@ -5,7 +5,8 @@ namespace redmine {
 result query::trackers(redmine::config &config, redmine::options &options,
                        std::vector<reference> &trackers) {
   std::string body;
-  CHECK_RETURN(http::get("/trackers.json", config, options, body));
+  CHECK_RETURN(http::get("/trackers.json?offset=0&limit=1000000", config,
+                         options, body));
 
   auto root = json::read(body, false);
   CHECK_JSON_TYPE(root, json::TYPE_OBJECT);

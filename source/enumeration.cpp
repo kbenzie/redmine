@@ -32,7 +32,7 @@ static result query_enumerations(const std::string &enum_name, config &config,
 
     auto is_default = Enum.object().get("is_default");
     if (is_default) {
-      CHECK_JSON_TYPE((*is_default), json::TYPE_BOOL);
+      CHECK_JSON_TYPE(*is_default, json::TYPE_BOOL);
       enumeration.is_default = is_default->boolean();
     }
 

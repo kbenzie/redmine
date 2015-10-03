@@ -75,7 +75,7 @@
 ///
 /// @return FAILURE if check is true.
 #define CHECK_JSON_TYPE(REFERENCE, TYPE)    \
-  if (TYPE != REFERENCE.type()) {           \
+  if (TYPE != (REFERENCE).type()) {         \
     DEBUG_MSG("json is not a " #TYPE "\n"); \
     return FAILURE;                         \
   }
@@ -91,6 +91,6 @@
     DEBUG_MSG("json is null\n", __FILE__, __LINE__); \
     return FAILURE;                                  \
   }                                                  \
-  CHECK_JSON_TYPE((*POINTER), TYPE)
+  CHECK_JSON_TYPE(*POINTER, TYPE)
 
 #endif  // REDMINE_ERROR_H

@@ -1,12 +1,13 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#include <args.h>
+#include <command_line.h>
 #include <redmine.h>
 
 #include <json/json.hpp>
 
 #include <string>
+#include <vector>
 
 namespace redmine {
 struct config {
@@ -17,31 +18,44 @@ struct config {
   ///
   /// @param options Comand line options.
   ///
-  /// @return Either SUCCESS or FAILURE.
+  /// @return Either redmine::SUCCESS or redmine::FAILURE.
   result load(redmine::options &options);
 
   /// @brief Save this config object to the config file.
   ///
-  /// @return Either SUCCESS or FAILURE.
+  /// @return Either redmine::SUCCESS or redmine::FAILURE.
   result save();
 
-  std::string url;
-  std::string key;
-  // TODO: std::string editor;
-  // TODO: std::string browser;
-  uint32_t port;
-  bool use_ssl;
-  bool verify_ssl;
+  struct profile {
+    profile();
+
+    std::string name;
+    std::string url;
+    std::string key;
+    uint32_t port;
+    bool use_ssl;
+    bool verify_ssl;
+  };
+
+  std::string editor;
+  std::string browser;
+  std::string profile_name;
+  std::vector<config::profile> profiles;
+  config::profile *current;
 };
 
 namespace action {
-result config(redmine::args args, redmine::options &options);
-result config_url(redmine::args args, redmine::options &options);
-result config_key(redmine::args args, redmine::options &options);
-result config_port(redmine::args args, redmine::options &options);
-result config_use_ssl(redmine::args args, redmine::options &options);
-result config_verify_ssl(redmine::args args, redmine::options &options);
-}
+result config(redmine::cl::args &args, redmine::options &options);
+result config_new(redmine::cl::args &args, redmine::options &options);
+result config_browser(redmine::cl::args &args, redmine::options &options);
+result config_editor(redmine::cl::args &args, redmine::options &options);
+result config_profile(redmine::cl::args &args, redmine::options &options);
+result config_url(redmine::cl::args &args, redmine::options &options);
+result config_key(redmine::cl::args &args, redmine::options &options);
+result config_port(redmine::cl::args &args, redmine::options &options);
+result config_use_ssl(redmine::cl::args &args, redmine::options &options);
+result config_verify_ssl(redmine::cl::args &args, redmine::options &options);
+}  // action
 }  // redmine
 
 #endif

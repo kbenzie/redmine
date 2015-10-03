@@ -67,7 +67,7 @@ size_t write(void *ptr, size_t size, size_t count, void *data) {
 struct curl_slist *create_header(const config &config, size_t length = 0) {
   struct curl_slist *header = nullptr;
   std::string api_key_header("X-Redmine-API-Key: ");
-  api_key_header += config.key;
+  api_key_header += config.current->key;
   header = curl_slist_append(header, api_key_header.c_str());
   header = curl_slist_append(header, "Content-Type: application/json");
   if (length) {
@@ -80,17 +80,18 @@ struct curl_slist *create_header(const config &config, size_t length = 0) {
 
 result set_options(CURL *curl, const std::string &path,
                    const redmine::config &config, redmine::options &options) {
-  std::string url = config.url + path;
+  std::string url = config.current->url + path;
   CHECK(options.debug, printf("%s\n", url.c_str()));
   CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_URL, url.c_str()));
   auto header = create_header(config);
   CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_HTTPHEADER, header));
-  if (config.use_ssl) {
+  if (config.current->use_ssl) {
     CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_USE_SSL, CURLUSESSL_ALL));
-    CURL_CHECK_RETURN(
-        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, config.verify_ssl));
+    CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER,
+                                       config.current->verify_ssl));
   }
-  CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_PORT, config.port));
+  CURL_CHECK_RETURN(
+      curl_easy_setopt(curl, CURLOPT_PORT, config.current->port));
   if (options.debug_http) {
     CURL_CHECK_RETURN(curl_easy_setopt(curl, CURLOPT_VERBOSE, true));
   }

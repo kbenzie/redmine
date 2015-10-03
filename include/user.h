@@ -54,11 +54,11 @@ struct current_user {
 };
 
 namespace action {
-result user(redmine::args args, redmine::config &config,
+result user(redmine::cl::args &args, redmine::config &config,
             redmine::options &options);
-result user_list(redmine::args args, redmine::config &config,
+result user_list(redmine::cl::args &args, redmine::config &config,
                  redmine::options &options);
-result user_show(redmine::args args, redmine::config &config,
+result user_show(redmine::cl::args &args, redmine::config &config,
                  redmine::options &options);
 }
 

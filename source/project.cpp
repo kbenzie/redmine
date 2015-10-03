@@ -49,7 +49,7 @@ result project::init(const json::object &object) {
 
   auto Parent = object.get("parent");
   if (Parent) {
-    CHECK_JSON_TYPE((*Parent), json::TYPE_OBJECT);
+    CHECK_JSON_TYPE(*Parent, json::TYPE_OBJECT);
 
     auto Name = Parent->object().get("name");
     CHECK_JSON_PTR(Name, json::TYPE_STRING);
@@ -79,7 +79,7 @@ bool project::operator==(const char *str) const {
 }
 
 namespace action {
-result project(redmine::args args, redmine::config &config,
+result project(redmine::cl::args &args, redmine::config &config,
                redmine::options &options) {
   if (0 == args.count()) {
     fprintf(stderr,
@@ -107,7 +107,7 @@ result project(redmine::args args, redmine::config &config,
   return INVALID_ARGUMENT;
 }
 
-result project_list(redmine::args args, redmine::config &config,
+result project_list(redmine::cl::args &args, redmine::config &config,
                     redmine::options &options) {
   CHECK(0 != args.count(), fprintf(stderr, "invalid argument: %s\n", args[0]);
         return INVALID_ARGUMENT);
@@ -131,7 +131,7 @@ result project_list(redmine::args args, redmine::config &config,
   return SUCCESS;
 }
 
-result project_new(redmine::args args, redmine::config &config,
+result project_new(redmine::cl::args &args, redmine::config &config,
                    redmine::options &options) {
   CHECK(2 > args.count(),
         fprintf(stderr, "usage: redmine project new <name> <identifier>\n");
@@ -167,13 +167,10 @@ result project_new(redmine::args args, redmine::config &config,
             "issue_tracking, news, repository, time_tracking, wiki\n";
   }
 
-  // TODO: Make editor configureable
-  std::string editor("vim");
-
-  // TODO: Open REDMINE_PROJECT_NEW in editor
-  std::string command = editor + " " + filename;
+  std::string command = config.editor + " " + filename;
   int result = std::system(command.c_str());
-  CHECK(result, fprintf(stderr, "failed to load editor: %s", editor.c_str());
+  CHECK(result,
+        fprintf(stderr, "failed to load editor: %s", config.editor.c_str());
         return FAILURE);
 
   std::stringstream content;
@@ -304,7 +301,7 @@ result project_new(redmine::args args, redmine::config &config,
   return SUCCESS;
 }
 
-result project_show(redmine::args args, redmine::config &config,
+result project_show(redmine::cl::args &args, redmine::config &config,
                     redmine::options &options) {
   CHECK(0 == args.count(), fprintf(stderr, "missing id or name\n");
         return FAILURE);
@@ -346,7 +343,8 @@ result project_show(redmine::args args, redmine::config &config,
 result query::projects(redmine::config &config, redmine::options &options,
                        std::vector<project> &projects) {
   std::string body;
-  CHECK_RETURN(http::get("/projects.json", config, options, body));
+  CHECK_RETURN(http::get("/projects.json?offset=0&limit=1000000", config,
+                         options, body));
 
   auto root = json::read(body, false);
   CHECK_JSON_TYPE(root, json::TYPE_OBJECT);

@@ -16,8 +16,7 @@
 #include <fstream>
 #include <iostream>
 
-namespace redmine {
-issue::issue()
+redmine::issue::issue()
     : id(0),
       subject(),
       description(),
@@ -35,7 +34,25 @@ issue::issue()
       assigned_to(),
       category() {}
 
-result issue::init(const json::object &object) {
+static std::string &ltrim(std::string &str) {
+  str.erase(str.begin(),
+            std::find_if(str.begin(), str.end(),
+                         std::not1(std::ptr_fun<int, int>(std::isspace))));
+
+  return str;
+}
+
+static std::string &rtrim(std::string &str) {
+  str.erase(std::find_if(str.rbegin(), str.rend(),
+                         std::not1(std::ptr_fun<int, int>(std::isspace)))
+                .base(),
+            str.end());
+  return str;
+}
+
+static std::string &trim(std::string &str) { return ltrim(rtrim(str)); }
+
+redmine::result redmine::issue::init(const json::object &object) {
   auto Id = object.get("id");
   CHECK_JSON_PTR(Id, json::TYPE_NUMBER);
   id = Id->number<uint32_t>();
@@ -54,7 +71,7 @@ result issue::init(const json::object &object) {
 
   auto DueDate = object.get("due_date");
   if (DueDate) {
-    CHECK_JSON_TYPE((*DueDate), json::TYPE_STRING);
+    CHECK_JSON_TYPE(*DueDate, json::TYPE_STRING);
     due_date = DueDate->string();
   }
 
@@ -72,7 +89,7 @@ result issue::init(const json::object &object) {
 
   auto EstimatedHours = object.get("estimated_hours");
   if (EstimatedHours) {
-    CHECK_JSON_TYPE((*EstimatedHours), json::TYPE_NUMBER);
+    CHECK_JSON_TYPE(*EstimatedHours, json::TYPE_NUMBER);
     estimated_hours = EstimatedHours->number<uint32_t>();
   }
 
@@ -114,7 +131,7 @@ result issue::init(const json::object &object) {
 
   auto Category = object.get("category");
   if (Category) {
-    CHECK_JSON_TYPE((*Category), json::TYPE_OBJECT);
+    CHECK_JSON_TYPE(*Category, json::TYPE_OBJECT);
     CHECK_RETURN(getRef(Category->object(), category));
   }
 
@@ -147,9 +164,10 @@ redmine::result redmine::issue::get(const std::string &ID,
   return SUCCESS;
 }
 
-namespace action {
-result issue(redmine::args args, redmine::config &config,
-             redmine::options &options) {
+redmine::result redmine::action::issue(redmine::cl::args &args,
+                                       redmine::config &config,
+                                       redmine::current_user &user,
+                                       redmine::options &options) {
   if (0 == args.count()) {
     fprintf(stderr,
             "usage: redmine issue <action> [args]\n"
@@ -166,7 +184,7 @@ result issue(redmine::args args, redmine::config &config,
   }
 
   if (!strcmp("new", args[0])) {
-    return issue_new(++args, config, options);
+    return issue_new(++args, config, user, options);
   }
 
   if (!strcmp("show", args[0])) {
@@ -174,15 +192,16 @@ result issue(redmine::args args, redmine::config &config,
   }
 
   if (!strcmp("update", args[0])) {
-    return issue_update(++args, config, options);
+    return issue_update(++args, config, user, options);
   }
 
   fprintf(stderr, "invalid argument: %s\n", args[0]);
   return FAILURE;
 }
 
-result issue_list(redmine::args args, redmine::config &config,
-                  redmine::options &options) {
+redmine::result redmine::action::issue_list(redmine::cl::args &args,
+                                            redmine::config &config,
+                                            redmine::options &options) {
   CHECK(args.count() > 1, fprintf(stderr, "invalid argument: %s\n", args[1]));
 
   std::vector<redmine::project> projects;
@@ -291,8 +310,10 @@ static uint32_t get_user_id(const char *name,
   return assignee_id;
 }
 
-result issue_new(redmine::args args, redmine::config &config,
-                 redmine::options &options) {
+redmine::result redmine::action::issue_new(redmine::cl::args &args,
+                                           redmine::config &config,
+                                           redmine::current_user &user,
+                                           redmine::options &options) {
   CHECK_MSG(0 == args.count(), "missing project id or identifier",
             return FAILURE);
 
@@ -312,7 +333,7 @@ result issue_new(redmine::args args, redmine::config &config,
   std::string subject;
   if (1 < args.count()) {
     CHECK(std::strcmp("-m", args[1]),
-          fprintf(stderr, "invliad option: %s\n", args[1]);
+          fprintf(stderr, "invalid option: %s\n", args[1]);
           return FAILURE);
     CHECK(3 != args.count(),
           fprintf(stderr, "invalid argument: %s\n", args.back());
@@ -325,13 +346,21 @@ result issue_new(redmine::args args, redmine::config &config,
 
   std::vector<redmine::issue_status> issue_statuses;
   CHECK_RETURN(query::issue_statuses(config, options, issue_statuses));
+  uint32_t status_id = 0;
+  for (auto &status : issue_statuses) {
+    if (status.is_default) {
+      status_id = status.id;
+    }
+  }
 
   std::vector<redmine::enumeration> priorities;
   CHECK_RETURN(query::issue_priorities(config, options, priorities));
 
   std::vector<redmine::issue_category> issue_categories;
-  CHECK_RETURN(query::issue_categories(project->identifier, config, options,
-                                       issue_categories));
+  if (user.permissions.manage_categories) {
+    CHECK_RETURN(query::issue_categories(project->identifier, config, options,
+                                         issue_categories));
+  }
 
   std::vector<redmine::version> versions;
   CHECK_RETURN(query::versions(project->identifier, config, options, versions));
@@ -364,23 +393,24 @@ result issue_new(redmine::args args, redmine::config &config,
             "----------------\n\n";
   }
 
-  // TODO: Get editor from redmine::config.
-  std::string editor("vim");
-
-  std::string command = editor + " " + filename;
+  std::string command = config.editor + " " + filename;
   int result = std::system(command.c_str());
-  CHECK_MSG(result, "editor exited with failure!", return FAILURE);
+  CHECK(result,
+        fprintf(stderr, "failed to load editor %s\n", config.editor.c_str());
+        return FAILURE);
 
   std::string description;
   {
     std::ifstream file(filename);
     CHECK(!file.is_open(),
-          fprintf(stderr, "could not open temporary file: %s\n",
-                  filename.c_str());
+          fprintf(stderr, "Aborted due to empty update file.\n");
           return FAILURE);
     std::getline(file, subject);
-    std::string line;
+    subject = trim(subject);
+    CHECK(subject.empty(), fprintf(stderr, "Aborted due to empty subject.\n");
+          return FAILURE);
 
+    std::string line;
     std::getline(file, line);
     CHECK(line !=
               "----------------------------------------------------------------"
@@ -392,6 +422,11 @@ result issue_new(redmine::args args, redmine::config &config,
       std::getline(file, line);
       description += line + "\n";
     }
+
+    description = trim(description);
+    CHECK(description.empty(),
+          fprintf(stderr, "Aborted due to empty description.\n");
+          return FAILURE);
   }
 
   // NOTE: Remove temoryary file.
@@ -399,14 +434,15 @@ result issue_new(redmine::args args, redmine::config &config,
 
   // NOTE: Ask for user input.
   uint32_t tracker_id = get_answer_id("Tracker", trackers, false);
-  uint32_t status_id = get_answer_id("Status", issue_statuses, false);
   uint32_t priority_id = get_answer_id("Priority", priorities, false);
-  uint32_t category_id = get_answer_id("Category", issue_categories, false);
+  uint32_t category_id = 0;
+  if (!issue_categories.empty()) {
+    category_id = get_answer_id("Category", issue_categories, false);
+  }
   uint32_t fixed_version_id = get_answer_id("Target Version", versions, false);
   uint32_t assigned_to_id = get_user_id("Assignee", memberships, true);
   json::array watcher_user_ids;
   while (uint32_t watcher_id = get_user_id("Watcher", memberships, true)) {
-    printf("watcher_id: %u\n", watcher_id);
     watcher_user_ids.append(watcher_id);
   }
 
@@ -466,17 +502,25 @@ result issue_new(redmine::args args, redmine::config &config,
   printf(
       "created issue %u\n"
       "%s/issues/%u\n",
-      id, config.url.c_str(), id);
+      id, config.current->url.c_str(), id);
 
   return SUCCESS;
 }
 
-result issue_show(redmine::args args, redmine::config &config,
-                  redmine::options &options) {
+redmine::result redmine::action::issue_show(redmine::cl::args &args,
+                                            redmine::config &config,
+                                            redmine::options &options) {
   CHECK(0 == args.count(), fprintf(stderr, "missing issue id\n");
         return FAILURE);
   CHECK(1 < args.count(), fprintf(stderr, "invalid argument: %s\n", args[1]);
         return FAILURE);
+
+  if (!config.browser.empty()) {
+    std::string command =
+        config.browser + " " + config.current->url + "/issues/" + args[0];
+    std::system(command.c_str());
+    return SUCCESS;
+  }
 
   redmine::issue issue;
   CHECK_RETURN(issue.get(args[0], config, options));
@@ -520,8 +564,10 @@ result issue_show(redmine::args args, redmine::config &config,
   return SUCCESS;
 }
 
-result issue_update(redmine::args args, redmine::config &config,
-                    redmine::options &options) {
+redmine::result redmine::action::issue_update(redmine::cl::args &args,
+                                              redmine::config &config,
+                                              redmine::current_user &user,
+                                              redmine::options &options) {
   CHECK(0 == args.count(), fprintf(stderr, "missing issue <id>\n");
         return FAILURE);
   CHECK(1 != args.count(), fprintf(stderr, "invalid argument: %s\n", args[1]);
@@ -544,21 +590,16 @@ result issue_update(redmine::args args, redmine::config &config,
   // TODO: Populate file?
   std::string filename("issue.redmine");
 
-  // TODO: Use config defined editor.
-  std::string editor("vim");
-
-  std::string command = editor + " " + filename;
+  std::string command = config.editor + " " + filename;
   CHECK(std::system(command.c_str()),
-        fprintf(stderr, "editor exited with failure\n");
+        fprintf(stderr, "fail to load editor %s\n", config.editor.c_str());
         return FAILURE);
 
   // NOTE: Read notes from temporary file.
   std::string notes;
   {
     std::ifstream file(filename);
-    CHECK(!file.is_open(),
-          fprintf(stderr, "could not open temporary file: %s\n",
-                  filename.c_str());
+    CHECK(!file.is_open(), fprintf(stderr, "Aborted due to empty note.\n");
           return FAILURE);
     notes.assign((std::istreambuf_iterator<char>(file)),
                  std::istreambuf_iterator<char>());
@@ -618,14 +659,14 @@ result issue_update(redmine::args args, redmine::config &config,
   printf(
       "updated issue %u\n"
       "%s/issues/%u\n",
-      issue.id, config.url.c_str(), issue.id);
+      issue.id, config.current->url.c_str(), issue.id);
 
   return SUCCESS;
 }
-}  // action
 
-result query::issues(std::string &filter, config &config, options options,
-                     std::vector<issue> &issues) {
+redmine::result redmine::query::issues(std::string &filter, config &config,
+                                       redmine::options &options,
+                                       std::vector<issue> &issues) {
   std::string body;
   CHECK_RETURN(http::get("/issues.json" + filter, config, options, body));
 
@@ -649,10 +690,12 @@ result query::issues(std::string &filter, config &config, options options,
   return SUCCESS;
 }
 
-result query::issue_statuses(redmine::config &config, redmine::options &options,
-                             std::vector<issue_status> &statuses) {
+redmine::result redmine::query::issue_statuses(
+    redmine::config &config, redmine::options &options,
+    std::vector<issue_status> &statuses) {
   std::string body;
-  CHECK_RETURN(http::get("/issue_statuses.json", config, options, body));
+  CHECK_RETURN(http::get("/issue_statuses.json?offset=0&limit=1000000", config,
+                         options, body));
 
   auto root = json::read(body, false);
   CHECK_JSON_TYPE(root, json::TYPE_OBJECT);
@@ -675,13 +718,13 @@ result query::issue_statuses(redmine::config &config, redmine::options &options,
 
     auto is_default = Status.object().get("is_default");
     if (is_default) {
-      CHECK_JSON_TYPE((*is_default), json::TYPE_BOOL);
+      CHECK_JSON_TYPE(*is_default, json::TYPE_BOOL);
       status.is_default = is_default->boolean();
     }
 
     auto is_closed = Status.object().get("is_closed");
     if (is_closed) {
-      CHECK_JSON_TYPE((*is_closed), json::TYPE_BOOL);
+      CHECK_JSON_TYPE(*is_closed, json::TYPE_BOOL);
       status.is_closed = is_closed->boolean();
     }
 
@@ -691,13 +734,13 @@ result query::issue_statuses(redmine::config &config, redmine::options &options,
   return SUCCESS;
 }
 
-result query::issue_categories(const std::string &project,
-                               redmine::config &config,
-                               redmine::options &options,
-                               std::vector<issue_category> &issue_categories) {
+redmine::result redmine::query::issue_categories(
+    const std::string &project, redmine::config &config,
+    redmine::options &options, std::vector<issue_category> &issue_categories) {
   std::string body;
-  CHECK_RETURN(http::get("/projects/" + project + "/issue_categories.json",
-                         config, options, body));
+  CHECK_RETURN(http::get(
+      "/projects/" + project + "/issue_categories.json?offset=0&limit=1000000",
+      config, options, body));
 
   auto Root = json::read(body, false);
   CHECK_JSON_TYPE(Root, json::TYPE_OBJECT);
@@ -725,7 +768,7 @@ result query::issue_categories(const std::string &project,
 
     auto AssignedTo = IssueCategory.object().get("assigned_to");
     if (AssignedTo) {
-      CHECK_JSON_TYPE((*AssignedTo), json::TYPE_OBJECT);
+      CHECK_JSON_TYPE(*AssignedTo, json::TYPE_OBJECT);
       CHECK_RETURN(issue_category.assigned_to.init(AssignedTo->object()));
     }
 
@@ -734,4 +777,3 @@ result query::issue_categories(const std::string &project,
 
   return SUCCESS;
 }
-}  // redmine
