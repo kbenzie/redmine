@@ -144,6 +144,24 @@ redmine::result redmine::config::load(redmine::options &options) {
   return SUCCESS;
 }
 
+redmine::result redmine::config_interactive(redmine::options &options) {
+  fprintf(stderr, "You config file is missing or invalid.\n");
+  redmine::config::profile profile;
+  profile.name = cl::get_answer_string("Profile name");
+  profile.key = cl::get_answer_string("Redmine API key");
+  profile.url = cl::get_answer_string("Redmine URL");
+  profile.port = cl::get_answer_number("Redmine port");
+  profile.use_ssl = cl::get_answer_bool("Enable SSL");
+  profile.use_ssl = cl::get_answer_bool("Verify SSL");
+  redmine::config config;
+  config.profile_name = profile.name;
+  config.profiles.push_back(profile);
+  config.editor = cl::get_answer_string("Editor");
+  config.browser = cl::get_answer_string("Browser");
+  CHECK_RETURN(config.save());
+  return SUCCESS;
+}
+
 redmine::result redmine::action::config(redmine::cl::args &args,
                                         redmine::options &options) {
   if (0 == args.count()) {

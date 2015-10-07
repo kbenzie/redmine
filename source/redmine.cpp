@@ -47,7 +47,10 @@ int main(int argc, char **argv) {
   CHECK_RETURN(http.init());
 
   redmine::config config;
-  CHECK_RETURN(config.load(options));
+  if (config.load(options)) {
+    CHECK_RETURN(redmine::config_interactive(options));
+    CHECK_RETURN(config.load(options));
+  }
 
   redmine::current_user user;
   CHECK_RETURN(user.get(config, options));

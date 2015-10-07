@@ -44,6 +44,11 @@ struct config {
   config::profile *current;
 };
 
+/// @brief Interactive setup of redmine::config, writes to config file.
+///
+/// @return Returns redmine::SUCCESS on succes, redmine::FAILURE otherwise.
+result config_interactive(redmine::options &options);
+
 namespace action {
 result config(redmine::cl::args &args, redmine::options &options);
 result config_new(redmine::cl::args &args, redmine::options &options);

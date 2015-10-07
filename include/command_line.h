@@ -1,6 +1,8 @@
 #ifndef REDMINE_COMMAND_LINE_H
 #define REDMINE_COMMAND_LINE_H
 
+#include <string>
+
 namespace redmine {
 namespace cl {
 /// @brief Command line argument wrapper.
@@ -83,6 +85,27 @@ class args {
   /// @brief Argument value array.
   char **argv;
 };
+
+/// @brief Prompt the user for input, no answer checking.
+///
+/// @param question Question to ask.
+///
+/// @return Answer string.
+std::string get_answer_string(const std::string &question);
+
+/// @brief Prompt the user for input, must be a valid unsigned int.
+///
+/// @param question Question to ask.
+///
+/// @return Number answer.
+uint32_t get_answer_number(const std::string &question);
+
+/// @brief Prompt the user for input, must be "true" or "false.
+///
+/// @param question Question to ask.
+///
+/// @return Boolean answer.
+bool get_answer_bool(const std::string &question);
 }  // cl
 }  // redmine
 
