@@ -51,6 +51,7 @@ struct OperationConfig {
   bool proto_present;
   long proto_redir;
   bool proto_redir_present;
+  char *proto_default;
   curl_off_t resume_from;
   char *postfields;
   curl_off_t postfieldsize;
@@ -199,6 +200,7 @@ struct OperationConfig {
   bool xattr;               /* store metadata in extended attributes */
   long gssapi_delegation;
   bool ssl_allow_beast;     /* allow this SSL vulnerability */
+  bool ssl_no_revoke;       /* disable SSL certificate revocation checks */
 
   bool use_metalink;        /* process given URLs as metalink XML file */
   metalinkfile *metalinkfile_list; /* point to the first node */
