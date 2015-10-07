@@ -340,6 +340,9 @@ static CURLcode AcceptServerConnect(struct connectdata *conn)
     return CURLE_FTP_PORT_FAILED;
   }
   infof(data, "Connection accepted from server\n");
+  /* when this happens within the DO state it is important that we mark us as
+     not needing DO_MORE anymore */
+  conn->bits.do_more = FALSE;
 
   conn->sock[SECONDARYSOCKET] = s;
   (void)curlx_nonblock(s, TRUE); /* enable non-blocking */
@@ -1887,7 +1890,7 @@ static CURLcode proxy_magic(struct connectdata *conn,
     memset(&http_proxy, 0, sizeof(http_proxy));
     data->req.protop = &http_proxy;
 
-    result = Curl_proxyCONNECT(conn, SECONDARYSOCKET, newhost, newport);
+    result = Curl_proxyCONNECT(conn, SECONDARYSOCKET, newhost, newport, TRUE);
 
     data->req.protop = ftp_save;
 
@@ -3645,7 +3648,7 @@ static CURLcode ftp_do_more(struct connectdata *conn, int *completep)
     if(conn->tunnel_state[SECONDARYSOCKET] == TUNNEL_CONNECT) {
       /* As we're in TUNNEL_CONNECT state now, we know the proxy name and port
          aren't used so we blank their arguments. TODO: make this nicer */
-      result = Curl_proxyCONNECT(conn, SECONDARYSOCKET, NULL, 0);
+      result = Curl_proxyCONNECT(conn, SECONDARYSOCKET, NULL, 0, FALSE);
 
       return result;
     }
@@ -3720,7 +3723,13 @@ static CURLcode ftp_do_more(struct connectdata *conn, int *completep)
         return result;
 
       result = ftp_multi_statemach(conn, &complete);
-      *completep = (int)complete;
+      if(ftpc->wait_data_conn)
+        /* if we reach the end of the FTP state machine here, *complete will be
+           TRUE but so is ftpc->wait_data_conn, which says we need to wait for
+           the data connection and therefore we're not actually complete */
+        *completep = 0;
+      else
+        *completep = (int)complete;
     }
     else {
       /* download */
