@@ -38,7 +38,7 @@ If you use a Windows environment you can build the project as follows.
 Any pull requests are welcome, however do not expect frequent patches from
 [myself](https://github.com/kbenzie) as this does what I need.
 
-# Licence
+# Licence - MIT
 
 Copyright (C) 2015 Kenenth Benzie
 
