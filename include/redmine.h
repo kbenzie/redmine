@@ -27,6 +27,8 @@ struct options {
   /// @brief Default constructor.
   options() : verbose(), debug(), debug_http() {}
 
+  /// @breif Option to display help output.
+  bool help;
   /// @brief Option to enable verbose output.
   bool verbose;
   /// @brief Option to enable debug output.

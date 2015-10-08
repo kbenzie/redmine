@@ -18,6 +18,11 @@ int main(int argc, char **argv) {
   for (; index < args.count(); ++index) {
     const char *arg = args[index];
 
+    if (!strcmp("-h", arg) || !strcmp("--help", arg)) {
+      options.help = true;
+      break;
+    }
+
     if (!strcmp("--verbose", arg)) {
       options.verbose = true;
       CHECK(args.end() - 1 == &arg, fprintf(stderr, "action required\n");
@@ -58,7 +63,7 @@ int main(int argc, char **argv) {
       user.can(redmine::ADD_ISSUE_WATCHERS);
   const bool use_user = 0 != user.status;
 
-  if (0 == args.count()) {
+  if (options.help || 0 == args.count()) {
     printf(
         "usage: redmine [options] <action> [args]\n"
         "actions:\n");
