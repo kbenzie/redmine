@@ -1,3 +1,23 @@
+// Copyright (C) 2015 Kenenth Benzie
+//
+// Permission is hereby granted, free of charge, to any person obtaining
+// a copy of this software and associated documentation files (the "Software"),
+// to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the
+// Software is furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+// OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+// IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+// TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
+// OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 #include <config.h>
 
 #include <json/json.hpp>
@@ -141,6 +161,24 @@ redmine::result redmine::config::load(redmine::options &options) {
                 profile_name.c_str());
         return FAILURE);
 
+  return SUCCESS;
+}
+
+redmine::result redmine::config_interactive(redmine::options &options) {
+  fprintf(stderr, "You config file is missing or invalid.\n");
+  redmine::config::profile profile;
+  profile.name = cl::get_answer_string("Profile name");
+  profile.key = cl::get_answer_string("Redmine API key");
+  profile.url = cl::get_answer_string("Redmine URL");
+  profile.port = cl::get_answer_number("Redmine port");
+  profile.use_ssl = cl::get_answer_bool("Enable SSL");
+  profile.use_ssl = cl::get_answer_bool("Verify SSL");
+  redmine::config config;
+  config.profile_name = profile.name;
+  config.profiles.push_back(profile);
+  config.editor = cl::get_answer_string("Editor");
+  config.browser = cl::get_answer_string("Browser");
+  CHECK_RETURN(config.save());
   return SUCCESS;
 }
 

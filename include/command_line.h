@@ -1,5 +1,27 @@
+// Copyright (C) 2015 Kenenth Benzie
+//
+// Permission is hereby granted, free of charge, to any person obtaining
+// a copy of this software and associated documentation files (the "Software"),
+// to deal in the Software without restriction, including without limitation
+// the rights to use, copy, modify, merge, publish, distribute, sublicense,
+// and/or sell copies of the Software, and to permit persons to whom the
+// Software is furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+// EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+// OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+// IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+// TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
+// OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
 #ifndef REDMINE_COMMAND_LINE_H
 #define REDMINE_COMMAND_LINE_H
+
+#include <string>
 
 namespace redmine {
 namespace cl {
@@ -83,6 +105,27 @@ class args {
   /// @brief Argument value array.
   char **argv;
 };
+
+/// @brief Prompt the user for input, no answer checking.
+///
+/// @param question Question to ask.
+///
+/// @return Answer string.
+std::string get_answer_string(const std::string &question);
+
+/// @brief Prompt the user for input, must be a valid unsigned int.
+///
+/// @param question Question to ask.
+///
+/// @return Number answer.
+uint32_t get_answer_number(const std::string &question);
+
+/// @brief Prompt the user for input, must be "true" or "false.
+///
+/// @param question Question to ask.
+///
+/// @return Boolean answer.
+bool get_answer_bool(const std::string &question);
 }  // cl
 }  // redmine
 
