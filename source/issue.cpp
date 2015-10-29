@@ -366,14 +366,8 @@ redmine::result redmine::action::issue_new(redmine::cl::args &args,
   std::vector<redmine::reference> trackers;
   CHECK_RETURN(query::trackers(config, options, trackers));
 
-  std::vector<redmine::issue_status> issue_statuses;
-  CHECK_RETURN(query::issue_statuses(config, options, issue_statuses));
-  uint32_t status_id = 0;
-  for (auto &status : issue_statuses) {
-    if (status.is_default) {
-      status_id = status.id;
-    }
-  }
+  std::vector<redmine::issue_status> statuses;
+  CHECK_RETURN(query::issue_statuses(config, options, statuses));
 
   std::vector<redmine::enumeration> priorities;
   CHECK_RETURN(query::issue_priorities(config, options, priorities));
@@ -455,6 +449,7 @@ redmine::result redmine::action::issue_new(redmine::cl::args &args,
   util::rm(filename);
 
   // NOTE: Ask for user input.
+  uint32_t status_id = get_answer_id("Status", statuses, false);
   uint32_t tracker_id = get_answer_id("Tracker", trackers, false);
   uint32_t priority_id = get_answer_id("Priority", priorities, false);
   uint32_t category_id = 0;
