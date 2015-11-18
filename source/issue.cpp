@@ -196,7 +196,7 @@ redmine::result redmine::action::issue(redmine::cl::args &args,
             "actions:\n"
             "        list [project]\n"
             "        new <project> [-m <subject>]\n"
-            "        show <id>\n"
+            "        show [-r] <id>\n"
             "        update <id>\n");
     return SUCCESS;
   }
@@ -529,10 +529,23 @@ redmine::result redmine::action::issue_show(redmine::cl::args &args,
                                             redmine::options &options) {
   CHECK(0 == args.count(), fprintf(stderr, "missing issue id\n");
         return FAILURE);
-  CHECK(1 < args.count(), fprintf(stderr, "invalid argument: %s\n", args[1]);
+  CHECK(2 < args.count(), fprintf(stderr, "invalid argument: %s\n", args[1]);
         return FAILURE);
 
-  if (!config.browser.empty()) {
+  bool raw = false;
+  const char *id = nullptr;
+  if (2 == args.count()) {
+    if (!strcmp("-r", args[0])) {
+      raw = true;
+      id = args[1];
+    } else {
+      fprintf(stderr, "invalid option: %s\n", args[0]);
+    }
+  } else {
+    id = args[0];
+  }
+
+  if (!raw && !config.browser.empty()) {
     std::string command =
         config.browser + " " + config.current->url + "/issues/" + args[0];
     int error = std::system(command.c_str());
@@ -543,7 +556,7 @@ redmine::result redmine::action::issue_show(redmine::cl::args &args,
   }
 
   redmine::issue issue;
-  CHECK_RETURN(issue.get(args[0], config, options));
+  CHECK_RETURN(issue.get(id, config, options));
 
   // TODO: Improve layout of issue details.
   printf("%u: %s\n", issue.id, issue.subject.c_str());
