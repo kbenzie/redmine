@@ -45,7 +45,7 @@ enum result {
 /// @brief Object encapsulating all command line options.
 struct options {
   /// @brief Default constructor.
-  options() : verbose(), debug(), debug_http() {}
+  options() : help(), verbose(), debug(), debug_http() {}
 
   /// @breif Option to display help output.
   bool help;
